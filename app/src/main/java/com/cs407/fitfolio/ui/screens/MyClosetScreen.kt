@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 
 @Composable
@@ -9,6 +10,6 @@ fun MyClosetScreen(
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit
 ) {
-
+    Text("Closet screen")
 }
 
