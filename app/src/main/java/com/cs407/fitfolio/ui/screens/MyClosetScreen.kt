@@ -22,7 +22,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.Info
@@ -57,6 +56,9 @@ import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.data.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 
+
+// TODO: shuffle icon, item icons, put toggle fav in view model, make columns for item types
+// clickable, implement item card, add settings and info screens, add coroutines for filtering calls??
 @Composable
 fun MyClosetScreen(
     onNavigateToOutfitsScreen: () -> Unit,
@@ -90,6 +92,8 @@ fun MyClosetScreen(
             FilterRow(closetState, closetViewModel)
 
             Spacer(modifier = Modifier.size(10.dp))
+
+            ClosetGrid(closetState, closetViewModel)
         }
 
         // Settings button
@@ -296,6 +300,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     Button(onClick = {
                         isSearchActive = false
                         closetViewModel.searchItems(searchText)
+                        searchText = ""
                     }) {
                         Text(text = "Search")
                     }
@@ -366,7 +371,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 
 // Grid of the items currently shown in the closet
 @Composable
-fun ClosetGrid(closetState: ClosetState) {
+fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Adaptive(200.dp),
         verticalItemSpacing = 4.dp,
@@ -375,6 +380,7 @@ fun ClosetGrid(closetState: ClosetState) {
             items(closetState.filteredItems) { item ->
                 ElevatedCard() {
                     // TODO: implement item card
+
                 }
             }
         }
