@@ -12,10 +12,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
@@ -43,7 +45,7 @@ fun MyOutfitsScreen(
 ) {
     Box(modifier = Modifier
         .fillMaxSize()
-        .padding(8.dp)
+        .padding(horizontal = 8.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -51,7 +53,6 @@ fun MyOutfitsScreen(
                 .align(alignment = Alignment.TopCenter)
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp)
-//                .background(Color(0xFF000000))
         ) {
             // profile image, my outfits title, information icon
             TopHeaderSection()
@@ -136,7 +137,7 @@ fun WeatherRow() {
 @Composable
 fun SearchRow() {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth(), // matches rest of screen
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -146,7 +147,7 @@ fun SearchRow() {
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color(0xFFE0E0E0))
                 .padding(horizontal = 10.dp, vertical = 10.dp),
-            contentAlignment = Alignment.Center
+            contentAlignment = Alignment.Center,
         ) {
             // TODO: replace with toggle button
             Icon(
@@ -179,27 +180,16 @@ fun SearchRow() {
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp)
-                .weight(1f),
-            contentAlignment = Alignment.CenterStart
+                .padding(horizontal = 10.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center
         ) {
             // TODO: swap out with real search logic
-            Row {
-                Icon(
-                    Icons.Outlined.Search,
-                    contentDescription = "Search",
-                    modifier = Modifier.size(20.dp),
-                    tint = Color.Black
-                )
-
-                Spacer(Modifier.width(8.dp))
-
-                Text(
-                    text = "Search",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black
-                )
-            }
+            Icon(
+                Icons.Outlined.Search,
+                contentDescription = "Search",
+                modifier = Modifier.size(20.dp),
+                tint = Color.Black
+            )
         }
 
         // tags drop down menu
@@ -224,9 +214,47 @@ fun SearchRow() {
                 )
             }
         }
+
+        // clear filters button
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color(0xFFE0E0E0))
+                .padding(horizontal = 10.dp, vertical = 10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            // TODO: swap out with real clear filters logic
+            Icon(
+                Icons.Outlined.Clear,
+                contentDescription = "Clear filters",
+                modifier = Modifier.size(20.dp),
+                tint = Color.Black
+            )
+        }
     }
 }
 
 
 @Composable
-fun OutfitGrid() {}
+fun OutfitGrid() {
+    LazyVerticalStaggeredGrid(
+        columns = StaggeredGridCells.Fixed(2),
+        modifier = Modifier
+            .fillMaxWidth(),
+        verticalItemSpacing = 8.dp,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(30) { index ->
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height((150..250).random().dp)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color(0xFFE0E0E0)),
+                contentAlignment = Alignment.Center
+            ) {
+                Text("Item $index")
+            }
+        }
+    }
+}
