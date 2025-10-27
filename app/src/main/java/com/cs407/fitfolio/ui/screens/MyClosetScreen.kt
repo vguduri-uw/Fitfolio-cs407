@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Favorite
@@ -84,11 +83,11 @@ fun MyClosetScreen(
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            ItemTypeRow(closetState)
+            ItemTypeRow(closetState, closetViewModel)
 
             Spacer(modifier = Modifier.size(10.dp))
 
-            FilterRow(closetState)
+            FilterRow(closetState, closetViewModel)
 
             Spacer(modifier = Modifier.size(10.dp))
         }
@@ -125,7 +124,7 @@ fun TopHeaderSection () {
     Spacer(modifier = Modifier.size(8.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "My Outfits", style = MaterialTheme.typography.titleLarge)
+        Text(text = "My Closet", style = MaterialTheme.typography.titleLarge)
         IconButton(onClick = {}) { // TODO: add info onClick lambda
             Icon(Icons.Outlined.Info,
                 contentDescription = "Information",
@@ -138,7 +137,7 @@ fun TopHeaderSection () {
 // Scrollable row of item types for filtering
 // TODO: make each column clickable (modifier.clickable)
 @Composable
-fun ItemTypeRow(closetState: ClosetState) {
+fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     // Scroll state for the item type row
     val scrollState = rememberScrollState()
 
@@ -147,7 +146,6 @@ fun ItemTypeRow(closetState: ClosetState) {
     var selectedType by remember { mutableStateOf("All") }
 
     // TODO: update icons
-    // TODO: implement filtering
     Row(modifier = Modifier
         .horizontalScroll(scrollState)
         .fillMaxWidth(),
@@ -165,7 +163,10 @@ fun ItemTypeRow(closetState: ClosetState) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.padding(8.dp)
             ) {
-                IconButton(onClick = {selectedType = "All"}) {
+                IconButton(onClick = {
+                    selectedType = "All"
+                    closetViewModel.filterByItemType("All")
+                }) {
                     Icon(
                         imageVector = Icons.Outlined.ShoppingCart,
                         contentDescription = "All items"
@@ -187,7 +188,10 @@ fun ItemTypeRow(closetState: ClosetState) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    IconButton(onClick = {selectedType = itemType}) {
+                    IconButton(onClick = {
+                        selectedType = itemType
+                        closetViewModel.filterByItemType(itemType)
+                    }) {
                         Icon(
                             imageVector = Icons.Outlined.ShoppingCart,
                             contentDescription = itemType
@@ -197,27 +201,12 @@ fun ItemTypeRow(closetState: ClosetState) {
                 }
             }
         }
-
-        // TODO: implement adding a type
-        // Icon button for adding a type
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            modifier = Modifier.padding(8.dp)
-        ) {
-            IconButton(onClick = {}) {
-                Icon(
-                    imageVector = Icons.Outlined.Add,
-                    contentDescription = "Add type"
-                )
-            }
-            Text("Add type")
-        }
     }
 }
 
 // Row of action buttons for filtering, shuffling, and searching
 @Composable
-fun FilterRow(closetState: ClosetState) {
+fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     // Tracks whether or not the favorites filtering is toggled
     // TODO: move to view model
     var isFilteredByFav by remember { mutableStateOf(false) }
@@ -241,7 +230,10 @@ fun FilterRow(closetState: ClosetState) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = { isFilteredByFav = !isFilteredByFav }) {
+            IconButton(onClick = {
+                isFilteredByFav = !isFilteredByFav
+                closetViewModel.filterByFavorites()
+            }) {
                 Icon(
                     imageVector = if (isFilteredByFav) Icons.Filled.Favorite else Icons.Outlined.Favorite,
                     contentDescription = if (isFilteredByFav) "Remove favorites filter" else "Filter by favorites",
@@ -259,7 +251,7 @@ fun FilterRow(closetState: ClosetState) {
             contentAlignment = Alignment.Center
         ) {
             // TODO: add a shuffle icon
-            IconButton(onClick = {}) {
+            IconButton(onClick = {closetViewModel.shuffleItems()}) {
                 Icon(
                     imageVector = Icons.Outlined.Refresh,
                     contentDescription = "Shuffle",
@@ -303,7 +295,7 @@ fun FilterRow(closetState: ClosetState) {
                 confirmButton = {
                     Button(onClick = {
                         isSearchActive = false
-                        // TODO: feed value into view model to filter by
+                        closetViewModel.searchItems(searchText)
                     }) {
                         Text(text = "Search")
                     }
@@ -346,7 +338,7 @@ fun FilterRow(closetState: ClosetState) {
                     closetState.tags.forEach { tag ->
                         DropdownMenuItem(
                             text = { Text(tag) },
-                            onClick = { /* handle tag click */ }
+                            onClick = { closetViewModel.filterByTags(tag) }
                         )
                     }
                 }
@@ -360,8 +352,7 @@ fun FilterRow(closetState: ClosetState) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            // TODO: implement clear filter button
-            IconButton(onClick = { }) {
+            IconButton(onClick = { closetViewModel.clearFilters() }) {
                 Icon(
                     imageVector = Icons.Outlined.Clear,
                     contentDescription = "Clear filters",

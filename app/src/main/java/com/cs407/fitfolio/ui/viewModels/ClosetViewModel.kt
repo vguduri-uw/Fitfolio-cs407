@@ -43,9 +43,15 @@ class ClosetViewModel : ViewModel() {
         )
     }
 
-    // Toggles whether an item of clothing is favorited or not
     // TODO: implement this!!
-    fun toggleFavorites(itemId: String) {}
+    fun addToFavorites(item: ItemEntry) {
+
+    }
+
+    // TODO: implement this!!
+    fun removeFromFavorites(item: ItemEntry) {
+
+    }
 
     // Adds an item type to the itemTypes list
     fun addItemType(itemType: String) {
@@ -68,8 +74,33 @@ class ClosetViewModel : ViewModel() {
     }
 
     // TODO: implement
+    fun filterByItemType(itemType: String) {
+
+    }
+
+    // TODO: implement
     // Filters closet to only show favorite items
     fun filterByFavorites() {
         return
+    }
+
+    // TODO: implement
+    fun shuffleItems() {
+
+    }
+
+    // TODO: implement
+    fun searchItems(searchValue: String) {
+
+    }
+
+    // TODO: implement
+    fun filterByTags(tag: String) {
+
+    }
+
+    // TODO: implement
+    fun clearFilters() {
+
     }
 }
