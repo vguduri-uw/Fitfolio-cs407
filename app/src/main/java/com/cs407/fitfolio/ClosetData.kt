@@ -12,7 +12,8 @@ data class ItemEntry(
     val id : String
 ) : Serializable
 
-data class Closet(
+// Data class representing the entire closet of clothing
+data class ClosetState(
     val items: List<ItemEntry> = emptyList(),
     val itemTypes: List<String> = listOf(
         "T-Shirts", "Shirts", "Jeans", "Pants", "Shorts", "Skirts", "Dresses", "Outerwear", "Shoes"
