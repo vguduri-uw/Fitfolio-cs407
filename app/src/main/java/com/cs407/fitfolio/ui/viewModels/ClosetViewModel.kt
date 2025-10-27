@@ -61,4 +61,10 @@ class ClosetViewModel : ViewModel() {
             itemTypes = updatedItemTypes
         )
     }
+
+    // TODO: implement
+    // Filters closet to only show favorite items
+    fun filterByFavorites() {
+        return
+    }
 }
