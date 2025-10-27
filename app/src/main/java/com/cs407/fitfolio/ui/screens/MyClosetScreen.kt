@@ -2,6 +2,7 @@ package com.cs407.fitfolio.ui.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -130,6 +132,7 @@ fun TopHeaderSection () {
 }
 
 // Scrollable row of item types for filtering
+// TODO: make each column clickable (modifier.clickable)
 @Composable
 fun ItemTypeRow(closetState: ClosetState) {
     // Scroll state for the item type row
@@ -143,13 +146,14 @@ fun ItemTypeRow(closetState: ClosetState) {
     // TODO: implement filtering
     Row(modifier = Modifier
         .horizontalScroll(scrollState)
+        .fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.small)
-                .background(color = if (selectedType == "All") Color(0xFFE0E0E0) else Color.Transparent,
-                )
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(color = if (selectedType == "All") Color(0xFFE0E0E0) else Color.Transparent),
             contentAlignment = Alignment.Center
         ) {
             // Show all items icon button
@@ -172,8 +176,7 @@ fun ItemTypeRow(closetState: ClosetState) {
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(color = if (selectedType == itemType) Color(0xFFE0E0E0) else Color.Transparent)
-                    .padding(horizontal = 10.dp, vertical = 10.dp),
+                    .background(color = if (selectedType == itemType) Color(0xFFE0E0E0) else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -223,7 +226,7 @@ fun FilterRow(closetState: ClosetState) {
     var isSearchActive by remember { mutableStateOf(false) }
 
     Row(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -231,8 +234,7 @@ fun FilterRow(closetState: ClosetState) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { isFilteredByFav = !isFilteredByFav }) {
@@ -249,8 +251,7 @@ fun FilterRow(closetState: ClosetState) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
             // TODO: add a shuffle icon
@@ -268,9 +269,7 @@ fun FilterRow(closetState: ClosetState) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp)
-                .weight(1f),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.CenterStart
         ) {
             IconButton(onClick = { isSearchActive = true }) {
@@ -313,35 +312,37 @@ fun FilterRow(closetState: ClosetState) {
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .padding(14.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
-                //horizontalArrangement = Arrangement.SpaceEvenly,
+                horizontalArrangement = Arrangement.Center,
                 verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { expanded = !expanded }
             ) {
                 Text(
                     "Tags",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black,
+                    color = Color.Black
                 )
-                IconButton(onClick = { expanded = !expanded }) {
-                    Icon(
-                        Icons.Default.ArrowDropDown,
-                        contentDescription = "Tag options",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
+
+                Spacer(modifier = Modifier.width(4.dp))
+
+                Icon(
+                    imageVector = Icons.Default.ArrowDropDown,
+                    contentDescription = "Tag options",
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.Black
+                )
+
                 DropdownMenu(
                     expanded = expanded,
                     onDismissRequest = { expanded = false }
                 ) {
-                    // TODO: implement dropdown menu filtering
                     closetState.tags.forEach { tag ->
                         DropdownMenuItem(
                             text = { Text(tag) },
-                            onClick = {}
+                            onClick = { /* handle tag click */ }
                         )
                     }
                 }
@@ -352,8 +353,7 @@ fun FilterRow(closetState: ClosetState) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
             // TODO: implement clear filter button
@@ -363,11 +363,15 @@ fun FilterRow(closetState: ClosetState) {
                     contentDescription = "Clear filters",
                     tint = Color.Black,
                     modifier = Modifier.size(20.dp)
-
                 )
             }
         }
     }
+}
+
+@Composable
+fun ClosetGrid(closetState: ClosetState) {
+
 }
 
 
