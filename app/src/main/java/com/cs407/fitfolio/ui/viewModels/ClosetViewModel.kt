@@ -11,10 +11,10 @@ data class ItemEntry(
     val itemName: String,
     val itemType: String,
     val itemDescription: String,
-    val tags: List<String>,
-    val isFavorite: Boolean = false,
-    val photo: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int
-    val id : String
+    val itemTags: List<String>,
+    val isFavorite: Boolean,
+    val itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int
+    val itemId : String
 ) : Serializable
 
 // Data class representing the entire closet of clothing
@@ -24,7 +24,10 @@ data class ClosetState(
     val itemTypes: List<String> = listOf(
         "T-Shirts", "Shirts", "Jeans", "Pants", "Shorts", "Skirts", "Dresses", "Outerwear", "Shoes"
     ),
-    val tags: List<String> = emptyList()
+    val activeItemType: String = "All",
+    val toggleFavorites: Boolean = false,
+    val tags: List<String> = emptyList(),
+    val activeTags: List<String> = emptyList(),
 )
 
 class ClosetViewModel : ViewModel() {
@@ -37,17 +40,17 @@ class ClosetViewModel : ViewModel() {
     // Adds an item to the closet
     fun addItem(
         name: String, type: String, description: String, tags: List<String>,
-        isFavorite: Boolean, photo: Int
+        isFavorites: Boolean, photo: Int
     ) {
         val newItem = ItemEntry(
-            id = UUID.randomUUID().toString(),
             itemName = name,
             itemType = type,
             itemDescription = description,
-            tags = tags,
-            isFavorite = isFavorite,
-            photo = photo
-        )
+            itemTags = tags,
+            isFavorite = isFavorites,
+            itemPhoto = photo,
+            itemId = UUID.randomUUID().toString(),
+            )
 
         val updatedItems = _closetState.value.items + newItem
         _closetState.value = _closetState.value.copy(
@@ -114,13 +117,27 @@ class ClosetViewModel : ViewModel() {
 
     }
 
-    // TODO: implement
+    // TODO: fix logic
+    // Filters out items that do not have the specified tag
     fun filterByTags(tag: String) {
+        var currentTags = _closetState.value.activeTags
 
+        if (currentTags.contains(tag)) {
+            currentTags = currentTags - tag
+        } else {
+            currentTags = currentTags + tag
+        }
+
+        val postFilterItems = _closetState.value.filteredItems.filter { item -> tag in item.itemTags }
+        _closetState.value = _closetState.value.copy(
+            filteredItems = postFilterItems
+        )
     }
 
-    // TODO: implement
+    // Clears any applied filters
     fun clearFilters() {
-
+        _closetState.value = _closetState.value.copy(
+            filteredItems = _closetState.value.items
+        )
     }
 }

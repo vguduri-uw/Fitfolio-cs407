@@ -53,9 +53,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.ui.data.ClosetState
+import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-
 
 // TODO: shuffle icon, item icons, put toggle fav in view model, make columns for item types
 // clickable, implement item card, add settings and info screens, add coroutines for filtering calls??
@@ -372,17 +371,24 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Adaptive(200.dp),
-        verticalItemSpacing = 4.dp,
-        horizontalArrangement = Arrangement.spacedBy(4.dp),
-        content = {
-            items(closetState.filteredItems) { item ->
-                ElevatedCard() {
-                    // TODO: implement item card
-
+    if (closetState.filteredItems.isEmpty()) {
+        Text(
+            "No items found.",
+            modifier = Modifier
+                .padding(16.dp)
+        )
+    } else {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Adaptive(200.dp),
+            verticalItemSpacing = 4.dp,
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            content = {
+                items(closetState.filteredItems) { item ->
+                    ElevatedCard() {
+                        // TODO: implement item card
+                    }
                 }
             }
-        }
-    )
+        )
+    }
 }
