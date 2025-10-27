@@ -15,13 +15,18 @@ class ClosetViewModel : ViewModel() {
     val closetState = _closetState.asStateFlow()
 
     // Adds an item to the closet
-    fun addItem(name: String, type: String, description: String, tags: List<String>) {
+    fun addItem(
+        name: String, type: String, description: String, tags: List<String>,
+        isFavorite: Boolean, photo: Int
+    ) {
         val newItem = ItemEntry(
             id = UUID.randomUUID().toString(),
             itemName = name,
             itemType = type,
             itemDescription = description,
-            tags = tags
+            tags = tags,
+            isFavorite = isFavorite,
+            photo = photo
         )
 
         val updatedItems = _closetState.value.items + newItem
