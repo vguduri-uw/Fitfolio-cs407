@@ -1,8 +1,8 @@
 package com.cs407.fitfolio.ui.viewModels
 
 import androidx.lifecycle.ViewModel
-import com.cs407.fitfolio.ClosetState
-import com.cs407.fitfolio.ItemEntry
+import com.cs407.fitfolio.ui.data.ClosetState
+import com.cs407.fitfolio.ui.data.ItemEntry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID

@@ -1,4 +1,4 @@
-package com.cs407.fitfolio
+package com.cs407.fitfolio.ui.data
 
 import java.io.Serializable
 
