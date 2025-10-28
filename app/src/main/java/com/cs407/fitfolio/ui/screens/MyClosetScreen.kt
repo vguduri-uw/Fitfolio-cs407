@@ -56,8 +56,8 @@ import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 
-// TODO: shuffle icon, item icons, put toggle fav in view model, make columns for item types
-// clickable, implement item card, add settings and info screens, add coroutines for filtering calls??
+// TODO: different item icons?, put toggle fav in view model, make columns for item types
+// clickable, implement item card, add info modal, add coroutines for filtering calls??
 @Composable
 fun MyClosetScreen(
     onNavigateToOutfitsScreen: () -> Unit,
@@ -151,8 +151,9 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     closetViewModel.filterByItemType("All")
                 }) {
                     Icon(
-                        imageVector = Icons.Outlined.ShoppingCart,
-                        contentDescription = "All items"
+                        painter = painterResource(id = R.drawable.hanger),
+                        contentDescription = "All items",
+                        modifier = Modifier.size(36.dp)
                     )
                 }
                 Text("All")
@@ -176,8 +177,9 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         closetViewModel.filterByItemType(itemType)
                     }) {
                         Icon(
-                            imageVector = Icons.Outlined.ShoppingCart,
-                            contentDescription = itemType
+                            painter = painterResource(id = R.drawable.hanger),
+                            contentDescription = itemType,
+                            modifier = Modifier.size(36.dp)
                         )
                     }
                     Text(itemType)
