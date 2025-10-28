@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 import java.io.Serializable
 
+// TODO: add functions for editing the item itself (from the item modal)
 // Data class representing a single item of clothing
 data class ItemEntry(
     val itemName: String,
@@ -25,8 +26,9 @@ data class ClosetState(
         "T-Shirts", "Shirts", "Jeans", "Pants", "Shorts", "Skirts", "Dresses", "Outerwear", "Shoes"
     ),
     val activeItemType: String = "All",
-    val toggleFavorites: Boolean = false,
-    val tags: List<String> = emptyList(),
+    val isFavoritesActive: Boolean = false,
+    val isSearchActive: Boolean = false,
+    val tags: List<String> = listOf("tag1", "tag2", "tag3", "tag4"), // TODO: establish some starter tags
     val activeTags: List<String> = emptyList(),
     val searchQuery: String = ""
 )
@@ -38,7 +40,7 @@ class ClosetViewModel : ViewModel() {
     // Publicly exposed immutable StateFlow for the UI layer to observe changes safely
     val closetState = _closetState.asStateFlow()
 
-    // Adds an item to the closet
+    // Adds an item to the closet (from add screen)
     fun addItem(
         name: String, type: String, description: String, tags: List<String>,
         isFavorites: Boolean, photo: Int
@@ -50,22 +52,24 @@ class ClosetViewModel : ViewModel() {
             itemTags = tags,
             isFavorite = isFavorites,
             itemPhoto = photo,
-            itemId = UUID.randomUUID().toString(),
-            )
+            itemId = UUID.randomUUID().toString()
+        )
 
         val updatedItems = _closetState.value.items + newItem
+        val updatedFilteredItems = _closetState.value.filteredItems + newItem
         _closetState.value = _closetState.value.copy(
             items = updatedItems,
-            filteredItems = updatedItems
+            filteredItems = updatedFilteredItems
         )
     }
 
     // Deletes a specified item from the closet
     fun delete(item: ItemEntry) {
         val updatedItems = _closetState.value.items - item
+        val updatedFilteredItems = _closetState.value.filteredItems - item
         _closetState.value = _closetState.value.copy(
             items = updatedItems,
-            filteredItems = updatedItems
+            filteredItems = updatedFilteredItems
         )
     }
 
@@ -79,7 +83,7 @@ class ClosetViewModel : ViewModel() {
 
     }
 
-    // Adds an item type to the itemTypes list
+    // Adds an item type to the itemTypes list (from the item modal)
     fun addItemType(itemType: String) {
         if (itemType !in _closetState.value.itemTypes) {
             val updatedItemTypes = _closetState.value.itemTypes + itemType
@@ -89,9 +93,8 @@ class ClosetViewModel : ViewModel() {
         }
     }
 
-    // Removes the specified item type from the itemTypes list
-    // TODO: warn the user that deleting the type will delete all clothes of that type
-    // TODO: do this in MyClosetScreen (not here)
+    // Removes the specified item type from the itemTypes list (from the item modal)
+    // TODO: warn the user that deleting the type will delete all clothes of that type (in the modal)
     fun deleteItemType(itemType: String) {
         val updatedItemTypes = _closetState.value.itemTypes - itemType
         _closetState.value = _closetState.value.copy(
@@ -99,48 +102,72 @@ class ClosetViewModel : ViewModel() {
         )
     }
 
-    // TODO: implement
-    fun filterByItemType(itemType: String) {
-
-    }
-
-    // TODO: implement
-    // Filters closet to only show favorite items
-    fun filterByFavorites() {
-        return
-    }
-
-    // TODO: implement
-    fun shuffleItems() {
-
-    }
-
-    // TODO: implement
-    fun searchItems(searchValue: String) {
-
-    }
-
-    // TODO: fix logic
-    // Filters out items that do not have the specified tag
-    fun filterByTags(tag: String) {
-        var currentTags = _closetState.value.activeTags
-
-        currentTags = if (currentTags.contains(tag)) {
-            currentTags - tag
-        } else {
-            currentTags + tag
-        }
-
-        val postFilterItems = _closetState.value.filteredItems.filter { item -> tag in item.itemTags }
+    // Updates the active item type
+    fun updateItemType(itemType: String) {
         _closetState.value = _closetState.value.copy(
-            filteredItems = postFilterItems
+            activeItemType = itemType
         )
     }
 
-    // Clears any applied filters
+    // Updates whether the favorites filter is activated or not
+    fun toggleFavorites() {
+        val isToggled = _closetState.value.isFavoritesActive
+        _closetState.value = _closetState.value.copy(
+            isFavoritesActive = !isToggled
+        )
+    }
+
+    fun shuffleItems() {
+        val shuffledItems = _closetState.value.filteredItems.shuffled()
+        _closetState.value = _closetState.value.copy(
+            filteredItems = shuffledItems
+        )
+    }
+
+    // Updates whether the search filter is activated or not
+    fun toggleSearch(isActive: Boolean) {
+        _closetState.value = _closetState.value.copy(
+            isSearchActive = isActive
+        )
+    }
+
+    // Updates the search query
+    fun updateSearchQuery(query: String) {
+        _closetState.value = _closetState.value.copy(
+            searchQuery = query
+        )
+    }
+
+    // Adds a tag to the active tags list
+    fun addToActiveTags(tag: String) {
+        val updatedTags = _closetState.value.activeTags + tag
+        _closetState.value = _closetState.value.copy(
+            activeTags = updatedTags
+        )
+    }
+
+    // Removes a tag from the active tags list
+    fun removeFromActiveTags(tag: String) {
+        val updatedTags = _closetState.value.activeTags - tag
+        _closetState.value = _closetState.value.copy(
+            activeTags = updatedTags
+        )
+    }
+
+    // TODO: implement
+    // TODO: decide if multiple tags means the item must share those, or if we show any item that has at least 1 of the tags
+    fun applyFilters() {
+
+    }
+
+    // Clears any applied filters and resets properties
     fun clearFilters() {
         _closetState.value = _closetState.value.copy(
-            filteredItems = _closetState.value.items
+            filteredItems = _closetState.value.items,
+            activeItemType = "All",
+            isFavoritesActive = false,
+            activeTags = emptyList(),
+            searchQuery = ""
         )
     }
 }
