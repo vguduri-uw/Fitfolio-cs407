@@ -54,7 +54,7 @@ class OutfitsViewModel : ViewModel() {
         tags: List<String>,
         isFavorite: Boolean,
         photo: Int,
-        itemIds: List<String>
+        itemIds: List<String>,
     ) {
         val newOutfit = OutfitEntry(
             outfitName = name,
@@ -73,7 +73,7 @@ class OutfitsViewModel : ViewModel() {
         )
     }
 
-    // deletes a specified outfit from the list
+    // deletes a specified outfit from the list of outfits
     fun delete(outfit: OutfitEntry) {
         val updatedOutfits = _outfitsState.value.outfits - outfit
         _outfitsState.value = _outfitsState.value.copy(
@@ -83,11 +83,13 @@ class OutfitsViewModel : ViewModel() {
     }
 
     // todo: implement this - marks an outfit as a favorite
+    // adds an outfit to favorites list
     fun addToFavorites(outfit: OutfitEntry) {
 
     }
 
     // todo: implement - removes an outfit from favorites
+    // removes an outfit from favorites list
     fun removeFromFavorites(outfit: OutfitEntry) {
 
     }
@@ -133,33 +135,20 @@ class OutfitsViewModel : ViewModel() {
     }
 
     // todo: implement
-    // filters outfits by tag(s). if a tag is active, only show outfits
-    // that contain that tag in outfitTags.
-    fun filterByTags(tag: String) {
-        // toggles tag in activetags
-        var currentTags = _outfitsState.value.activeTags
+    // todo: only show items that include ALL selected filters
+    // apply all tag filters at once
+    fun applyTagFilters() {
 
-        currentTags = if (currentTags.contains(tag)) {
-            currentTags - tag
-        } else {
-            currentTags + tag
-        }
-
-        // todo: after updating currenttags, update filteredoutfits so it only
-        // includes outfits where any of the activetags appear in outfittags
-
-        _outfitsState.value = _outfitsState.value.copy(
-            activeTags = currentTags
-            // todo: filteredoutfits = ...
-        )
     }
 
     // todo: implement - randomizes the order of the currently filtered outfits
+    // shuffles all outfits available
     fun shuffleOutfits() {
 
     }
 
     // todo: implement - searches outfits by name/description
+    // filters out outfits based on search query (regex??_
     fun searchOutfits(searchValue: String) {
 
     }

@@ -20,12 +20,14 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -262,34 +264,39 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 outfitsState.allTags
                     .sortedByDescending { it in outfitsState.activeTags }
                     .forEach { tag ->
-                    DropdownMenuItem(
-                        text = { Text(tag) },
-                        onClick = {
-                            outfitsViewModel.filterByTags(tag)
-                        },
-                        trailingIcon = {
-                            if (tag in outfitsState.activeTags) {
-                                Icon(
-                                    Icons.Outlined.Clear,
-                                    contentDescription = "Remove tag",
-                                    tint = Color.Black,
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                        .weight(.25f),
-                                )
-                            } else {
-                                Icon(
-                                    Icons.Outlined.Add,
-                                    contentDescription = "Add tag",
-                                    tint = Color.Black,
-                                    modifier = Modifier
-                                        .size(20.dp)
-                                        .weight(.25f),
-                                )
-                            }
-                        },
-                        modifier = Modifier.width(140.dp)
-                    )
+                        DropdownMenuItem(
+                            text = { Text(tag) },
+                            onClick = {
+                                if (tag in outfitsState.activeTags) {
+                                    outfitsViewModel.removeFromActiveTags(tag)
+                                } else {
+                                    outfitsViewModel.addToActiveTags(tag)
+                                }
+                                outfitsViewModel.applyTagFilters()
+                            },
+                            trailingIcon = {
+                                if (tag in outfitsState.activeTags) {
+                                    Icon(
+                                        Icons.Outlined.Clear,
+                                        contentDescription = "Remove tag",
+                                        tint = Color.Black,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .weight(.25f),
+                                    )
+                                } else {
+                                    Icon(
+                                        Icons.Outlined.Add,
+                                        contentDescription = "Add tag",
+                                        tint = Color.Black,
+                                        modifier = Modifier
+                                            .size(20.dp)
+                                            .weight(.25f),
+                                    )
+                                }
+                            },
+                            modifier = Modifier.width(140.dp)
+                        )
                 }
             }
         }
@@ -332,7 +339,32 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     .background(Color(0xFFE0E0E0)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Outfit $index")
+                Text("Outfit ${index + 1}")
+
+                Row(
+                    modifier = Modifier
+                        .clickable(
+                            onClick = {
+
+                            })
+                        .align(Alignment.TopEnd)
+                        .padding(10.dp)
+
+                ) {
+                    Icon(
+                        Icons.Outlined.FavoriteBorder,
+                        contentDescription = "Favorite this item",
+                        tint = Color.Black,
+                        modifier = Modifier.size(25.dp)
+                        )
+                    Spacer(modifier = Modifier.size(4.dp))
+                    Icon(
+                        Icons.Outlined.Delete,
+                        contentDescription = "Delete this item",
+                        tint = Color.Black,
+                        modifier = Modifier.size(25.dp)
+                        )
+                }
             }
         }
     }
