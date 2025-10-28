@@ -69,7 +69,7 @@ fun MyClosetScreen(
 
     Box(modifier = Modifier
         .fillMaxSize()
-        .padding(8.dp)
+        .padding(horizontal = 8.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
