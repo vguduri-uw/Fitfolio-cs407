@@ -38,7 +38,7 @@ fun TopHeader (title: String) {
     Spacer(modifier = Modifier.size(8.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "My Outfits", style = MaterialTheme.typography.titleLarge)
+        Text(text = title, style = MaterialTheme.typography.titleLarge)
         IconButton(onClick = {}) { // todo: add info onClick lambda
             Icon(Icons.Outlined.Info,
                 contentDescription = "Information",
