@@ -110,7 +110,7 @@ fun MyClosetScreen(
             )
         }
 
-        // Show settings or information modals
+        // Show settings
         if (showSettings) {
             SettingsModal(onDismiss = { showSettings = false })
         }
@@ -144,18 +144,18 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             // Show all items icon button
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier.padding(8.dp)
+                modifier = Modifier
+                    .padding(8.dp)
+                    .clickable(onClick = {
+                        selectedType = "All"
+                        closetViewModel.filterByItemType("All")
+                    })
             ) {
-                IconButton(onClick = {
-                    selectedType = "All"
-                    closetViewModel.filterByItemType("All")
-                }) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.hanger),
-                        contentDescription = "All items",
-                        modifier = Modifier.size(36.dp)
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.hanger),
+                    contentDescription = "All items",
+                    modifier = Modifier.size(36.dp)
+                )
                 Text("All")
             }
         }
@@ -170,18 +170,18 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             ) {
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(8.dp)
+                    modifier = Modifier
+                        .padding(8.dp)
+                        .clickable(onClick = {
+                            selectedType = itemType
+                            closetViewModel.filterByItemType(itemType)
+                        })
                 ) {
-                    IconButton(onClick = {
-                        selectedType = itemType
-                        closetViewModel.filterByItemType(itemType)
-                    }) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.hanger),
-                            contentDescription = itemType,
-                            modifier = Modifier.size(36.dp)
-                        )
-                    }
+                    Icon(
+                        painter = painterResource(id = R.drawable.hanger),
+                        contentDescription = itemType,
+                        modifier = Modifier.size(36.dp)
+                    )
                     Text(itemType)
                 }
             }
