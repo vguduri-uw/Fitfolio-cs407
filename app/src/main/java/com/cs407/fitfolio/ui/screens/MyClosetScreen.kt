@@ -52,7 +52,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
@@ -83,7 +83,7 @@ fun MyClosetScreen(
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            TopHeaderSection()
+            TopHeader(title = "My Closet")
 
             Spacer(modifier = Modifier.size(10.dp))
 
@@ -111,35 +111,9 @@ fun MyClosetScreen(
             )
         }
 
+        // Show settings or information modals
         if (showSettings) {
             SettingsModal(onDismiss = { showSettings = false })
-        }
-    }
-}
-
-@Composable
-fun TopHeaderSection () {
-    Image(
-        // TODO: replace with actual profile image
-        painter = painterResource(id = R.drawable.user),
-        contentDescription = "User profile image",
-        contentScale = ContentScale.Fit,
-        modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        alignment = Alignment.Center
-    )
-
-    Spacer(modifier = Modifier.size(8.dp))
-
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "My Closet", style = MaterialTheme.typography.titleLarge)
-        IconButton(onClick = {}) { // TODO: add info onClick lambda
-            Icon(Icons.Outlined.Info,
-                contentDescription = "Information",
-                modifier = Modifier.size(24.dp)
-            )
         }
     }
 }
