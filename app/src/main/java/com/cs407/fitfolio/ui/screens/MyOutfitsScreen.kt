@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
@@ -26,6 +27,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -42,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,6 +59,8 @@ fun MyOutfitsScreen(
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
+    onNavigateToSignUpScreen: () -> Unit,
+    onNavigateToSignInScreen: () -> Unit,
     outfitsViewModel: OutfitsViewModel
 ) {
     // observes current ui state from the outfits view model
@@ -102,6 +107,26 @@ fun MyOutfitsScreen(
                 contentDescription = "Settings",
                 Modifier.size(36.dp)
             )
+        }
+
+        // navigate to sign up and sign in screens
+        Column(
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .padding(bottom = 16.dp)
+        ) {
+            Button(
+                onClick = { onNavigateToSignUpScreen() },
+                modifier = Modifier.width(100.dp)
+            ) {
+                Text("Sign Up")
+            }
+            Button(
+                onClick = { onNavigateToSignInScreen() },
+                modifier = Modifier.width(100.dp)
+            ) {
+                Text("Sign In")
+            }
         }
     }
 }
