@@ -35,6 +35,7 @@ import com.cs407.fitfolio.ui.screens.AddScreen
 import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.navigation.BottomNavigationBar
 import com.cs407.fitfolio.ui.screens.SignUpScreen
+import com.cs407.fitfolio.ui.screens.SignInScreen
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
@@ -100,6 +101,7 @@ fun AppNavigation() {
 
                     // temporary routes to sign in and sign up pages
                     onNavigateToSignUpScreen = { navController.navigate("sign_up") },
+                    onNavigateToSignInScreen = { navController.navigate("sign_in") }
 
                 )
             }
@@ -150,6 +152,17 @@ fun AppNavigation() {
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     onNavigateToSignInScreen = { navController.navigate("sign_in") },
+                )
+            }
+            // Defines the "sign in" route and what UI to display there
+            composable(route = "sign_in") {
+                SignInScreen(
+                    onNavigateToOutfitsScreen = { navController.navigate("outfits") },
+                    onNavigateToCalendarScreen = { navController.navigate("calendar") },
+                    onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
+                    onNavigateToAddScreen = { navController.navigate("add") },
+                    onNavigateToClosetScreen = { navController.navigate("closet") },
+                    onNavigateToSignUpScreen = { navController.navigate("sign_up") },
                 )
             }
         }

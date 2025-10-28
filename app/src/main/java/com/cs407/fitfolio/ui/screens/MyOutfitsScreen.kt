@@ -58,6 +58,7 @@ fun MyOutfitsScreen(
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
     onNavigateToSignUpScreen: () -> Unit,
+    onNavigateToSignInScreen: () -> Unit,
     outfitsViewModel: OutfitsViewModel
 ) {
     // observes current ui state from the outfits view model
@@ -114,6 +115,9 @@ fun MyOutfitsScreen(
         ) {
             Button(onClick = { onNavigateToSignUpScreen() }) {
                 Text("Sign Up")
+            }
+            Button(onClick = { onNavigateToSignInScreen() }) {
+                Text("Sign In")
             }
         }
     }

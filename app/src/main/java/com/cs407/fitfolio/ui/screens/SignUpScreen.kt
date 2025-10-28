@@ -53,12 +53,14 @@ fun SignUpScreen (
         ) {
             // profile image, my outfits title, information icon
             SignUpScreenTopHeader()
+
+            Text("Sign Up Screen")
         }
 
         // back button (navigates back to my outfits for now)
         // navigate to sign up and sign in screens
         IconButton(
-            onClick = { onNavigateToOutfitsScreen() }, // TODO: add settings onClick lambda
+            onClick = { onNavigateToOutfitsScreen() },
             modifier = Modifier
                 .align(alignment = Alignment.TopStart)
         ) {
