@@ -107,14 +107,13 @@ fun SignInScreenTopHeader() {
 fun SignInForm( onNavigateToSignUpScreen: () -> Unit ) {
     // User information
     // TODO: implement the way to get this from storage (these are placeholders)
-    var name by remember { mutableStateOf("Name") }
-    var email by remember { mutableStateOf("emailaddress@gmail.com") }
-    var password by remember { mutableStateOf("password") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     // Track whether all fields are filled (to make sign in button available)
     val allFieldsFilled by remember {
         derivedStateOf {
-            name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()
+            email.isNotEmpty() && password.isNotEmpty()
         }
     }
 
@@ -128,13 +127,6 @@ fun SignInForm( onNavigateToSignUpScreen: () -> Unit ) {
         ) {
             // Fields for editing user information
             // TODO: add edit button and only enable then??
-            EditableField(
-                label = "Name",
-                value = name,
-                onValueChange = { name = it },
-                isPassword = false,
-            )
-
             EditableField(
                 label = "Email",
                 value = email,
