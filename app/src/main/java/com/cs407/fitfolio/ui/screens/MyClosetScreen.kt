@@ -53,6 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 
@@ -68,6 +69,8 @@ fun MyClosetScreen(
 ) {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
+
+    var showSettings by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -97,7 +100,7 @@ fun MyClosetScreen(
 
         // Settings button
         IconButton(
-            onClick = {}, // TODO: add settings onClick lambda
+            onClick = { showSettings = true },
             modifier = Modifier
                 .align(alignment = Alignment.TopEnd)
         ) {
@@ -106,6 +109,10 @@ fun MyClosetScreen(
                 contentDescription = "Settings",
                 Modifier.size(36.dp)
             )
+        }
+
+        if (showSettings) {
+            SettingsModal(onDismiss = { showSettings = false })
         }
     }
 }
