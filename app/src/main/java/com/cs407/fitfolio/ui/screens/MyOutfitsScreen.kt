@@ -26,6 +26,7 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -56,6 +57,7 @@ fun MyOutfitsScreen(
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
+    onNavigateToSignUpScreen: () -> Unit,
     outfitsViewModel: OutfitsViewModel
 ) {
     // observes current ui state from the outfits view model
@@ -102,6 +104,17 @@ fun MyOutfitsScreen(
                 contentDescription = "Settings",
                 Modifier.size(36.dp)
             )
+        }
+
+        // navigate to sign up and sign in screens
+        Column(
+            modifier = Modifier
+                .align(alignment = Alignment.TopStart)
+                .padding(bottom = 16.dp)
+        ) {
+            Button(onClick = { onNavigateToSignUpScreen() }) {
+                Text("Sign Up")
+            }
         }
     }
 }

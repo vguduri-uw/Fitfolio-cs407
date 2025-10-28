@@ -34,6 +34,7 @@ import com.cs407.fitfolio.ui.screens.MyWardrobeScreen
 import com.cs407.fitfolio.ui.screens.AddScreen
 import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.navigation.BottomNavigationBar
+import com.cs407.fitfolio.ui.screens.SignUpScreen
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
@@ -95,7 +96,11 @@ fun AppNavigation() {
                     onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
-                    outfitsViewModel = outfitsViewModel
+                    outfitsViewModel = outfitsViewModel,
+
+                    // temporary routes to sign in and sign up pages
+                    onNavigateToSignUpScreen = { navController.navigate("sign_up") },
+
                 )
             }
             // Defines the "calendar" route and what UI to display there
@@ -134,6 +139,17 @@ fun AppNavigation() {
                     onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
                     onNavigateToAddScreen = { navController.navigate("add") },
                     closetViewModel = closetViewModel
+                )
+            }
+            // Defines the "sign up" route and what UI to display there
+            composable(route = "sign_up") {
+                SignUpScreen(
+                    onNavigateToOutfitsScreen = { navController.navigate("outfits") },
+                    onNavigateToCalendarScreen = { navController.navigate("calendar") },
+                    onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
+                    onNavigateToAddScreen = { navController.navigate("add") },
+                    onNavigateToClosetScreen = { navController.navigate("closet") },
+                    onNavigateToSignInScreen = { navController.navigate("sign_in") },
                 )
             }
         }
