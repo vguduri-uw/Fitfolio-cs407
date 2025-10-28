@@ -53,7 +53,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.ui.dialogs.SettingsDialog
+import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 
@@ -112,7 +112,7 @@ fun MyClosetScreen(
         }
 
         if (showSettings) {
-            SettingsDialog(onDismiss = { showSettings = false })
+            SettingsModal(onDismiss = { showSettings = false })
         }
     }
 }
