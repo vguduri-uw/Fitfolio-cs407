@@ -302,7 +302,6 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 )
             }
 
-            // TODO: fix dropdown menu spacing (get it below tags/row component)
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
@@ -361,6 +360,10 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
+    // Track whether deletion confirm AlertDialog should be shown
+    // TODO: move to view model... maybe put it in item (isDeletionCandidate)
+    var showDeletionDialog by remember { mutableStateOf(false) }
+
     // TODO: pull back in the if/elses and the iteration through filteredItems when ready
     /*if (closetState.filteredItems.isEmpty()) {
         Text(
@@ -419,8 +422,10 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 
                         // Delete item button
                         IconButton(
-                            // TODO: add alert dialog to confirm
-                            onClick = { /*closetViewModel.delete(item)*/ },
+                            onClick = {
+                                // closetViewModel.toggleDeletionCandidate(true, item.itemId)
+                                showDeletionDialog = true
+                            },
                             modifier = Modifier
                                 .size(28.dp)
                         ) {
@@ -434,5 +439,33 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 }
             }
         }
+
+    // TODO: fix logic here... because rn we'll have to iterate over all to see if any is candidate...
+    // TODO: move the dialog to its own component so the item modal can use it
+    if (showDeletionDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeletionDialog = false },
+            title = {
+                Text("Are you sure you want to delete this item?")
+            },
+            dismissButton = {
+                Button(onClick = {
+                    // closetViewModel.toggleDeletionCandidate(false, item.itemId)
+                    showDeletionDialog = false
+                }) {
+                    Text(text = "Cancel")
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    // closetViewModel.toggleDeletionCandidate(false, item.itemId)
+                    showDeletionDialog = false
+                    /*closetViewModel.delete(item)*/
+                }) {
+                    Text(text = "Delete")
+                }
+            }
+        )
+    }
     //}
 }

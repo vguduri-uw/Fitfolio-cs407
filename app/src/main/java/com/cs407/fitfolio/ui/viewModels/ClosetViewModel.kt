@@ -14,6 +14,7 @@ data class ItemEntry(
     val itemDescription: String,
     val itemTags: List<String>,
     val isFavorite: Boolean,
+    val isDeletionCandidate: Boolean,
     val itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int
     val itemId : String
 ) : Serializable
@@ -51,6 +52,7 @@ class ClosetViewModel : ViewModel() {
             itemDescription = description,
             itemTags = tags,
             isFavorite = isFavorites,
+            isDeletionCandidate = false,
             itemPhoto = photo,
             itemId = UUID.randomUUID().toString()
         )
@@ -80,6 +82,11 @@ class ClosetViewModel : ViewModel() {
 
     // TODO: implement this!!
     fun removeFromFavorites(item: ItemEntry) {
+
+    }
+
+    // TODO: implement this!!
+    fun toggleDeletionCandidate(isCandidate: Boolean, itemId: String) {
 
     }
 
