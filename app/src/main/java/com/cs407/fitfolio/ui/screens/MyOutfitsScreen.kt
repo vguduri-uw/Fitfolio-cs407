@@ -1,7 +1,9 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.widget.Space
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,17 +18,25 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,15 +44,22 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.viewModels.OutfitsState
+import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 @Composable
 fun MyOutfitsScreen(
     onNavigateToClosetScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToWardrobeScreen: () -> Unit,
-    onNavigateToAddScreen: () -> Unit
+    onNavigateToAddScreen: () -> Unit,
+    outfitsViewModel: OutfitsViewModel
 ) {
+    // observes current ui state from the outfits view model
+    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 8.dp)
@@ -65,12 +82,12 @@ fun MyOutfitsScreen(
             Spacer(modifier = Modifier.size(10.dp))
 
             // search bar, tags filter, favorites toggle, shuffle button
-            SearchRow()
+            SearchRow(outfitsState, outfitsViewModel)
 
             Spacer(modifier = Modifier.size(10.dp))
 
             // vertically scrollable outfits grid
-            OutfitGrid()
+            OutfitGrid(outfitsState, outfitsViewModel)
         }
 
         // settings button
@@ -89,7 +106,7 @@ fun MyOutfitsScreen(
 }
 
 @Composable
-fun TopHeaderSection () {
+private fun TopHeaderSection () {
     Image(
         // TODO: replace with actual profile image
         painter = painterResource(id = R.drawable.user),
@@ -135,7 +152,14 @@ fun WeatherRow() {
 }
 
 @Composable
-fun SearchRow() {
+fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
+    // tracks favorites filter toggle status
+    // todo: move to view model
+    var isFilteredByFavorites by remember { mutableStateOf(false) }
+
+    // tracks whether tags dropdown is expanded
+    var expanded by remember { mutableStateOf(false) }
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth(), // matches rest of screen
@@ -145,51 +169,56 @@ fun SearchRow() {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center,
         ) {
-            // TODO: replace with toggle button
-            Icon(
-                Icons.Outlined.FavoriteBorder,
-                contentDescription = "Favorites",
-                tint = Color.Black,
-                modifier = Modifier.size(20.dp),
-            )
+            IconButton(onClick = {
+                isFilteredByFavorites = !isFilteredByFavorites
+                outfitsViewModel.filterByFavorites()
+            }) {
+                Icon(
+                    imageVector = if (isFilteredByFavorites) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (isFilteredByFavorites) "remove favorites filter" else "filter by favorites",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
 
         // shuffle button
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            // TODO: replace with shuffle button
-            Icon(
-                painter = painterResource(id = R.drawable.shuffle),
-                contentDescription = "Shuffle",
-                tint = Color.Black,
-                modifier = Modifier.size(20.dp),
-            )
+            IconButton(onClick = { outfitsViewModel.shuffleOutfits() }) {
+                Icon(
+                    painter = painterResource(R.drawable.shuffle),
+                    contentDescription = "shuffle",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp),
+                )
+            }
         }
 
-        // search bar
+        // search button
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            // TODO: swap out with real search logic
-            Icon(
-                Icons.Outlined.Search,
-                contentDescription = "Search",
-                modifier = Modifier.size(20.dp),
-                tint = Color.Black
-            )
+            IconButton(onClick = {
+                // todo: open search dialog, then call outfitsViewModel.searchOutfits(...)
+            }) {
+                Icon(
+                    imageVector = Icons.Outlined.Search,
+                    contentDescription = "search",
+                    modifier = Modifier.size(20.dp),
+                    tint = Color.Black
+                )
+            }
         }
 
         // tags drop down menu
@@ -197,15 +226,22 @@ fun SearchRow() {
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .padding(horizontal = 10.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
-            Row {
+            Row(
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.clickable { expanded = !expanded }
+            ) {
                 Text(
                     text = "Tags",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Black,
                 )
+
+                Spacer(modifier = Modifier.size(4.dp))
+
                 Icon(
                     Icons.Outlined.ArrowDropDown,
                     contentDescription = "Favorites",
@@ -213,30 +249,45 @@ fun SearchRow() {
                     modifier = Modifier.size(20.dp),
                 )
             }
+
+            DropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                // note: outfitsState.allTags is the master list of tags/types
+                outfitsState.allTags.forEach { tag ->
+                    DropdownMenuItem(
+                        text = { Text(tag) },
+                        onClick = {
+                            outfitsViewModel.filterByTags(tag)
+                        }
+                    )
+                }
+            }
         }
 
         // clear filters button
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 10.dp),
+                .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            // TODO: swap out with real clear filters logic
-            Icon(
-                Icons.Outlined.Clear,
-                contentDescription = "Clear filters",
-                modifier = Modifier.size(20.dp),
-                tint = Color.Black
-            )
+            IconButton(onClick = { outfitsViewModel.clearFilters() }) {
+                Icon(
+                    imageVector = Icons.Outlined.Clear,
+                    contentDescription = "clear filters",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
         }
     }
 }
 
 
 @Composable
-fun OutfitGrid() {
+fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2),
         modifier = Modifier
@@ -253,7 +304,7 @@ fun OutfitGrid() {
                     .background(Color(0xFFE0E0E0)),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Item $index")
+                Text("Outfit $index")
             }
         }
     }
