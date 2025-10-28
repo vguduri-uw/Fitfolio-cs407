@@ -1,7 +1,5 @@
 package com.cs407.fitfolio.ui.screens
 
-import android.widget.Space
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,14 +15,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Button
@@ -43,13 +38,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.TopHeader
+import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.OutfitsState
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
@@ -65,6 +59,9 @@ fun MyOutfitsScreen(
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+
+    // track settings modal state
+    var showSettings by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -98,7 +95,7 @@ fun MyOutfitsScreen(
 
         // settings button
         IconButton(
-            onClick = {}, // TODO: add settings onClick lambda
+            onClick = { showSettings = true }, // TODO: add settings onClick lambda
             modifier = Modifier
                 .align(alignment = Alignment.TopEnd)
         ) {
@@ -107,6 +104,11 @@ fun MyOutfitsScreen(
                 contentDescription = "Settings",
                 Modifier.size(36.dp)
             )
+        }
+
+        // pull up settings modal
+        if (showSettings) {
+            SettingsModal(onDismiss = { showSettings = false })
         }
 
         // navigate to sign up and sign in screens
