@@ -116,9 +116,25 @@ class OutfitsViewModel : ViewModel() {
         )
     }
 
+    // adds a tag to active tags
+    fun addToActiveTags (tag: String) {
+        val updatedActiveTags = _outfitsState.value.activeTags + tag
+        _outfitsState.value = _outfitsState.value.copy(
+            activeTags = updatedActiveTags
+        )
+    }
+
+    // removes a tag from active tags
+    fun removeFromActiveTags (tag: String) {
+        val updatedActiveTags = _outfitsState.value.activeTags - tag
+        _outfitsState.value = _outfitsState.value.copy(
+            activeTags = updatedActiveTags
+        )
+    }
+
     // todo: implement
     // filters outfits by tag(s). if a tag is active, only show outfits
-    // that contain that tag in outfittags.
+    // that contain that tag in outfitTags.
     fun filterByTags(tag: String) {
         // toggles tag in activetags
         var currentTags = _outfitsState.value.activeTags

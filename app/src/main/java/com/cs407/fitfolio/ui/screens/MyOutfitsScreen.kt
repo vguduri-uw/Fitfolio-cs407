@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -39,6 +40,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
@@ -253,15 +255,40 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
 
             DropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                offset = DpOffset(x = -10.dp, y = 15.dp)
             ) {
                 // note: outfitsState.allTags is the master list of tags/types
-                outfitsState.allTags.forEach { tag ->
+                outfitsState.allTags
+                    .sortedByDescending { it in outfitsState.activeTags }
+                    .forEach { tag ->
                     DropdownMenuItem(
                         text = { Text(tag) },
                         onClick = {
                             outfitsViewModel.filterByTags(tag)
-                        }
+                        },
+                        trailingIcon = {
+                            if (tag in outfitsState.activeTags) {
+                                Icon(
+                                    Icons.Outlined.Clear,
+                                    contentDescription = "Remove tag",
+                                    tint = Color.Black,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .weight(.25f),
+                                )
+                            } else {
+                                Icon(
+                                    Icons.Outlined.Add,
+                                    contentDescription = "Add tag",
+                                    tint = Color.Black,
+                                    modifier = Modifier
+                                        .size(20.dp)
+                                        .weight(.25f),
+                                )
+                            }
+                        },
+                        modifier = Modifier.width(140.dp)
                     )
                 }
             }
