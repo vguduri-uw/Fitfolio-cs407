@@ -63,7 +63,6 @@ fun BottomNavigationBar(navController: NavController) {
                         Icon(
                             painter = painterResource(R.drawable.closet),
                             contentDescription = "Closet",
-                            modifier = Modifier.size(24.dp)
                         )
                     }
                     Text(stringResource(R.string.closet))

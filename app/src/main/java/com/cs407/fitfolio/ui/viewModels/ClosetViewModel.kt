@@ -28,6 +28,7 @@ data class ClosetState(
     val toggleFavorites: Boolean = false,
     val tags: List<String> = emptyList(),
     val activeTags: List<String> = emptyList(),
+    val searchQuery: String = ""
 )
 
 class ClosetViewModel : ViewModel() {
@@ -124,10 +125,10 @@ class ClosetViewModel : ViewModel() {
     fun filterByTags(tag: String) {
         var currentTags = _closetState.value.activeTags
 
-        if (currentTags.contains(tag)) {
-            currentTags = currentTags - tag
+        currentTags = if (currentTags.contains(tag)) {
+            currentTags - tag
         } else {
-            currentTags = currentTags + tag
+            currentTags + tag
         }
 
         val postFilterItems = _closetState.value.filteredItems.filter { item -> tag in item.itemTags }

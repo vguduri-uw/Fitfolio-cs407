@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -22,6 +23,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
@@ -45,8 +47,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
@@ -215,7 +219,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 closetViewModel.filterByFavorites()
             }) {
                 Icon(
-                    imageVector = if (isFilteredByFav) Icons.Filled.Favorite else Icons.Outlined.Favorite,
+                    imageVector = if (isFilteredByFav) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = if (isFilteredByFav) "Remove favorites filter" else "Filter by favorites",
                     tint = Color.Black,
                     modifier = Modifier.size(20.dp),
@@ -233,8 +237,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             // TODO: add a shuffle icon
             IconButton(onClick = {closetViewModel.shuffleItems()}) {
                 Icon(
-                    imageVector = Icons.Outlined.Refresh,
-                    contentDescription = "Shuffle",
+                    painter = painterResource(R.drawable.shuffle),
+                    contentDescription = "shuffle",
                     tint = Color.Black,
                     modifier = Modifier.size(20.dp),
                 )
@@ -348,24 +352,38 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
-    if (closetState.filteredItems.isEmpty()) {
+    // TODO: pull back in the if/else and the iteration through filteredItems when ready
+    /*if (closetState.filteredItems.isEmpty()) {
         Text(
             "No items found.",
             modifier = Modifier
                 .padding(16.dp)
         )
-    } else {
+    } else {*/
         LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Adaptive(200.dp),
-            verticalItemSpacing = 4.dp,
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            content = {
-                items(closetState.filteredItems) { item ->
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalItemSpacing = 8.dp,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            /*items(closetState.filteredItems) { item ->
                     ElevatedCard() {
                         // TODO: implement item card
                     }
+                }*/
+            items(30) { index ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height((150..250).random().dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(Color(0xFFE0E0E0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("Item $index")
                 }
             }
-        )
-    }
+        }
+    //}
 }
