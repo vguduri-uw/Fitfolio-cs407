@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.shape.CircleShape
@@ -43,6 +44,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -113,10 +115,16 @@ fun MyOutfitsScreen(
                 .align(alignment = Alignment.TopStart)
                 .padding(bottom = 16.dp)
         ) {
-            Button(onClick = { onNavigateToSignUpScreen() }) {
+            Button(
+                onClick = { onNavigateToSignUpScreen() },
+                modifier = Modifier.width(100.dp)
+            ) {
                 Text("Sign Up")
             }
-            Button(onClick = { onNavigateToSignInScreen() }) {
+            Button(
+                onClick = { onNavigateToSignInScreen() },
+                modifier = Modifier.width(100.dp)
+            ) {
                 Text("Sign In")
             }
         }
