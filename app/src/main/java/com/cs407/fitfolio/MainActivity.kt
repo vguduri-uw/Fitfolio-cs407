@@ -35,6 +35,7 @@ import com.cs407.fitfolio.ui.screens.AddScreen
 import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.navigation.BottomNavigationBar
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
+import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -54,6 +55,7 @@ fun AppNavigation() {
     // Creates and remembers a NavController to manage navigation state
     val navController = rememberNavController()
     val closetViewModel: ClosetViewModel = viewModel()
+    val outfitsViewModel: OutfitsViewModel = viewModel()
 
     Scaffold(
         // Creates bottom navigation bar with centered floating action button
@@ -92,7 +94,8 @@ fun AppNavigation() {
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
                     onNavigateToAddScreen = { navController.navigate("add") },
-                    onNavigateToClosetScreen = { navController.navigate("closet") }
+                    onNavigateToClosetScreen = { navController.navigate("closet") },
+                    outfitsViewModel = outfitsViewModel
                 )
             }
             // Defines the "calendar" route and what UI to display there
