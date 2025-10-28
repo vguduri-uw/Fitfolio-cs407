@@ -112,12 +112,12 @@ fun SignUpScreenTopHeader() {
 fun SignUpForm( onNavigateToSignInScreen: () -> Unit ) {
     // User information
     // TODO: implement the way to get this from storage (these are placeholders)
-    var name by remember { mutableStateOf("Name") }
-    var email by remember { mutableStateOf("emailaddress@gmail.com") }
-    var password by remember { mutableStateOf("password") }
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     // todo: replace with actual error handling
-    var reenteredPassword by remember { mutableStateOf("password") }
+    var reenteredPassword by remember { mutableStateOf("") }
     val passwordsMatch = password == reenteredPassword
 
     // Track whether all fields are filled (to make sign up button available)
