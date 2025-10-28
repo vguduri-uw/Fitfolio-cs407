@@ -54,7 +54,8 @@ class ClosetViewModel : ViewModel() {
 
         val updatedItems = _closetState.value.items + newItem
         _closetState.value = _closetState.value.copy(
-            items = updatedItems
+            items = updatedItems,
+            filteredItems = updatedItems
         )
     }
 
@@ -62,7 +63,8 @@ class ClosetViewModel : ViewModel() {
     fun delete(item: ItemEntry) {
         val updatedItems = _closetState.value.items - item
         _closetState.value = _closetState.value.copy(
-            items = updatedItems
+            items = updatedItems,
+            filteredItems = updatedItems
         )
     }
 

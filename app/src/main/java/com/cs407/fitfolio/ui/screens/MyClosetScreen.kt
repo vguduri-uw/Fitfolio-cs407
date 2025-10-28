@@ -194,6 +194,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     var expanded by remember { mutableStateOf(false) }
 
     // Tracks search bar information
+    // TODO: move to view model
     var searchText by remember { mutableStateOf("")}
     var isSearchActive by remember { mutableStateOf(false) }
 
