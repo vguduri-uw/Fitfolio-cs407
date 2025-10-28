@@ -163,14 +163,14 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit ) {
             isPassword = true
         )
         // todo: implement actual error handling logic
-        if (!passwordsMatch) {
+        if (password.isNotEmpty() && reenteredPassword.isNotEmpty() && !passwordsMatch) {
             Text(text = "Passwords do not match", color = MaterialTheme.colorScheme.error)
         }
 
         // Sign up button
         Button(
             onClick = { },
-            enabled = allFieldsFilled,
+            enabled = allFieldsFilled && passwordsMatch,
             content = { Text("Sign Up") },
         )
 
