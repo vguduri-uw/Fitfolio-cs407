@@ -305,7 +305,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                offset = DpOffset(x = -14.dp, y = 14.dp)
+                offset = DpOffset(x = -14.dp, y = 15.dp),
             ) {
                 closetState.tags
                     .sortedByDescending { it in closetState.activeTags }
@@ -324,7 +324,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                 if (tag in closetState.activeTags) {
                                     Icon(
                                         imageVector = Icons.Outlined.Clear,
-                                        contentDescription = "Clear tag"
+                                        contentDescription = "Remove tag"
                                     )
                                 } else {
                                     Icon(
@@ -332,7 +332,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                         contentDescription = "Add tag"
                                     )
                                 }
-                            }
+                            },
+                            modifier = Modifier.width(width = 154.dp)
                         )
                     }
             }
