@@ -16,7 +16,6 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
@@ -34,6 +34,7 @@ import com.cs407.fitfolio.ui.screens.MyWardrobeScreen
 import com.cs407.fitfolio.ui.screens.AddScreen
 import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.navigation.BottomNavigationBar
+import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -52,6 +53,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     // Creates and remembers a NavController to manage navigation state
     val navController = rememberNavController()
+    val closetViewModel: ClosetViewModel = viewModel()
 
     Scaffold(
         // Creates bottom navigation bar with centered floating action button
@@ -117,7 +119,8 @@ fun AppNavigation() {
                     onNavigateToOutfitsScreen = { navController.navigate("outfits") },
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
-                    onNavigateToClosetScreen = { navController.navigate("closet") }
+                    onNavigateToClosetScreen = { navController.navigate("closet") },
+                    closetViewModel = closetViewModel
                 )
             }
             // Defines the "closet" route and what UI to display there
@@ -127,6 +130,7 @@ fun AppNavigation() {
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
                     onNavigateToAddScreen = { navController.navigate("add") },
+                    closetViewModel = closetViewModel
                 )
             }
         }
