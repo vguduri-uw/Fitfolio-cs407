@@ -1,3 +1,8 @@
 <resources>
     <string name="app_name">Fitfolio</string>
+    <string name="calendar">Calendar</string>
+    <string name="outfits">Outfits</string>
+    <string name="add">Add</string>
+    <string name="closet">Closet</string>
+    <string name="carousel">Carousel</string>
 </resources>
