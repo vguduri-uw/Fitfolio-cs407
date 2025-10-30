@@ -6,7 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -54,7 +58,7 @@ fun BottomNavigationBar(navController: NavController) {
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = { navController.navigate("add") }) {
-                        Icon(Icons.Filled.Favorite, contentDescription = "Add")
+                        Icon(Icons.Outlined.AddCircle, contentDescription = "Add")
                     }
                     Text(stringResource(R.string.add))
                 }
