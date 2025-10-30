@@ -49,7 +49,7 @@ fun InformationModal (onDismiss: () -> Unit, screen: String) {
             // Dynamic information/tips for each screen
             when (screen) {
                 "My Outfits" -> OutfitScreenInfo()
-                "Calendar" -> CalendarScreenInfo()
+                "My Calendar" -> CalendarScreenInfo()
                 "Wardrobe" -> WardrobeScreenInfo()
                 "Add" -> AddScreenInfo()
                 "My Closet" -> ClosetScreenInfo()
