@@ -278,7 +278,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color(0xFFE0E0E0))
-                .padding(14.dp),
+                .padding(horizontal = 10.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -305,7 +305,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                offset = DpOffset(x = -14.dp, y = 15.dp),
+                offset = DpOffset(x = -10.dp, y = 15.dp),
             ) {
                 closetState.tags
                     .sortedByDescending { it in closetState.activeTags }
@@ -333,7 +333,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                     )
                                 }
                             },
-                            modifier = Modifier.width(width = 154.dp)
+                            modifier = Modifier.width(width = 140.dp)
                         )
                     }
             }
