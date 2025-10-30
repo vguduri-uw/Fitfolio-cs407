@@ -90,7 +90,7 @@ fun CalendarScreenInfo() {
 
 @Composable
 fun WardrobeScreenInfo() {
-    Text("Wardrobe")
+    Text("My Wardrobe")
 }
 
 @Composable
