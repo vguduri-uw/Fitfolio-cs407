@@ -50,7 +50,7 @@ fun InformationModal (onDismiss: () -> Unit, screen: String) {
             when (screen) {
                 "My Outfits" -> OutfitScreenInfo()
                 "My Calendar" -> CalendarScreenInfo()
-                "Wardrobe" -> WardrobeScreenInfo()
+                "My Wardrobe" -> WardrobeScreenInfo()
                 "Add" -> AddScreenInfo()
                 "My Closet" -> ClosetScreenInfo()
             }
@@ -90,7 +90,7 @@ fun CalendarScreenInfo() {
 
 @Composable
 fun WardrobeScreenInfo() {
-    Text("Wardrobe")
+    Text("My Wardrobe")
 }
 
 @Composable
