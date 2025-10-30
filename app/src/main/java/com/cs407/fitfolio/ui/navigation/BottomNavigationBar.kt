@@ -40,7 +40,12 @@ fun BottomNavigationBar(navController: NavController) {
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = { navController.navigate("calendar") }) {
-                        Icon(Icons.Filled.Favorite, contentDescription = "Calendar")
+                        //https://www.flaticon.com/free-icons/calendar, Calendar icons created by Hilmy Abiyyu A. - Flaticon
+                        Icon(
+                            painter = painterResource(R.drawable.schedule),
+                            contentDescription = "Calendar",
+                            modifier = Modifier.size(30.dp)
+                        )
                     }
                     Text(stringResource(R.string.calendar))
                 }
@@ -58,7 +63,6 @@ fun BottomNavigationBar(navController: NavController) {
                         Icon(
                             painter = painterResource(R.drawable.closet),
                             contentDescription = "Closet",
-                            modifier = Modifier.size(24.dp)
                         )
                     }
                     Text(stringResource(R.string.closet))
