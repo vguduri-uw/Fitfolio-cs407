@@ -59,7 +59,7 @@ import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
-// TODO: different item icons?, add coroutines for filtering calls?, add scroll bars?, implement item card
+// TODO: different item icons?, add coroutines for filtering calls?, add scroll bars?, implement item card, add toast messages for delete mode??
 @Composable
 fun MyClosetScreen(
     onNavigateToOutfitsScreen: () -> Unit,
@@ -366,7 +366,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 }
                 DeletionStates.Active.name -> {
                     // TODO: should this be the exit mode?? and we have a separate confirm button
-                    // ^^ currently, the clear filters takes it out of delete mode
+                    // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
                     IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name) }) {
                         Icon(
                             imageVector = Icons.Outlined.Check,

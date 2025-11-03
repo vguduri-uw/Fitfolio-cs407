@@ -6,8 +6,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 import java.io.Serializable
-import kotlin.collections.minus
-import kotlin.collections.plus
 
 // Data class representing a single item of clothing
 data class ItemEntry(
@@ -17,12 +15,13 @@ data class ItemEntry(
     var itemTags: List<String>, // the tags corresponding to the item
     var isFavorite: Boolean, // whether or not the item is in favorites
     var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
-    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int
+    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
     var outfitList: List<OutfitEntry>, // the outfits that the item is featured in
     val itemId : String, // the unique id of the item
 ) : Serializable
 
 // Data class representing the entire closet of clothing
+// TODO: update all of these methods to deal with database
 data class ClosetState(
     val items: List<ItemEntry> = emptyList(), // all items in the closet
     val filteredItems : List<ItemEntry> = emptyList(), // the items currently rendered on the screen
