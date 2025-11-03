@@ -57,6 +57,7 @@ import com.cs407.fitfolio.ui.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
+import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 // TODO: different item icons?, add coroutines for filtering calls?, add scroll bars?, implement item card
 @Composable
@@ -65,7 +66,8 @@ fun MyClosetScreen(
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
-    closetViewModel: ClosetViewModel
+    closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel
 ) {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
@@ -149,8 +151,7 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable(onClick = {
-                        closetViewModel.updateItemType("All")
-                        closetViewModel.applyFilters()
+                        closetViewModel.updateActiveItemType("All")
                     })
             ) {
                 Icon(
@@ -175,8 +176,7 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     modifier = Modifier
                         .padding(8.dp)
                         .clickable(onClick = {
-                            closetViewModel.updateItemType(itemType)
-                            closetViewModel.applyFilters()
+                            closetViewModel.updateActiveItemType(itemType)
                         })
                 ) {
                     Icon(
@@ -212,7 +212,6 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         ) {
             IconButton(onClick = {
                 closetViewModel.toggleFavoritesState()
-                closetViewModel.applyFilters()
             }) {
                 Icon(
                     imageVector = if (closetState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
@@ -327,7 +326,6 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                 } else {
                                     closetViewModel.addToActiveTags(tag)
                                 }
-                                closetViewModel.applyFilters()
                             },
                             trailingIcon = {
                                 if (tag in closetState.activeTags) {
@@ -355,24 +353,38 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
-                IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Active.name) }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Enter deletion candidate state",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
+            when (closetState.isDeleteActive) {
+                DeletionStates.Inactive.name -> {
+                    IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Active.name) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Enter deletion candidate state",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-            } else if (closetState.isDeleteActive == DeletionStates.Active.name) {
-                // TODO: should this be the exit mode?? and we have a separate confirm button
-                IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name) }) {
-                    Icon(
-                        imageVector = Icons.Outlined.Check,
-                        contentDescription = "Confirm delete state",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
+                DeletionStates.Active.name -> {
+                    // TODO: should this be the exit mode?? and we have a separate confirm button
+                    // ^^ currently, the clear filters takes it out of delete mode
+                    IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Check,
+                            contentDescription = "Confirm delete state",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                DeletionStates.Confirmed.name -> {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Placeholder during alert dialog composition",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
             }
         }
@@ -506,7 +518,7 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 Button(onClick = {
                     closetViewModel.clearDeletionCandidates()
                     closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                    /*closetViewModel.delete(closetState.deletionCandidates)*/
+                    /*closetViewModel.delete(closetState.deletionCandidates, outfitsViewModel)*/
                 }) {
                     Text(text = "Delete")
                 }
