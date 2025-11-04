@@ -440,12 +440,16 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     .clip(MaterialTheme.shapes.medium)
                     .background(Color(0xFFE0E0E0))
                     .clickable( // TODO: put this in the card itself after testing
-                    // TODO: figure out if scrolling will click the card
-                    enabled = outfitsState.isDeleteActive == DeletionStates.Active.name,
-                    onClick = {
-                        // TODO: uncomment after testing
-                        // outfitsViewModel.setDeletionCandidate(item)
-                    }
+                        // TODO: figure out if scrolling will click the card
+                        enabled = outfitsState.isDeleteActive != DeletionStates.Confirmed.name,
+                        onClick = {
+                            if (outfitsState.isDeleteActive == DeletionStates.Active.name){
+                                // TODO: uncomment after testing
+                                // outfitsViewModel.setDeletionCandidate(item)
+                            } else {
+                                outfitsViewModel.updateOutfitToShow("Test")
+                            }
+                        }
                 ),
                 contentAlignment = Alignment.Center
             ) {
