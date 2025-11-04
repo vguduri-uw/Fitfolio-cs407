@@ -21,8 +21,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Check
-import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -38,7 +36,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -53,29 +50,21 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.TopHeader
-import com.cs407.fitfolio.ui.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
-// TODO: different item icons?, add coroutines for filtering calls?, add scroll bars?, implement item card, add toast messages for delete mode??
+// TODO: different item icons?, add coroutines for filtering calls?, add scroll bars?, implement item card
 @Composable
 fun MyClosetScreen(
     onNavigateToOutfitsScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
-    closetViewModel: ClosetViewModel,
-    outfitsViewModel: OutfitsViewModel
+    closetViewModel: ClosetViewModel
 ) {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-
-    // Re-filter when an item is added or deleted
-    LaunchedEffect(closetState.items) {
-        closetViewModel.applyFilters()
-    }
 
     // Track whether the settings modal is shown or not
     var showSettings by remember { mutableStateOf(false) }
@@ -91,7 +80,7 @@ fun MyClosetScreen(
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            TopHeader(title = "My Closet") // TODO: make string resource
+            TopHeader(title = "My Closet")
 
             Spacer(modifier = Modifier.size(10.dp))
 
@@ -151,7 +140,8 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable(onClick = {
-                        closetViewModel.updateActiveItemType("All")
+                        closetViewModel.updateItemType("All")
+                        closetViewModel.applyFilters()
                     })
             ) {
                 Icon(
@@ -176,7 +166,8 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     modifier = Modifier
                         .padding(8.dp)
                         .clickable(onClick = {
-                            closetViewModel.updateActiveItemType(itemType)
+                            closetViewModel.updateItemType(itemType)
+                            closetViewModel.applyFilters()
                         })
                 ) {
                     Icon(
@@ -211,7 +202,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = {
-                closetViewModel.toggleFavoritesState()
+                closetViewModel.toggleFavorites()
+                closetViewModel.applyFilters()
             }) {
                 Icon(
                     imageVector = if (closetState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
@@ -246,7 +238,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.CenterStart
         ) {
-            IconButton(onClick = { closetViewModel.toggleSearchState(true) }) {
+            IconButton(onClick = { closetViewModel.toggleSearch(true) }) {
                 Icon(
                     imageVector = Icons.Outlined.Search,
                     contentDescription = "Search",
@@ -269,10 +261,10 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         placeholder = { Text("Enter item name") },
                     )
                 },
-                onDismissRequest = { closetViewModel.toggleSearchState(false) },
+                onDismissRequest = { closetViewModel.toggleSearch(false) },
                 confirmButton = {
                     Button(onClick = {
-                        closetViewModel.toggleSearchState(false)
+                        closetViewModel.toggleSearch(false)
                         closetViewModel.applyFilters()
                     }) {
                         Text(text = "Search")
@@ -313,7 +305,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                offset = DpOffset(x = (-10).dp, y = 15.dp),
+                offset = DpOffset(x = -10.dp, y = 15.dp),
             ) {
                 closetState.tags
                     .sortedByDescending { it in closetState.activeTags }
@@ -326,6 +318,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                 } else {
                                     closetViewModel.addToActiveTags(tag)
                                 }
+                                closetViewModel.applyFilters()
                             },
                             trailingIcon = {
                                 if (tag in closetState.activeTags) {
@@ -343,49 +336,6 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                             modifier = Modifier.width(width = 140.dp)
                         )
                     }
-            }
-        }
-
-        // Enter deletion candidate state/confirm delete state
-        Box(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
-            contentAlignment = Alignment.Center
-        ) {
-            when (closetState.isDeleteActive) {
-                DeletionStates.Inactive.name -> {
-                    IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Active.name) }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = "Enter deletion candidate state",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                DeletionStates.Active.name -> {
-                    // TODO: should this be the exit mode?? and we have a separate confirm button
-                    // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
-                    IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name) }) {
-                        Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = "Confirm delete state",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                DeletionStates.Confirmed.name -> {
-                    IconButton(onClick = {}) {
-                        Icon(
-                            imageVector = Icons.Outlined.Delete,
-                            contentDescription = "Placeholder during alert dialog composition",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
             }
         }
 
@@ -411,6 +361,10 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
+    // Track whether deletion confirm AlertDialog should be shown
+    // TODO: move to view model... maybe put it in item (isDeletionCandidate)
+    var showDeletionDialog by remember { mutableStateOf(false) }
+
     // TODO: pull back in the if/elses and the iteration through filteredItems when ready
     /*if (closetState.filteredItems.isEmpty()) {
         Text(
@@ -438,15 +392,7 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         .fillMaxWidth()
                         .height((150..250).random().dp)
                         .clip(MaterialTheme.shapes.medium)
-                        .background(Color(0xFFE0E0E0))
-                        .clickable( // TODO: put this in the card itself after testing
-                            // TODO: figure out if scrolling will click the card
-                            enabled = closetState.isDeleteActive == DeletionStates.Active.name,
-                            onClick = {
-                                // TODO: uncomment after testing
-                                //closetViewModel.setDeletionCandidate(item)
-                            }
-                        ),
+                        .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center
                 ) {
                     Row(modifier = Modifier
@@ -455,70 +401,67 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        // Favorite item button (if not in delete state)
-                        if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
-                            IconButton(
-                                onClick = { /* closetViewModel.toggleFavoritesProperty(item) */ },
-                                modifier = Modifier.size(28.dp)
-                            ) {
-                                Icon(
-                                    /*imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        // Favorite item button
+                        IconButton(
+                            onClick = {
+                                /*if (item.isFavorite) {
+                                closetViewModel.removeFromFavorites(item)
+                            } else {
+                                closetViewModel.addToFavorites(item)
+                            } */
+                            },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                /*imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites"*/
 
-                                    imageVector = Icons.Outlined.FavoriteBorder,
-                                    contentDescription = "Add item to favorites"
-                                )
-                            }
-                        }
-
-                        // Toggle deletion candidate icon (if in delete state)
-                        if (closetState.isDeleteActive == DeletionStates.Active.name) {
-                            Icon(
-                                /*imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                            contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"*/
-
-                                imageVector = Icons.Outlined.CheckCircle,
-                                contentDescription = "Add item to deletion candidates"
+                                imageVector = Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Add item to favorites"
                             )
-
                         }
 
+                        // Delete item button
+                        IconButton(
+                            onClick = {
+                                // closetViewModel.toggleDeletionCandidate(true, item.itemId)
+                                showDeletionDialog = true
+                            },
+                            modifier = Modifier
+                                .size(28.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = "Delete item"
+                            )
+                        }
                     }
                     Text("Item $index")
                 }
             }
         }
 
-    if (closetState.isDeleteActive == DeletionStates.Confirmed.name) {
+    // TODO: fix logic here... because rn we'll have to iterate over all to see if any is candidate...
+    // TODO: move the dialog to its own component so the item modal can use it
+    if (showDeletionDialog) {
         AlertDialog(
-            onDismissRequest = {
-                closetViewModel.clearDeletionCandidates()
-                closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-            },
+            onDismissRequest = { showDeletionDialog = false },
             title = {
-                Text("Are you sure you want to delete these item(s)?")
-            },
-            text = {
-                Text( // TODO: should this logic actually be true.... also make a better message
-                    // TODO: implement this logic if we want it to be like this
-                    "Deleting these item(s) will delete all of the outfits they are featured in. " +
-                            "Check the items' outfit(s) before deleting and remove the item(s) from the " +
-                            "outfit(s) if you would like the outfit(s) to be saved."
-                )
+                Text("Are you sure you want to delete this item?")
             },
             dismissButton = {
                 Button(onClick = {
-                    closetViewModel.clearDeletionCandidates()
-                    closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                    // closetViewModel.toggleDeletionCandidate(false, item.itemId)
+                    showDeletionDialog = false
                 }) {
                     Text(text = "Cancel")
                 }
             },
             confirmButton = {
                 Button(onClick = {
-                    closetViewModel.clearDeletionCandidates()
-                    closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                    /*closetViewModel.delete(closetState.deletionCandidates, outfitsViewModel)*/
+                    // closetViewModel.toggleDeletionCandidate(false, item.itemId)
+                    showDeletionDialog = false
+                    /*closetViewModel.delete(item)*/
                 }) {
                     Text(text = "Delete")
                 }

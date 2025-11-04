@@ -146,8 +146,7 @@ fun AppNavigation() {
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
                     onNavigateToAddScreen = { navController.navigate("add") },
-                    closetViewModel = closetViewModel,
-                    outfitsViewModel = outfitsViewModel
+                    closetViewModel = closetViewModel
                 )
             }
             // Defines the "sign up" route and what UI to display there

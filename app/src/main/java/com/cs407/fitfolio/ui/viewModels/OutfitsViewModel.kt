@@ -8,23 +8,24 @@ import java.util.UUID
 
 // data class representing a single saved outfit (a look made of multiple clothing items)
 data class OutfitEntry(
-    val outfitName: String,
-    val outfitDescription: String,
-    val outfitTags: List<String>,      // e.g. ["athletic", "winter", "interview"]
-    val isFavorite: Boolean,
-    val outfitPhoto: Int,              // todo: figure out what type...drawable? int?
+    var outfitName: String,
+    var outfitDescription: String,
+    var outfitTags: List<String>,      // e.g. ["athletic", "winter", "interview"]
+    var isFavorite: Boolean,
+    var outfitPhoto: Int,              // todo: figure out what type...drawable? int?
     val itemIds: List<String>,         // references itemEntry.itemId values from the closet
     val outfitId: String
 ) : Serializable
 
 // data class representing the entire collection of outfits
 data class OutfitsState(
-    val outfits: List<OutfitEntry> = emptyList(),
-    val filteredOutfits: List<OutfitEntry> = emptyList(),
+    val outfits: List<OutfitEntry> = emptyList(), // all outfits in the outfits screen
+    val filteredOutfits: List<OutfitEntry> = emptyList(), // the outfits currently rendered on the screen
 
     // all possible tags/types a user can apply to outfits
     // (user can add more)
-    val allTags: List<String> = listOf(
+    // todo: should tags be an enum??
+    val tags: List<String> = listOf(
         "Athletic",
         "Business",
         "Business Casual",
@@ -34,9 +35,11 @@ data class OutfitsState(
         "Loungewear"
     ),
 
-    val activeTags: List<String> = emptyList(), // currently selected tags for filtering
-    val toggleFavorites: Boolean = false,       // whether "favorites only" is on
-    val searchQuery: String = ""               // current search input
+    val activeTags: List<String> = emptyList(),                 // currently selected tags for filtering
+    val isFavoritesActive: Boolean = false,                     // whether "favorites only" toggle is on
+    val isSearchActive: Boolean = false,                        // whether or not a search query is active
+    val searchQuery: String = "",                               // current search input
+    val deletionCandidates: List<OutfitEntry> = emptyList()     // the item that is potentially deleted
 )
 
 class OutfitsViewModel : ViewModel() {
@@ -46,6 +49,11 @@ class OutfitsViewModel : ViewModel() {
 
     // publicly exposed immutable stateflow for the ui layer to observe changes safely
     val outfitsState = _outfitsState.asStateFlow()
+
+
+   /* ==========================================================================================
+                                        OUTFIT FUNCTIONS
+   ========================================================================================== */
 
     // adds an outfit to the list of outfits
     fun addOutfit(
@@ -69,42 +77,30 @@ class OutfitsViewModel : ViewModel() {
         val updatedOutfits = _outfitsState.value.outfits + newOutfit
         _outfitsState.value = _outfitsState.value.copy(
             outfits = updatedOutfits,
-            filteredOutfits = updatedOutfits // todo: apply filters instead of just copying
         )
     }
 
-    // deletes a specified outfit from the list of outfits
-    fun delete(outfit: OutfitEntry) {
-        val updatedOutfits = _outfitsState.value.outfits - outfit
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = updatedOutfits,
-            filteredOutfits = updatedOutfits // todo: apply filters instead of just copying
-        )
+    // deletes all specified items
+    fun delete(outfits: List<OutfitEntry>) {
+        for (outfit in outfits) {
+            val updatedOutfits = _outfitsState.value.outfits - outfit
+            _outfitsState.value = _outfitsState.value.copy(
+                outfits = updatedOutfits,
+            )
+        }
     }
 
-    // todo: implement this - marks an outfit as a favorite
-    // adds an outfit to favorites list
-    fun addToFavorites(outfit: OutfitEntry) {
-
-    }
-
-    // todo: implement - removes an outfit from favorites
-    // removes an outfit from favorites list
-    fun removeFromFavorites(outfit: OutfitEntry) {
-
-    }
-
-    // todo: implement - filters outfits so only "favorite" outfits show
-    fun filterByFavorites() {
-
+    // adds/removes outfit from favorites
+    fun toggleFavoritesProperty(outfit: OutfitEntry) {
+        outfit.isFavorite = !outfit.isFavorite
     }
 
     // adds a new tag/type option the user can choose from
     fun addTag(newTag: String) {
-        if (newTag !in _outfitsState.value.allTags) {
-            val updatedTags = _outfitsState.value.allTags + newTag
+        if (newTag !in _outfitsState.value.tags) {
+            val updatedTags = _outfitsState.value.tags + newTag
             _outfitsState.value = _outfitsState.value.copy(
-                allTags = updatedTags
+                tags = updatedTags
             )
         }
     }
@@ -112,9 +108,21 @@ class OutfitsViewModel : ViewModel() {
     // removes a tag/type from the list of selectable tags
     // todo: warn the user that deleting the tag will not remove it from already-saved outfits
     fun deleteTag(tag: String) {
-        val updatedTags = _outfitsState.value.allTags - tag
+        val updatedTags = _outfitsState.value.tags - tag
         _outfitsState.value = _outfitsState.value.copy(
-            allTags = updatedTags
+            tags = updatedTags
+        )
+    }
+
+    /* ==========================================================================================
+                                            OUTFITS FUNCTIONS
+       ========================================================================================== */
+
+    // toggles the favorites state for all outfits
+    fun toggleFavoritesState() {
+        val isToggled = _outfitsState.value.isFavoritesActive
+        _outfitsState.value = _outfitsState.value.copy(
+            isFavoritesActive = !isToggled
         )
     }
 
@@ -127,17 +135,34 @@ class OutfitsViewModel : ViewModel() {
     }
 
     // removes a tag from active tags
-    fun removeFromActiveTags (tag: String) {
+    fun removeFromActiveTags(tag: String) {
         val updatedActiveTags = _outfitsState.value.activeTags - tag
         _outfitsState.value = _outfitsState.value.copy(
             activeTags = updatedActiveTags
         )
     }
 
-    // todo: implement
-    // todo: only show items that include ALL selected filters
+    // todo: if allowing deleting multiple deletions at once change to iterate through LIST of deletion candidates
+    // sets the deletion candidates
+    fun setDeletionCandidates(outfit: OutfitEntry){
+        val updatedDeletionCandidates = outfitsState.value.deletionCandidates + outfit
+        _outfitsState.value = _outfitsState.value.copy(
+            deletionCandidates = updatedDeletionCandidates
+        )
+
+    }
+
+    // clears the deletion candidates
+    fun clearDeletionCandidates() {
+        _outfitsState.value = _outfitsState.value.copy(
+            deletionCandidates = emptyList()
+        )
+    }
+
+    // todo: implement - only show items that include ALL selected filters
+    // todo: add loading indicator
     // apply all tag filters at once
-    fun applyTagFilters() {
+    fun applyFilters() {
 
     }
 
@@ -148,15 +173,20 @@ class OutfitsViewModel : ViewModel() {
     }
 
     // todo: implement - searches outfits by name/description
-    // filters out outfits based on search query (regex??_
+    // filters out outfits based on search query (regex??)
     fun searchOutfits(searchValue: String) {
+
+    }
+
+    // todo: return a list of type string containing outfit Ids for each outfit containing the item
+    fun getOutfitsForItem(itemId: String) {
 
     }
 
     // clears any applied filters (favorites, tags, search)
     fun clearFilters() {
         _outfitsState.value = _outfitsState.value.copy(
-            toggleFavorites = false,
+            isFavoritesActive = false,
             activeTags = emptyList(),
             searchQuery = "",
             filteredOutfits = _outfitsState.value.outfits
