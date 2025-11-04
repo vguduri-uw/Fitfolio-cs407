@@ -167,6 +167,31 @@ class ClosetViewModel : ViewModel() {
         )
     }
 
+    // Adds a new tag option the user can choose from
+    // TODO: if it already exists, then let them know
+    fun addTag(newTag: String) {
+        if (newTag !in _closetState.value.tags) {
+            val updatedTags = _closetState.value.tags + newTag
+            _closetState.value = _closetState.value.copy(
+                tags = updatedTags
+            )
+        }
+    }
+
+    // Removes a tag from the list of selectable tags
+    fun deleteTag(tag: String) {
+        val updatedTags = _closetState.value.tags - tag
+        _closetState.value = _closetState.value.copy(
+            tags = updatedTags
+        )
+
+        // Remove tag from any item containing it
+        val itemsWithTag = _closetState.value.items.filter { tag in it.itemTags }
+        for (itemWithTag in itemsWithTag) {
+            editItemTags(itemWithTag, tag, true)
+        }
+    }
+
     // Adds an item type to the itemTypes list (from the item modal)
     fun addItemType(itemType: String) {
         if (itemType !in _closetState.value.itemTypes) {
@@ -284,7 +309,9 @@ class ClosetViewModel : ViewModel() {
             isFavoritesActive = false,
             activeTags = emptyList(),
             searchQuery = "",
-            isDeleteActive = DeletionStates.Inactive.name
+            isDeleteActive = DeletionStates.Inactive.name,
         )
+
+        clearDeletionCandidates()
     }
 }
