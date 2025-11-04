@@ -1,0 +1,52 @@
+package com.cs407.fitfolio.ui.components
+
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
+import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
+
+@Composable
+fun DeleteItemDialog(closetViewModel: ClosetViewModel) {
+    // Observe the current UI state from the ViewModel
+    val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
+
+    AlertDialog(
+        onDismissRequest = {
+            closetViewModel.clearDeletionCandidates()
+            closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+        },
+        title = {
+            Text("Are you sure you want to delete these item(s)?")
+        },
+        text = {
+            Text( // TODO: should this logic actually be true.... also make a better message
+                // TODO: implement this logic if we want it to be like this
+                "Deleting these item(s) will delete all of the outfits they are featured in. " +
+                        "Check the items' outfit(s) before deleting and remove the item(s) from the " +
+                        "outfit(s) if you would like the outfit(s) to be saved."
+            )
+        },
+        dismissButton = {
+            Button(onClick = {
+                closetViewModel.clearDeletionCandidates()
+                closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+            }) {
+                Text(text = "Cancel")
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                closetViewModel.clearDeletionCandidates()
+                closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                closetViewModel.deleteItem(closetState.deletionCandidates, outfitsViewModel = OutfitsViewModel())
+            }) {
+                Text(text = "Delete")
+            }
+        }
+    )
+}

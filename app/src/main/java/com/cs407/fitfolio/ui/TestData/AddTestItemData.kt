@@ -1,7 +1,5 @@
 package com.cs407.fitfolio.ui.TestData
 
-
-
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
