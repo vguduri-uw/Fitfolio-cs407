@@ -172,11 +172,11 @@ class OutfitsViewModel : ViewModel() {
             _outfitsState.value = _outfitsState.value.copy(
                 tags = updatedTags
             )
-        }
+        } // todo: if tag already exists, notify user
     }
 
     // removes a tag/type from the list of selectable tags
-    // todo: warn the user that deleting the tag will not remove it from already-saved outfits
+    // todo: warn the user that deleting the tag will remove it from already-saved outfits
     fun deleteTag(tag: String) {
         val updatedTags = _outfitsState.value.tags - tag
         _outfitsState.value = _outfitsState.value.copy(
