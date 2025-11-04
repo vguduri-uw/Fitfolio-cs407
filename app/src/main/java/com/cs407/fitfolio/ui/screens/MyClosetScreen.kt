@@ -82,9 +82,6 @@ fun MyClosetScreen(
     // Track whether the settings modal is shown or not
     var showSettings by remember { mutableStateOf(false) }
 
-    // Track whether the item modal is shown or not
-    var showItemModal by remember { mutableStateOf(false) }
-
     Box(modifier = Modifier
         .fillMaxSize()
         .padding(horizontal = 8.dp)
@@ -125,22 +122,6 @@ fun MyClosetScreen(
                     Modifier.size(36.dp)
                 )
             }
-
-            // TEMPORARY ICON BUTTON TO SHOW ITEM MODAL
-            IconButton(
-                onClick = {
-                    showItemModal = true
-                    // replace with itemId when put in card
-                    closetViewModel.updateItemToShow("")
-                }
-                ,
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Star,
-                    contentDescription = "Item modal",
-                    Modifier.size(36.dp)
-                )
-            }
         }
 
         // Show settings
@@ -149,11 +130,11 @@ fun MyClosetScreen(
         }
 
         // Show item modal
-        if (showItemModal) {
+        if (closetState.itemToShow.isNotEmpty()) {
             ItemModal(
                 closetViewModel = closetViewModel,
                 itemId = closetState.itemToShow,
-                onDismiss = { showItemModal = false},
+                onDismiss = { closetViewModel.updateItemToShow("")},
                 onNavigateToOutfitsScreen = onNavigateToOutfitsScreen,
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
@@ -476,10 +457,16 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         .background(Color(0xFFE0E0E0))
                         .clickable( // TODO: put this in the card itself after testing
                             // TODO: figure out if scrolling will click the card
-                            enabled = closetState.isDeleteActive == DeletionStates.Active.name,
+                            enabled =
+                                closetState.isDeleteActive != DeletionStates.Confirmed.name,
                             onClick = {
-                                // TODO: uncomment after testing
-                                //closetViewModel.setDeletionCandidate(item)
+                                if (closetState.isDeleteActive == DeletionStates.Active.name) {
+                                    // TODO: uncomment after testing
+                                    //closetViewModel.setDeletionCandidate(item)
+                                } else {
+                                    // replace with itemId when put in card
+                                    closetViewModel.updateItemToShow("Test")
+                                }
                             }
                         ),
                     contentAlignment = Alignment.Center
