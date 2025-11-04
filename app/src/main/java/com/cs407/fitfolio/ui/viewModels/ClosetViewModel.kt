@@ -1,39 +1,46 @@
 package com.cs407.fitfolio.ui.viewModels
 
 import androidx.lifecycle.ViewModel
+import com.cs407.fitfolio.ui.enums.DeletionStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.util.UUID
 import java.io.Serializable
 
-// TODO: add functions for editing the item itself (from the item modal)
 // Data class representing a single item of clothing
 data class ItemEntry(
-    val itemName: String,
-    val itemType: String,
-    val itemDescription: String,
-    val itemTags: List<String>,
-    val isFavorite: Boolean,
-    val isDeletionCandidate: Boolean,
-    val itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int
-    val itemId : String
+    var itemName: String, // the name of the item
+    var itemType: String, // the type of the item
+    var itemDescription: String, // the description of the item
+    var itemTags: List<String>, // the tags corresponding to the item
+    var isFavorite: Boolean, // whether or not the item is in favorites
+    var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
+    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
+    var outfitList: List<OutfitEntry>, // the outfits that the item is featured in
+    val itemId : String, // the unique id of the item
 ) : Serializable
 
 // Data class representing the entire closet of clothing
+// TODO: update all of these methods to deal with database
 data class ClosetState(
-    val items: List<ItemEntry> = emptyList(),
-    val filteredItems : List<ItemEntry> = emptyList(),
+    val items: List<ItemEntry> = emptyList(), // all items in the closet
+    val filteredItems : List<ItemEntry> = emptyList(), // the items currently rendered on the screen
+    // TODO: should itemTypes be an enum?? also, confirm default item types
     val itemTypes: List<String> = listOf(
         "T-Shirts", "Shirts", "Jeans", "Pants", "Shorts", "Skirts", "Dresses", "Outerwear", "Shoes"
-    ),
-    val activeItemType: String = "All",
-    val isFavoritesActive: Boolean = false,
-    val isSearchActive: Boolean = false,
-    val tags: List<String> = listOf("tag1", "tag2", "tag3", "tag4"), // TODO: establish some starter tags
-    val activeTags: List<String> = emptyList(),
-    val searchQuery: String = ""
+    ), // item types
+    val activeItemType: String = "All", // item type that is currently rendered on the screen
+    val isFavoritesActive: Boolean = false, // whether or not the favorites filter is active
+    val isSearchActive: Boolean = false, // whether or not a search query filter is active
+    val searchQuery: String = "",
+    // TODO: establish some starter tags
+    val tags: List<String> = listOf("tag1", "tag2", "tag3", "tag4"), // all tags for closet items
+    val activeTags: List<String> = emptyList(), // the tags currently rendered on the screen
+    val deletionCandidates: List<ItemEntry> = emptyList(), // the items that can be potentially deleted
+    val isDeleteActive: String = DeletionStates.Inactive.name // the status of the deletion process
 )
 
+// ViewModel representing the state of the closet
 class ClosetViewModel : ViewModel() {
     // Backing property (private) for state
     private val _closetState = MutableStateFlow(ClosetState())
@@ -41,7 +48,9 @@ class ClosetViewModel : ViewModel() {
     // Publicly exposed immutable StateFlow for the UI layer to observe changes safely
     val closetState = _closetState.asStateFlow()
 
-    // Adds an item to the closet (from add screen)
+    // ITEM FUNCTIONS //
+
+    // Adds an item to the closet to be used in add screen
     fun addItem(
         name: String, type: String, description: String, tags: List<String>,
         isFavorites: Boolean, photo: Int
@@ -54,40 +63,133 @@ class ClosetViewModel : ViewModel() {
             isFavorite = isFavorites,
             isDeletionCandidate = false,
             itemPhoto = photo,
-            itemId = UUID.randomUUID().toString()
+            itemId = UUID.randomUUID().toString(),
+            outfitList = emptyList()
         )
 
         val updatedItems = _closetState.value.items + newItem
-        val updatedFilteredItems = _closetState.value.filteredItems + newItem
         _closetState.value = _closetState.value.copy(
-            items = updatedItems,
+            items = updatedItems
+        )
+    }
+
+    // Deletes specified items from the closet
+    // TODO: implement Room database (then I don't think the outfitsViewModel needs to be passed in)
+    fun delete(items: List<ItemEntry>, outfitsViewModel: OutfitsViewModel) {
+        for (item in items) {
+            val updatedItems = _closetState.value.items - item
+            _closetState.value = _closetState.value.copy(
+                items = updatedItems
+            )
+
+            // TODO: decide if we do indeed want to delete the outfits if an item is deleted
+            for (outfit in item.outfitList) {
+                outfitsViewModel.delete(outfit)
+            }
+        }
+    }
+
+    // Setters for item properties to be used in the add screen and item modal
+    fun editItemName(item: ItemEntry, name: String) {
+        item.itemName = name
+    }
+    fun editItemType(item: ItemEntry, type: String) {
+        item.itemType = type
+    }
+    fun editItemDescription(item: ItemEntry, description: String) {
+        item.itemDescription = description
+    }
+    fun editItemTags(item: ItemEntry, tag: String, isRemoving: Boolean) {
+        if (isRemoving) {
+            item.itemTags -= tag
+        } else {
+            item.itemTags += tag
+        }
+    }
+    fun toggleFavoritesProperty(item: ItemEntry) {
+        item.isFavorite = !item.isFavorite
+    }
+    fun toggleDeletionCandidate(item: ItemEntry, isCandidate: Boolean) {
+        item.isDeletionCandidate = isCandidate
+    }
+    fun editItemPhoto(item: ItemEntry, photo: Int) {
+        item.itemPhoto = photo
+    }
+    fun editOutfitList(item: ItemEntry, outfit: OutfitEntry, isRemoving: Boolean) {
+        if (isRemoving) {
+            item.outfitList -= outfit
+        } else {
+            item.outfitList += outfit
+        }
+    }
+
+    // CLOSET FUNCTIONS //
+
+    // TODO: add CircularProgressIndicator? when calling this (in closet screen), do in coroutine
+    fun applyFilters() {
+        var updatedFilteredItems = _closetState.value.items.filter { item ->
+            var passesAllFilters = true
+
+            // Filter through type
+            if (_closetState.value.activeItemType != "All") {
+                if (item.itemType != _closetState.value.activeItemType) passesAllFilters = false
+            }
+
+            // Filter through favorites
+            if (_closetState.value.isFavoritesActive) {
+                if (!item.isFavorite) passesAllFilters = false
+            }
+
+            // Filter with search query
+            if (_closetState.value.isSearchActive) {
+                val query = _closetState.value.searchQuery.lowercase()
+                if (!(item.itemName.lowercase().contains(query) ||
+                            item.itemDescription.lowercase().contains(query))) {
+                    passesAllFilters = false
+                }
+            }
+
+            // Filter through active tags
+            // TODO: decide if this should be inclusive (1 matching tag means its valid, how it currently is rn), or if it must match all tags
+            if (_closetState.value.activeTags.isNotEmpty()) {
+                val hasMatchingTag = item.itemTags.any { it in _closetState.value.activeTags }
+                if (!hasMatchingTag) {
+                    passesAllFilters = false
+                }
+            }
+
+            passesAllFilters
+        }
+
+        // Update filteredItems
+        _closetState.value = _closetState.value.copy(
             filteredItems = updatedFilteredItems
         )
     }
 
-    // Deletes a specified item from the closet
-    fun delete(item: ItemEntry) {
-        val updatedItems = _closetState.value.items - item
-        val updatedFilteredItems = _closetState.value.filteredItems - item
+    // Adds a new tag option the user can choose from
+    // TODO: if it already exists, then let them know
+    fun addTag(newTag: String) {
+        if (newTag !in _closetState.value.tags) {
+            val updatedTags = _closetState.value.tags + newTag
+            _closetState.value = _closetState.value.copy(
+                tags = updatedTags
+            )
+        }
+    }
+
+    // Removes a tag from the list of selectable tags
+    fun deleteTag(tag: String) {
+        val updatedTags = _closetState.value.tags - tag
         _closetState.value = _closetState.value.copy(
-            items = updatedItems,
-            filteredItems = updatedFilteredItems
+            tags = updatedTags
         )
-    }
 
-    // TODO: implement this!!
-    fun addToFavorites(item: ItemEntry) {
-
-    }
-
-    // TODO: implement this!!
-    fun removeFromFavorites(item: ItemEntry) {
-
-    }
-
-    // TODO: implement this!!
-    fun toggleDeletionCandidate(isCandidate: Boolean, itemId: String) {
-
+        // Remove tag from any item containing it
+        val itemsWithTag = _closetState.value.items.filter { tag in it.itemTags }
+        for (itemWithTag in itemsWithTag) {
+            editItemTags(itemWithTag, tag, true)
+        }
     }
 
     // Adds an item type to the itemTypes list (from the item modal)
@@ -110,20 +212,23 @@ class ClosetViewModel : ViewModel() {
     }
 
     // Updates the active item type
-    fun updateItemType(itemType: String) {
+    fun updateActiveItemType(itemType: String) {
         _closetState.value = _closetState.value.copy(
             activeItemType = itemType
         )
+        applyFilters()
     }
 
     // Updates whether the favorites filter is activated or not
-    fun toggleFavorites() {
+    fun toggleFavoritesState() {
         val isToggled = _closetState.value.isFavoritesActive
         _closetState.value = _closetState.value.copy(
             isFavoritesActive = !isToggled
         )
+        applyFilters()
     }
 
+    // Shuffles the order of the filtered items list
     fun shuffleItems() {
         val shuffledItems = _closetState.value.filteredItems.shuffled()
         _closetState.value = _closetState.value.copy(
@@ -132,7 +237,7 @@ class ClosetViewModel : ViewModel() {
     }
 
     // Updates whether the search filter is activated or not
-    fun toggleSearch(isActive: Boolean) {
+    fun toggleSearchState(isActive: Boolean) {
         _closetState.value = _closetState.value.copy(
             isSearchActive = isActive
         )
@@ -151,6 +256,7 @@ class ClosetViewModel : ViewModel() {
         _closetState.value = _closetState.value.copy(
             activeTags = updatedTags
         )
+        applyFilters()
     }
 
     // Removes a tag from the active tags list
@@ -159,12 +265,40 @@ class ClosetViewModel : ViewModel() {
         _closetState.value = _closetState.value.copy(
             activeTags = updatedTags
         )
+        applyFilters()
     }
 
-    // TODO: implement
-    // TODO: decide if multiple tags means the item must share those, or if we show any item that has at least 1 of the tags
-    fun applyFilters() {
+    // Sets the deletion candidates list
+    fun setDeletionCandidates(item: ItemEntry) {
+        // Update item isDeletionCandidate property
+        toggleDeletionCandidate(item, true)
 
+        // Update list
+        val updatedDeletionCandidates = _closetState.value.deletionCandidates + item
+        _closetState.value = _closetState.value.copy(
+            deletionCandidates = updatedDeletionCandidates
+        )
+    }
+
+    // Clears the deletion candidates list
+    fun clearDeletionCandidates() {
+        // Update item isDeletionCandidate property
+        for (item in _closetState.value.deletionCandidates) {
+            toggleDeletionCandidate(item, false)
+        }
+
+        // Update list
+        _closetState.value = _closetState.value.copy(
+            deletionCandidates = emptyList()
+        )
+    }
+
+    // Toggle the deletion state
+    // See DeletionStates.kt enum class
+    fun toggleDeleteState(status: String) {
+        _closetState.value = _closetState.value.copy(
+            isDeleteActive = status
+        )
     }
 
     // Clears any applied filters and resets properties
@@ -174,7 +308,10 @@ class ClosetViewModel : ViewModel() {
             activeItemType = "All",
             isFavoritesActive = false,
             activeTags = emptyList(),
-            searchQuery = ""
+            searchQuery = "",
+            isDeleteActive = DeletionStates.Inactive.name,
         )
+
+        clearDeletionCandidates()
     }
 }
