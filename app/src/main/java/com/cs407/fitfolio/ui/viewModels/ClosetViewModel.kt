@@ -37,7 +37,8 @@ data class ClosetState(
     val tags: List<String> = listOf("tag1", "tag2", "tag3", "tag4"), // all tags for closet items
     val activeTags: List<String> = emptyList(), // the tags currently rendered on the screen
     val deletionCandidates: List<ItemEntry> = emptyList(), // the items that can be potentially deleted
-    val isDeleteActive: String = DeletionStates.Inactive.name // the status of the deletion process
+    val isDeleteActive: String = DeletionStates.Inactive.name, // the status of the deletion process
+    val itemToShow: String = "" // itemId of the item to be shown
 )
 
 // ViewModel representing the state of the closet
@@ -75,7 +76,7 @@ class ClosetViewModel : ViewModel() {
 
     // Deletes specified items from the closet
     // TODO: implement Room database (then I don't think the outfitsViewModel needs to be passed in)
-    fun delete(items: List<ItemEntry>, outfitsViewModel: OutfitsViewModel) {
+    fun deleteItem(items: List<ItemEntry>, outfitsViewModel: OutfitsViewModel) {
         for (item in items) {
             val updatedItems = _closetState.value.items - item
             _closetState.value = _closetState.value.copy(
@@ -84,7 +85,6 @@ class ClosetViewModel : ViewModel() {
 
             // TODO: decide if we do indeed want to delete the outfits if an item is deleted
             var outfitsList: List<OutfitEntry> = emptyList()
-
             for (outfit in item.outfitList) {
                 outfitsList += outfit
             }
@@ -195,6 +195,14 @@ class ClosetViewModel : ViewModel() {
         }
     }
 
+    // Retrieves an ItemEntry based on it's itemId
+    // Throws an exception if item with that id is not found
+    // TODO: make sure wherever we call this catches the exception and displays error accordingly
+    fun getItem(itemId: String): ItemEntry {
+        return _closetState.value.items.find { it.itemId == itemId }
+            ?: throw NoSuchElementException("Item with id $itemId not found")
+    }
+
     // Adds an item type to the itemTypes list (from the item modal)
     fun addItemType(itemType: String) {
         if (itemType !in _closetState.value.itemTypes) {
@@ -250,6 +258,13 @@ class ClosetViewModel : ViewModel() {
     fun updateSearchQuery(query: String) {
         _closetState.value = _closetState.value.copy(
             searchQuery = query
+        )
+    }
+
+    // Update the item to show in item modal
+    fun updateItemToShow(itemId: String) {
+        _closetState.value = _closetState.value.copy(
+            itemToShow = itemId
         )
     }
 

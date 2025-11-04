@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -54,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
@@ -79,6 +81,9 @@ fun MyClosetScreen(
 
     // Track whether the settings modal is shown or not
     var showSettings by remember { mutableStateOf(false) }
+
+    // Track whether the item modal is shown or not
+    var showItemModal by remember { mutableStateOf(false) }
 
     Box(modifier = Modifier
         .fillMaxSize()
@@ -106,22 +111,52 @@ fun MyClosetScreen(
             ClosetGrid(closetState, closetViewModel)
         }
 
-        // Settings button
-        IconButton(
-            onClick = { showSettings = true },
+        Column(
             modifier = Modifier
                 .align(alignment = Alignment.TopEnd)
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Settings,
-                contentDescription = "Settings",
-                Modifier.size(36.dp)
-            )
+            // Settings button
+            IconButton(
+                onClick = { showSettings = true }
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Settings,
+                    contentDescription = "Settings",
+                    Modifier.size(36.dp)
+                )
+            }
+
+            // TEMPORARY ICON BUTTON TO SHOW ITEM MODAL
+            IconButton(
+                onClick = {
+                    showItemModal = true
+                    // replace with itemId when put in card
+                    closetViewModel.updateItemToShow("")
+                }
+                ,
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.Star,
+                    contentDescription = "Item modal",
+                    Modifier.size(36.dp)
+                )
+            }
         }
 
         // Show settings
         if (showSettings) {
             SettingsModal(onDismiss = { showSettings = false })
+        }
+
+        // Show item modal
+        if (showItemModal) {
+            ItemModal(
+                closetViewModel = closetViewModel,
+                itemId = closetState.itemToShow,
+                onDismiss = { showItemModal = false},
+                onNavigateToOutfitsScreen = onNavigateToOutfitsScreen,
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+            )
         }
     }
 }
