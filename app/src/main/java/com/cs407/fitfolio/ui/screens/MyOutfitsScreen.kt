@@ -1,6 +1,5 @@
 package com.cs407.fitfolio.ui.screens
 
-import android.widget.Space
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,20 +20,24 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,13 +46,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.TopHeader
+import com.cs407.fitfolio.ui.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.OutfitsState
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
@@ -66,6 +69,11 @@ fun MyOutfitsScreen(
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+
+    // re-filter when an item is added or deleted
+    LaunchedEffect(outfitsState.outfits) {
+        outfitsViewModel.applyFilters()
+    }
 
     // track settings modal state
     var showSettings by remember { mutableStateOf(false) }
@@ -92,7 +100,7 @@ fun MyOutfitsScreen(
             Spacer(modifier = Modifier.size(10.dp))
 
             // search bar, tags filter, favorites toggle, shuffle button
-            SearchRow(outfitsState, outfitsViewModel)
+            FilterRow(outfitsState, outfitsViewModel)
 
             Spacer(modifier = Modifier.size(10.dp))
 
@@ -164,11 +172,7 @@ fun WeatherRow() {
 }
 
 @Composable
-fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
-    // tracks favorites filter toggle status
-    // todo: move to view model
-    var isFilteredByFavorites by remember { mutableStateOf(false) }
-
+fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     // tracks whether tags dropdown is expanded
     var expanded by remember { mutableStateOf(false) }
 
@@ -184,13 +188,14 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center,
         ) {
-            IconButton(onClick = {
-                isFilteredByFavorites = !isFilteredByFavorites
-                outfitsViewModel.filterByFavorites()
-            }) {
+            IconButton(
+                onClick = {
+                    outfitsViewModel.toggleFavoritesState()
+                }
+            ){
                 Icon(
-                    imageVector = if (isFilteredByFavorites) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = if (isFilteredByFavorites) "remove favorites filter" else "filter by favorites",
+                    imageVector = if (outfitsState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    contentDescription = if (outfitsState.isFavoritesActive) "Remove favorites filter" else "Filter by favorites",
                     tint = Color.Black,
                     modifier = Modifier.size(20.dp),
                 )
@@ -221,9 +226,7 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = {
-                // todo: open search dialog, then call outfitsViewModel.searchOutfits(...)
-            }) {
+            IconButton(onClick = { outfitsViewModel.toggleSearchState(true) }) {
                 Icon(
                     imageVector = Icons.Outlined.Search,
                     contentDescription = "search",
@@ -231,6 +234,31 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     tint = Color.Black
                 )
             }
+        }
+
+        // search bar dialog
+        if (outfitsState.isSearchActive) {
+            AlertDialog(
+                title = {
+                    Text(text = "Search for an item")
+                },
+                text = {
+                    TextField(
+                        value = outfitsState.searchQuery,
+                        onValueChange = { it -> outfitsViewModel.updateSearchQuery(it)},
+                        placeholder = { Text("Enter item name") },
+                    )
+                },
+                onDismissRequest = { outfitsViewModel.toggleSearchState(false) },
+                confirmButton = {
+                    Button(onClick = {
+                        outfitsViewModel.toggleSearchState(false)
+                        outfitsViewModel.applyFilters()
+                    }) {
+                        Text(text = "Search")
+                    }
+                }
+            )
         }
 
         // tags drop down menu
@@ -268,7 +296,7 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 offset = DpOffset(x = -10.dp, y = 15.dp)
             ) {
                 // note: outfitsState.allTags is the master list of tags/types
-                outfitsState.allTags
+                outfitsState.tags
                     .sortedByDescending { it in outfitsState.activeTags }
                     .forEach { tag ->
                         DropdownMenuItem(
@@ -279,7 +307,6 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                                 } else {
                                     outfitsViewModel.addToActiveTags(tag)
                                 }
-                                outfitsViewModel.applyTagFilters()
                             },
                             trailingIcon = {
                                 if (tag in outfitsState.activeTags) {
@@ -308,6 +335,49 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             }
         }
 
+        // Enter deletion candidate state/confirm delete state
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color(0xFFE0E0E0)),
+            contentAlignment = Alignment.Center
+        ) {
+            when (outfitsState.isDeleteActive) {
+                DeletionStates.Inactive.name -> {
+                    IconButton(onClick = { outfitsViewModel.toggleDeleteState(DeletionStates.Active.name) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Enter deletion candidate state",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                DeletionStates.Active.name -> {
+                    // TODO: should this be the exit mode?? and we have a separate confirm button
+                    // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
+                    IconButton(onClick = { outfitsViewModel.toggleDeleteState(DeletionStates.Confirmed.name) }) {
+                        Icon(
+                            imageVector = Icons.Outlined.Check,
+                            contentDescription = "Confirm delete state",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                DeletionStates.Confirmed.name -> {
+                    IconButton(onClick = {}) {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Placeholder during alert dialog composition",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+            }
+        }
+
         // clear filters button
         Box(
             modifier = Modifier
@@ -327,9 +397,17 @@ fun SearchRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     }
 }
 
-
+// grid of items currently shown in closet
 @Composable
 fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
+    // TODO: pull back in the if/elses and the iteration through filteredItems when ready
+    /*if (outfitsState.filteredItems.isEmpty()) {
+        Text(
+            "No items found.",
+            modifier = Modifier
+                .padding(16.dp)
+        )
+    } else {*/
     LazyVerticalStaggeredGrid(
         columns = StaggeredGridCells.Fixed(2),
         modifier = Modifier
@@ -337,42 +415,104 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         verticalItemSpacing = 8.dp,
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
+        /*items(outfitsState.filteredItems) { item ->
+                    ElevatedCard() {
+                        // TODO: implement outfits card
+                    }
+                }*/
+        // for testing purposes only
         items(30) { index ->
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height((150..250).random().dp)
                     .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
+                    .background(Color(0xFFE0E0E0))
+                    .clickable( // TODO: put this in the card itself after testing
+                    // TODO: figure out if scrolling will click the card
+                    enabled = outfitsState.isDeleteActive == DeletionStates.Active.name,
+                    onClick = {
+                        // TODO: uncomment after testing
+                        // outfitsViewModel.setDeletionCandidate(item)
+                    }
+                ),
                 contentAlignment = Alignment.Center
             ) {
                 Text("Outfit ${index + 1}")
 
                 Row(
                     modifier = Modifier
-                        .clickable(
-                            onClick = {
-
-                            })
                         .align(Alignment.TopEnd)
-                        .padding(10.dp)
-
+                        .padding(6.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite this item",
-                        tint = Color.Black,
-                        modifier = Modifier.size(25.dp)
+                    // favorite item button (if not in delete state)
+                    if (outfitsState.isDeleteActive == DeletionStates.Inactive.name) {
+                        IconButton(
+                            onClick = { /* outfitsViewModel.toggleFavoritesProperty(item) */ },
+                            modifier = Modifier.size(28.dp)
+                        ) {
+                            Icon(
+                                /*imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites"*/
+
+                                imageVector = Icons.Outlined.FavoriteBorder,
+                                contentDescription = "Add item to favorites"
+                            )
+                        }
+                    }
+
+                    // Toggle deletion candidate icon (if in delete state)
+                    if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
+                        Icon(
+                            /*imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                        contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"*/
+
+                            imageVector = Icons.Outlined.CheckCircle,
+                            contentDescription = "Add item to deletion candidates"
                         )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Icon(
-                        Icons.Outlined.Delete,
-                        contentDescription = "Delete this item",
-                        tint = Color.Black,
-                        modifier = Modifier.size(25.dp)
-                        )
+
+                    }
                 }
             }
         }
+    }
+
+    if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
+        AlertDialog(
+            onDismissRequest = {
+                outfitsViewModel.clearDeletionCandidates()
+                outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+            },
+            title = {
+                Text("Are you sure you want to delete these item(s)?")
+            },
+            text = {
+                Text( // TODO: should this logic actually be true.... also make a better message
+                    // TODO: implement this logic if we want it to be like this
+                    "Deleting these item(s) will delete all of the outfits they are featured in. " +
+                            "Check the items' outfit(s) before deleting and remove the item(s) from the " +
+                            "outfit(s) if you would like the outfit(s) to be saved."
+                )
+            },
+            dismissButton = {
+                Button(onClick = {
+                    outfitsViewModel.clearDeletionCandidates()
+                    outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                }) {
+                    Text(text = "Cancel")
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    outfitsViewModel.clearDeletionCandidates()
+                    outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                    /*outfitsViewModel.delete(outfitsState.deletionCandidates, outfitsViewModel)*/
+                }) {
+                    Text(text = "Delete")
+                }
+            }
+        )
     }
 }
