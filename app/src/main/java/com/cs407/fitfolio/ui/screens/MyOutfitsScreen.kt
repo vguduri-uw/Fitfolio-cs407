@@ -53,6 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.OutfitsState
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
@@ -124,6 +125,16 @@ fun MyOutfitsScreen(
         // pull up settings modal
         if (showSettings) {
             SettingsModal(onDismiss = { showSettings = false })
+        }
+
+        // show outfit modal
+        if (outfitsState.outfitToShow.isNotEmpty()) {
+            OutfitModal(
+                outfitsViewModel = outfitsViewModel,
+                outfitId = outfitsState.outfitToShow,
+                onDismiss = { outfitsViewModel.updateOutfitToShow("") },
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+            )
         }
 
         // navigate to sign up and sign in screens

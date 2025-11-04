@@ -15,8 +15,8 @@ data class OutfitEntry(
     var isFavorite: Boolean,           // whether or not the item is in favorites
     var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
     var outfitPhoto: Int,              // todo: figure out what type...drawable? int?
-    var itemList: List<ItemEntry>,         // all the items featured in the outfit
-    val outfitId: String               // the unique id of the outfit
+    var itemList: List<ItemEntry>,     // all the items featured in the outfit
+    val outfitId: String,              // the unique id of the outfit
 ) : Serializable
 
 // data class representing the entire collection of outfits
@@ -42,7 +42,8 @@ data class OutfitsState(
     val isSearchActive: Boolean = false,                        // whether or not a search query is active
     val searchQuery: String = "",                               // current search input
     val deletionCandidates: List<OutfitEntry> = emptyList(),    // the item that is potentially deleted
-    val isDeleteActive: String = DeletionStates.Inactive.name   // the status of the deletion process
+    val isDeleteActive: String = DeletionStates.Inactive.name,  // the status of the deletion process
+    val outfitToShow: String = ""                               // outfit ID of the outfit to be shown
 )
 
 class OutfitsViewModel : ViewModel() {
@@ -75,13 +76,21 @@ class OutfitsViewModel : ViewModel() {
             isDeletionCandidate = false,
             outfitPhoto = photo,
             itemList = itemList,
-            outfitId = UUID.randomUUID().toString()
+            outfitId = UUID.randomUUID().toString(),
         )
 
         val updatedOutfits = _outfitsState.value.outfits + newOutfit
         _outfitsState.value = _outfitsState.value.copy(
             outfits = updatedOutfits,
         )
+    }
+
+    // Retrieves an ItemEntry based on it's itemId
+    // Throws an exception if item with that id is not found
+    // TODO: make sure wherever we call this catches the exception and displays error accordingly
+    fun getOutfit(outfitId: String): OutfitEntry {
+        return _outfitsState.value.outfits.find { it.outfitId == outfitId }
+            ?: throw NoSuchElementException("Outfit with id $outfitId not found")
     }
 
     // deletes all specified items
@@ -224,6 +233,13 @@ class OutfitsViewModel : ViewModel() {
     fun updateSearchQuery(query: String) {
         _outfitsState.value = _outfitsState.value.copy(
             searchQuery = query
+        )
+    }
+
+    // update the outfit to show in outfit modal
+    fun updateOutfitToShow(outfitId: String) {
+        _outfitsState.value = _outfitsState.value.copy(
+            outfitToShow = outfitId
         )
     }
 

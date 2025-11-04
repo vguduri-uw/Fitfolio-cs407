@@ -22,9 +22,7 @@ fun OutfitModal(
     outfitsViewModel: OutfitsViewModel,
     outfitId: String,
     onDismiss: () -> Unit,
-    onNavigateToOutfitsScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToClosetScreen: () -> Unit,
 ) {
     // Track sheet state and open to full screen
     val sheetState = rememberModalBottomSheetState(
