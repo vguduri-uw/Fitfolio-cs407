@@ -99,9 +99,11 @@ class OutfitsViewModel : ViewModel() {
     fun editOutfitName(outfit: OutfitEntry, name: String) {
         outfit.outfitName = name
     }
+
     fun editOutfitDescription(outfit: OutfitEntry, description: String) {
         outfit.outfitDescription = description
     }
+
     fun editOutfitTags(outfit: OutfitEntry, tag: String, isRemoving: Boolean) {
         if (isRemoving) {
             outfit.outfitTags -= tag
@@ -109,12 +111,15 @@ class OutfitsViewModel : ViewModel() {
             outfit.outfitTags += tag
         }
     }
+
     fun toggleFavoritesProperty(outfit: OutfitEntry) {
         outfit.isFavorite = !outfit.isFavorite
     }
+
     fun toggleDeletionCandidate(outfit: OutfitEntry, isCandidate: Boolean){
         outfit.isDeletionCandidate = isCandidate
     }
+
     fun editItemList(outfit: OutfitEntry, item: ItemEntry, isRemoving: Boolean){
         if (isRemoving) {
             outfit.itemList -= item
@@ -182,6 +187,12 @@ class OutfitsViewModel : ViewModel() {
         _outfitsState.value = _outfitsState.value.copy(
             tags = updatedTags
         )
+
+        val outfitsWithTag = _outfitsState.value.outfits.filter { tag in it.outfitTags }
+
+        for (outfitWithTag in outfitsWithTag){
+            editOutfitTags(outfitWithTag, tag, true)
+        }
     }
 
     // toggles the favorites state for all outfits
@@ -268,8 +279,16 @@ class OutfitsViewModel : ViewModel() {
     }
 
     // todo: return a list of type string containing outfit Ids for each outfit containing the item
-    fun getOutfitsForItem(itemId: String) {
+    fun getOutfitsForItem(itm: ItemEntry) {
+        val outfitsWithItem = emptyList<OutfitEntry>().toMutableList()
 
+        for (outfit in _outfitsState.value.outfits) {
+            for (item in outfit.itemList) {
+                if (item.itemId == itm.itemId) {
+                    outfitsWithItem += outfit
+                }
+            }
+        }
     }
 
     // clears any applied filters and resets properties
