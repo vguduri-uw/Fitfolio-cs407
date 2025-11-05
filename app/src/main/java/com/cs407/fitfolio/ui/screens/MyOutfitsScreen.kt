@@ -448,7 +448,11 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                                 outfitsState.isDeleteActive != DeletionStates.Confirmed.name,
                             onClick = {
                                 if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
-                                    outfitsViewModel.setDeletionCandidates(outfit)
+                                    if (outfit.isDeletionCandidate) {
+                                        outfitsViewModel.removeDeletionCandidates(outfit)
+                                    } else {
+                                        outfitsViewModel.setDeletionCandidates(outfit)
+                                    }
                                 } else {
                                     outfitsViewModel.updateOutfitToShow(outfit.outfitId)
                                 }

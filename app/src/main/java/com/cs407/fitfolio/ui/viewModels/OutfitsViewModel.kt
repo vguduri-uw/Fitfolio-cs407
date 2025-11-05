@@ -282,6 +282,17 @@ class OutfitsViewModel : ViewModel() {
 
     }
 
+    // removes deletion candidates
+    fun removeDeletionCandidates(outfit: OutfitEntry) {
+        // update outfit's isDeletionCandidate property
+        toggleDeletionCandidate(outfit, false)
+
+        val updatedDeletionCandidates = outfitsState.value.deletionCandidates - outfit
+        _outfitsState.value = _outfitsState.value.copy(
+            deletionCandidates = updatedDeletionCandidates
+        )
+    }
+
     // clears the deletion candidates
     fun clearDeletionCandidates() {
         // update item isDeletionCandidate property

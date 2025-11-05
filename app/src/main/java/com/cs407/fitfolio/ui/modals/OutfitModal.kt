@@ -1,15 +1,20 @@
 package com.cs407.fitfolio.ui.modals
 
+import android.graphics.Paint
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -36,6 +41,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
@@ -86,7 +92,7 @@ fun OutfitModal(
             // Track whether outfit is editable
             var isEditing by remember { mutableStateOf(false) }
 
-            isEditing = OutfitIconBox(
+            isEditing = outfitIconBox(
                 outfit = outfit,
                 outfitsViewModel = outfitsViewModel,
                 onDismiss = onDismiss,
@@ -97,7 +103,7 @@ fun OutfitModal(
 }
 
 @Composable
-fun OutfitIconBox (
+fun outfitIconBox (
     outfit: OutfitEntry,
     outfitsViewModel: OutfitsViewModel,
     onDismiss: () -> Unit,
@@ -109,130 +115,123 @@ fun OutfitIconBox (
     // Track whether outfit is editable
     var isEditing by remember { mutableStateOf(false) }
 
-    Box(
-        modifier = Modifier
-            .clip(MaterialTheme.shapes.medium)
-            .background(Color.White)
+    Column(
+        verticalArrangement = Arrangement.spacedBy(10.dp)
     ) {
-        // TODO: get icons to line up vertically
-        Column(
+        // outfit name
+        Box(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(vertical = 16.dp),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color.White)
+                .fillMaxWidth()
         ) {
-            Row(
+            Text(
+                text = outfit.outfitName,
+                style = MaterialTheme.typography.titleLarge,
+                textAlign = TextAlign.Center,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+                    .padding(vertical = 15.dp)
+            )
+        }
 
-                // Calendar icon button
-                IconButton(
-                    onClick = { // TODO: make it show the days in the calendar its featured??
-                        onDismiss()
-                        onNavigateToCalendarScreen()
-                    }
-                ) {
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color.White)
+                .fillMaxWidth()
+                .height(300.dp)
+        ) {
+            // outfit photo
+            Image(
+                painter = painterResource(R.drawable.shirt),
+                contentDescription = "Item photo",
+                modifier = Modifier
+                    .size(180.dp)
+                    .align(Alignment.Center)
+            )
+
+            // calendar icon button
+            IconButton(
+                modifier = Modifier.align(Alignment.TopStart),
+                onClick = { // TODO: make it show the days in the calendar its featured??
+                    onDismiss()
+                    onNavigateToCalendarScreen()
+                }
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.schedule),
+                    contentDescription = "Calendar",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+
+            // edit icon button
+            IconButton(
+                modifier = Modifier.align(Alignment.TopEnd),
+                onClick = { isEditing = !isEditing }
+            ) {
+                if (isEditing) {
                     Icon(
-                        painter = painterResource(R.drawable.schedule),
-                        contentDescription = "Calendar",
+                        imageVector = Icons.Filled.Check,
+                        contentDescription = "Save edits",
                         modifier = Modifier.size(28.dp)
                     )
-                }
-
-                // Title
-                Text(
-                    text = outfit.outfitName,
-                    style = MaterialTheme.typography.titleLarge
-                )
-
-                // Edit icon button
-                IconButton(
-                    onClick = { isEditing = !isEditing }
-                ) {
-                    if (isEditing) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = "Save edits",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Edit outfit",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = "Edit outfit",
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
 
-            // Image and bottom icons
-            Box(
+            // delete icon button
+            IconButton(
+                // TODO: get rid of outfits view model pass in eventually...
+                // TODO: add in alert dialog to warn about deleting outfits... make it its own reusable composable??
+                onClick = {
+                    onDismiss()
+                    outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
+                    outfitsViewModel.setDeletionCandidates(outfit)
+                },
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
-                contentAlignment = Alignment.Center
+                    .align(Alignment.BottomStart)
             ) {
-                Image(
-                    painter = painterResource(R.drawable.shirt),
-                    contentDescription = "Item photo",
-                    modifier = Modifier
-                        .size(180.dp)
-                        .align(Alignment.Center)
+                Icon(
+                    imageVector = Icons.Outlined.Delete,
+                    contentDescription = "Delete outfit",
+                    modifier = Modifier.size(28.dp)
                 )
+            }
 
-                // Delete icon button
-                IconButton(
-                    // TODO: get rid of outfits view model pass in eventually...
-                    // TODO: add in alert dialog to warn about deleting outfits... make it its own reusable composable??
-                    onClick = {
-                        onDismiss()
-                        outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
-                        outfitsViewModel.setDeletionCandidates(outfit)
-                    },
-                    modifier = Modifier
-                        .align(Alignment.BottomStart)
-                        .padding(8.dp)
-                ) {
+            // favorite icon button
+            IconButton(
+                onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
+                modifier = Modifier.align(Alignment.BottomEnd)
+            ) {
+                if (outfit.isFavorite) {
                     Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Delete outfit",
+                        imageVector = Icons.Filled.Favorite,
+                        contentDescription = "Unfavorite outfit",
                         modifier = Modifier.size(28.dp)
                     )
-                }
-
-                // Favorite icon button
-                IconButton(
-                    onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(8.dp)
-                ) {
-                    if (outfit.isFavorite) {
-                        Icon(
-                            imageVector = Icons.Filled.Favorite,
-                            contentDescription = "Unfavorite outfit",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Favorite,
-                            contentDescription = "Favorite outfit",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
+                } else {
+                    Icon(
+                        imageVector = Icons.Outlined.Favorite,
+                        contentDescription = "Favorite outfit",
+                        modifier = Modifier.size(28.dp)
+                    )
                 }
             }
         }
+    }
+
+    LazyColumn() {
+
+    }
 
         if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
             DeleteOutfitDialog(outfitsViewModel)
         }
-    }
-
     return isEditing
 }
