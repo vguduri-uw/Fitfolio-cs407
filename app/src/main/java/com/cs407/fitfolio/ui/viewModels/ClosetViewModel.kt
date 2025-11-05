@@ -2,8 +2,10 @@ package com.cs407.fitfolio.ui.viewModels
 
 import androidx.lifecycle.ViewModel
 import com.cs407.fitfolio.ui.enums.DeletionStates
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import java.util.UUID
 import java.io.Serializable
 
@@ -201,12 +203,9 @@ class ClosetViewModel : ViewModel() {
     }
 
     // Retrieves an ItemEntry based on it's itemId
-    // Throws an exception if item with that id is not found
     // TODO: make sure wherever we call this catches the exception and displays error accordingly
-    fun getItem(itemId: String): ItemEntry {
-        return _closetState.value.items.find { it.itemId == itemId }
-            ?: throw NoSuchElementException("Item with id $itemId not found")
-    }
+    fun itemFlow(itemId: String): Flow<ItemEntry?> =
+        closetState.map { state -> state.items.find { it.itemId == itemId } }
 
     // Adds an item type to the itemTypes list (from the item modal)
     fun addItemType(itemType: String) {

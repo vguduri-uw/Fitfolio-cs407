@@ -493,7 +493,8 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                             ) {
                                 Icon(
                                     imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites"
+                                    contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites",
+                                    tint = if (item.isFavorite) Color.Red else Color.Black
                                 )
                             }
                         }
