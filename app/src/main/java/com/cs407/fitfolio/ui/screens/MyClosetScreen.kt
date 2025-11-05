@@ -139,9 +139,13 @@ fun MyClosetScreen(
                 closetViewModel = closetViewModel,
                 itemId = closetState.itemToShow,
                 onDismiss = { closetViewModel.updateItemToShow("")},
-                onNavigateToOutfitsScreen = onNavigateToOutfitsScreen,
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
+        }
+
+        // Show deletion dialog
+        if (closetState.isDeleteActive == DeletionStates.Confirmed.name) {
+            DeleteItemDialog(closetViewModel, outfitsViewModel)
         }
     }
 }
@@ -506,10 +510,6 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     Text(item.itemName)
                 }
             }
-        }
-
-        if (closetState.isDeleteActive == DeletionStates.Confirmed.name) {
-            DeleteItemDialog(closetViewModel)
         }
     }
 }

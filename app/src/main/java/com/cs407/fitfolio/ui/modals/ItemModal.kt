@@ -54,7 +54,6 @@ fun ItemModal(
     closetViewModel: ClosetViewModel,
     itemId: String,
     onDismiss: () -> Unit,
-    onNavigateToOutfitsScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
 ) {
     // Observe the current UI state from the ViewModel
@@ -111,10 +110,6 @@ fun IconBox (
 ) : Boolean {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-
-    LaunchedEffect(closetState.deletionCandidates) {
-        Log.d("deletionCandidtates", closetState.deletionCandidates.toString())
-    }
 
     // Track whether item is editable
     var isEditing by remember { mutableStateOf(false) }
@@ -197,12 +192,10 @@ fun IconBox (
 
                 // Delete icon button
                 IconButton(
-                    // TODO: get rid of outfits view model pass in eventually...
-                    // TODO: add in alert dialog to warn about deleting outfits... make it its own reusable composable??
                     onClick = {
                         onDismiss()
-                        closetViewModel.toggleDeleteState(DeletionStates.Active.name)
                         closetViewModel.setDeletionCandidates(item)
+                        closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
                     },
                     modifier = Modifier
                         .align(Alignment.BottomStart)
@@ -238,11 +231,9 @@ fun IconBox (
                 }
             }
         }
-
-        if (closetState.isDeleteActive == DeletionStates.Active.name) {
-            DeleteItemDialog(closetViewModel)
-        }
     }
 
     return isEditing
+
+    // outfitsViewModel, outfitId, onDismiss, onNavigateToCalendarScreen
 }

@@ -93,6 +93,8 @@ class ClosetViewModel : ViewModel() {
     }
 
     // Setters for item properties to be used in the add screen and item modal
+    // TODO: gonna have to make a copy or something because the item for the closet state needs to be updated
+    // also this is prob the same stale issue for all of these
     fun editItemName(item: ItemEntry, name: String) {
         item.itemName = name
     }

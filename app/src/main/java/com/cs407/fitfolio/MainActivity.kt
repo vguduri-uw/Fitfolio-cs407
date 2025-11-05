@@ -22,11 +22,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -36,8 +31,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.cs407.fitfolio.ui.TestData.AddTestItemData
-import com.cs407.fitfolio.ui.TestData.AddTestOutfitData
+import com.cs407.fitfolio.ui.testData.AddTestItemData
+import com.cs407.fitfolio.ui.testData.AddTestOutfitData
 import com.cs407.fitfolio.ui.theme.FitfolioTheme
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
 import com.cs407.fitfolio.ui.screens.CalendarScreen
@@ -57,16 +52,16 @@ class MainActivity : ComponentActivity() {
         setContent {
             FitfolioTheme {
                 // TESTING PURPOSES ONLY-- populates a few items
-//                val closetViewModel: ClosetViewModel = viewModel()
-//                var populateItemTestData by remember { mutableStateOf(false) }
-//                val hasPopulated = remember { mutableStateOf(false) }
-//                LaunchedEffect(Unit) {
-//                    if (!hasPopulated.value) {
-//                        populateTestData = true
-//                        hasPopulated.value = true
-//                    }
-//                }
-//                if (populateTestData) AddTestItemData(closetViewModel = closetViewModel)
+                val closetViewModel: ClosetViewModel = viewModel()
+                var populateItemTestData by remember { mutableStateOf(false) }
+                val itemDataHasPopulated = remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    if (!itemDataHasPopulated.value) {
+                        populateItemTestData = true
+                        itemDataHasPopulated.value = true
+                    }
+                }
+                if (populateItemTestData) AddTestItemData(closetViewModel = closetViewModel)
 
                 // TESTING PURPOSES ONLY-- populates a few items in outfits screen
                 val outfitsViewModel: OutfitsViewModel = viewModel()
@@ -78,18 +73,8 @@ class MainActivity : ComponentActivity() {
                         hasPopulated.value = true
                     }
                 }
+
                 if (populateTestData) AddTestOutfitData(outfitsViewModel = outfitsViewModel)
-                // TESTING PURPOSES ONLY-- populates a few items
-                val closetViewModel: ClosetViewModel = viewModel()
-                var populateTestData by remember { mutableStateOf(false) }
-                val hasPopulated = remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) {
-                    if (!hasPopulated.value) {
-                        populateTestData = true
-                        hasPopulated.value = true
-                    }
-                }
-                if (populateTestData) AddTestItemData(closetViewModel = closetViewModel)
 
                 AppNavigation()
             }

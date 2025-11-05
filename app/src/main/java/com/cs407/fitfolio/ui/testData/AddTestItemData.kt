@@ -1,11 +1,9 @@
-package com.cs407.fitfolio.ui.TestData
+package com.cs407.fitfolio.ui.testData
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-import com.cs407.fitfolio.ui.viewModels.ItemEntry
-import java.util.UUID
 
 @Composable
 fun AddTestItemData(closetViewModel: ClosetViewModel) {

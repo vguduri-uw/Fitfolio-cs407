@@ -11,7 +11,10 @@ import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 @Composable
-fun DeleteItemDialog(closetViewModel: ClosetViewModel) {
+fun DeleteItemDialog(
+    closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel
+) {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
 
@@ -41,9 +44,9 @@ fun DeleteItemDialog(closetViewModel: ClosetViewModel) {
         },
         confirmButton = {
             Button(onClick = {
+                closetViewModel.deleteItem(closetState.deletionCandidates, outfitsViewModel)
                 closetViewModel.clearDeletionCandidates()
                 closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                closetViewModel.deleteItem(closetState.deletionCandidates, outfitsViewModel = OutfitsViewModel())
             }) {
                 Text(text = "Delete")
             }
