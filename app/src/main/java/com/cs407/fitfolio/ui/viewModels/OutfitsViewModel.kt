@@ -122,11 +122,20 @@ class OutfitsViewModel : ViewModel() {
     }
 
     fun toggleFavoritesProperty(outfit: OutfitEntry) {
-        outfit.isFavorite = !outfit.isFavorite
+        val updatedOutfits = _outfitsState.value.outfits.map {
+            if (it.outfitId == outfit.outfitId) it.copy(isFavorite = !it.isFavorite) else it
+        }
+
+        _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+        applyFilters()
     }
 
     fun toggleDeletionCandidate(outfit: OutfitEntry, isCandidate: Boolean){
-        outfit.isDeletionCandidate = isCandidate
+        val updatedOutfits = _outfitsState.value.outfits.map {
+            if (it.outfitId == outfit.outfitId) it.copy(isDeletionCandidate = isCandidate) else it
+        }
+
+        _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
     }
 
     fun editItemList(outfit: OutfitEntry, item: ItemEntry, isRemoving: Boolean){

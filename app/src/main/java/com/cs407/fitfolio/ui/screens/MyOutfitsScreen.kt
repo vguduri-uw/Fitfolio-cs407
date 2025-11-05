@@ -16,7 +16,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
@@ -31,6 +33,7 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -412,122 +415,75 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
 @Composable
 fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     // TODO: pull back in the if/elses and the iteration through filteredItems when ready
-    /*if (outfitsState.filteredItems.isEmpty()) {
+    if (outfitsState.filteredOutfits.isEmpty()) {
         Text(
             "No items found.",
             modifier = Modifier
                 .padding(16.dp)
         )
-    } else {*/
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Fixed(2),
-        modifier = Modifier
-            .fillMaxWidth(),
-        verticalItemSpacing = 8.dp,
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        /*items(outfitsState.filteredItems) { item ->
-                    ElevatedCard() {
-                        // TODO: implement outfits card
-                    }
-                }*/
-        // for testing purposes only
-        items(30) { index ->
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height((150..250).random().dp)
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0))
-                    .clickable( // TODO: put this in the card itself after testing
-                        // TODO: figure out if scrolling will click the card
-                        enabled = outfitsState.isDeleteActive != DeletionStates.Confirmed.name,
-                        onClick = {
-                            if (outfitsState.isDeleteActive == DeletionStates.Active.name){
-                                // TODO: uncomment after testing
-                                // outfitsViewModel.setDeletionCandidate(item)
-                            } else {
-                                outfitsViewModel.updateOutfitToShow("Test")
+    } else {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = Modifier
+                .fillMaxWidth(),
+            verticalItemSpacing = 8.dp,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(outfitsState.filteredOutfits) { outfit ->
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(Color(0xFFE0E0E0))
+                        .clickable(
+                            enabled =
+                                outfitsState.isDeleteActive != DeletionStates.Confirmed.name,
+                            onClick = {
+                                if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
+                                    outfitsViewModel.setDeletionCandidates(outfit)
+                                } else {
+                                    outfitsViewModel.updateOutfitToShow(outfit.outfitId)
+                                }
+                            }
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .align(alignment = Alignment.TopEnd)
+                            .padding(6.dp),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        // Favorite item button (if not in delete state)
+                        if (outfitsState.isDeleteActive == DeletionStates.Inactive.name) {
+                            IconButton(
+                                onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
+                                modifier = Modifier.size(28.dp)
+                            ) {
+                                Icon(
+                                    imageVector = if (outfit.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                    contentDescription = if (outfit.isFavorite) "Remove item from favorites" else "Add item to favorites"
+                                )
                             }
                         }
-                ),
-                contentAlignment = Alignment.Center
-            ) {
-                Text("Outfit ${index + 1}")
-
-                Row(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(6.dp),
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    // favorite item button (if not in delete state)
-                    if (outfitsState.isDeleteActive == DeletionStates.Inactive.name) {
-                        IconButton(
-                            onClick = { /* outfitsViewModel.toggleFavoritesProperty(item) */ },
-                            modifier = Modifier.size(28.dp)
-                        ) {
+                        // Toggle deletion candidate icon (if in delete state)
+                        if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
                             Icon(
-                                /*imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites"*/
-
-                                imageVector = Icons.Outlined.FavoriteBorder,
-                                contentDescription = "Add item to favorites"
+                                imageVector = if (outfit.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                                contentDescription = if (outfit.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
                             )
                         }
                     }
-
-                    // Toggle deletion candidate icon (if in delete state)
-                    if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
-                        Icon(
-                            /*imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                        contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"*/
-
-                            imageVector = Icons.Outlined.CheckCircle,
-                            contentDescription = "Add item to deletion candidates"
-                        )
-
-                    }
+                    Text(outfit.outfitName)
                 }
+            }
+
+            if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
+                // todo: uncomment once dialog is created
+                // DeleteOutfitDialog(outfitsViewModel)
             }
         }
-    }
-
-    if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
-        AlertDialog(
-            onDismissRequest = {
-                outfitsViewModel.clearDeletionCandidates()
-                outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-            },
-            title = {
-                Text("Are you sure you want to delete these item(s)?")
-            },
-            text = {
-                Text( // TODO: should this logic actually be true.... also make a better message
-                    // TODO: implement this logic if we want it to be like this
-                    "Deleting these item(s) will delete all of the outfits they are featured in. " +
-                            "Check the items' outfit(s) before deleting and remove the item(s) from the " +
-                            "outfit(s) if you would like the outfit(s) to be saved."
-                )
-            },
-            dismissButton = {
-                Button(onClick = {
-                    outfitsViewModel.clearDeletionCandidates()
-                    outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                }) {
-                    Text(text = "Cancel")
-                }
-            },
-            confirmButton = {
-                Button(onClick = {
-                    outfitsViewModel.clearDeletionCandidates()
-                    outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                    /*outfitsViewModel.delete(outfitsState.deletionCandidates, outfitsViewModel)*/
-                }) {
-                    Text(text = "Delete")
-                }
-            }
-        )
     }
 }

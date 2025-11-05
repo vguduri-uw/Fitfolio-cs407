@@ -61,9 +61,9 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
 
     // Outfit 1
     outfitsViewModel.addOutfit(
-        name = "Example Outfit Summer and Red",
+        name = "Example Outfit Summer and Red (Athletic)",
         description = "Summer and Red",
-        tags = listOf("Summer", "Red"),
+        tags = listOf("Athletic"),
         isFavorite = true,
         itemList = itemList,
         photo = -1
@@ -71,9 +71,9 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
 
     // Outfit 2
     outfitsViewModel.addOutfit(
-        name = "Example Outfit Fall and Blue",
+        name = "Example Outfit Fall and Blue (Business)",
         description = "Fall and Blue",
-        tags = listOf("Fall", "Blue"),
+        tags = listOf("Business"),
         isFavorite = true,
         itemList = itemList,
         photo = -1
@@ -81,9 +81,9 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
 
     // Outfit 3
     outfitsViewModel.addOutfit(
-        name = "Example Outfit Fall and Orange",
+        name = "Example Outfit Fall and Orange (Business Casual)",
         description = "Fall and Orange",
-        tags = listOf("Fall", "Orange"),
+        tags = listOf("Business Casual"),
         isFavorite = false,
         itemList = itemList,
         photo = -1
@@ -91,9 +91,9 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
 
     // Outfit 4
     outfitsViewModel.addOutfit(
-        name = "Example Outfit Spring, Green, and Casual",
+        name = "Example Outfit Spring, Green, and Casual (Casual)",
         description = "Spring, Green, and Casual",
-        tags = listOf("Spring", "Green", "Casual"),
+        tags = listOf("Casual"),
         isFavorite = false,
         itemList = itemList,
         photo = -1
@@ -101,9 +101,9 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
 
     // Outfit 5
     outfitsViewModel.addOutfit(
-        name = "Example Outfit Winter, Black, and Casual",
+        name = "Example Outfit Winter, Black, and Casual (Formal)",
         description = "Winter, Black, and Casual",
-        tags = listOf("Winter", "Black", "Casual"),
+        tags = listOf("Formal"),
         isFavorite = true,
         itemList = emptyList(),
         photo = -1
@@ -111,9 +111,9 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
 
     // Outfit 6
     outfitsViewModel.addOutfit(
-        name = "Example Outfit Fall and Brown",
+        name = "Example Outfit Fall and Brown (Streetwear)",
         description = "Fall and Brown",
-        tags = listOf("Fall", "Brown"),
+        tags = listOf("Streetwear"),
         isFavorite = false,
         itemList = itemList,
         photo = -1
@@ -121,21 +121,21 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
 
     // Outfit 7
     outfitsViewModel.addOutfit(
-        name = "Example Outfit Summer, Yellow, and Casual",
+        name = "Example Outfit Summer, Yellow, and Casual (Loungewear)",
         description = "Summer, Yellow, and Casual",
-        tags = listOf("Summer", "Yellow", "Casual"),
+        tags = listOf("Loungewear"),
         isFavorite = true,
         itemList = itemList,
         photo = -1
     )
 
-    // Outfit 8
-    outfitsViewModel.addOutfit(
-        name = "Example Outfit Spring, Purple, and Casual",
-        description = "Spring, Purple, and Casual",
-        tags = listOf("Spring", "Purple", "Casual"),
-        isFavorite = false,
-        itemList = itemList,
-        photo = -1
-    )
+//    // Outfit 8
+//    outfitsViewModel.addOutfit(
+//        name = "Example Outfit Spring, Purple, and Casual",
+//        description = "Spring, Purple, and Casual",
+//        tags = listOf("Spring", "Purple", "Casual"),
+//        isFavorite = false,
+//        itemList = itemList,
+//        photo = -1
+//    )
 }
