@@ -54,6 +54,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.OutfitModal
@@ -479,11 +480,9 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     Text(outfit.outfitName)
                 }
             }
-
-            if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
-                // todo: uncomment once dialog is created
-                // DeleteOutfitDialog(outfitsViewModel)
-            }
+        }
+        if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
+            DeleteOutfitDialog(outfitsViewModel)
         }
     }
 }
