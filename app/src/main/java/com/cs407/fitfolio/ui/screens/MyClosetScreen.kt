@@ -139,6 +139,7 @@ fun MyClosetScreen(
                 closetViewModel = closetViewModel,
                 itemId = closetState.itemToShow,
                 onDismiss = { closetViewModel.updateItemToShow("")},
+                outfitsViewModel = outfitsViewModel,
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
         }

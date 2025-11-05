@@ -2,6 +2,7 @@ package com.cs407.fitfolio.ui.modals
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -43,14 +44,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.enums.DeletionStates
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-
-// outfitsViewModel, outfitId, onDismiss, onNavigateToCalendarScreen
-
+import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun ItemModal(
     closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel,
     itemId: String,
     onDismiss: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
@@ -86,6 +86,8 @@ fun ItemModal(
             ItemInformation(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
+                outfitsViewModel = outfitsViewModel,
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -227,6 +229,8 @@ fun IconBox (
 fun ItemInformation(
     itemId: String,
     closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel,
+    onNavigateToCalendarScreen: () -> Unit,
     modifier: Modifier
 ) {
     // Observe the current UI state from the ViewModel
@@ -254,10 +258,17 @@ fun ItemInformation(
                         text = "Description",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    Text(
-                        text = item.itemDescription,
-                        style = MaterialTheme.typography.bodySmall
-                    )
+                    if (item.itemDescription.isNotEmpty()) {
+                        Text(
+                            text = item.itemDescription,
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    } else {
+                        Text(
+                            text = "No description found.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                 }
             }
         }
@@ -274,18 +285,31 @@ fun ItemInformation(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.padding(15.dp)
                 ) {
-                    Text(
-                        text = "Outfits featuring this item",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(item.outfitList.size) { idx ->
-                            val outfit = item.outfitList[idx]
-                            OutfitsCard(
-                                name = outfit.outfitName,
-                                imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
-                            )
+                    if (item.outfitList.isNotEmpty()) {
+                        Text(
+                            text = "Outfits featuring this item",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            items(item.outfitList.size) { idx ->
+                                val outfit = item.outfitList[idx]
+                                OutfitsCard(
+                                    outfitName = outfit.outfitName,
+                                    outfitId = outfit.outfitId,
+                                    outfitsViewModel = outfitsViewModel,
+                                    onNavigateToCalendarScreen = onNavigateToCalendarScreen,
+                                    imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
+                                )
+                            }
                         }
+                    } else {
+                        Text(
+                            text = "Outfits featuring this item",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        Text(
+                            text = "No outfits found."
+                        )
                     }
                 }
             }
@@ -295,7 +319,10 @@ fun ItemInformation(
 
 @Composable
 private fun OutfitsCard(
-    name: String,
+    outfitName: String,
+    outfitId: String,
+    outfitsViewModel: OutfitsViewModel,
+    onNavigateToCalendarScreen: () -> Unit,
     imageRes: Int,
 ) {
     Column(
@@ -306,14 +333,25 @@ private fun OutfitsCard(
             .background(Color(0xFFF7F7F7))
             .padding(10.dp)
             .fillMaxSize()
+        // TODO: uncomment when ready
+            /*.clickable(
+                OutfitsModal(
+                    outfitsViewModel = outfitsViewModel,
+                    outfitId = outfitId,
+                    onDismiss = { }, // ???
+                    onNavigateToCalendarScreen = onNavigateToCalendarScreen
+                )
+            )*/
+        // outfitsViewModel, outfitId, onDismiss, onNavigateToCalendarScreen
+
     ) {
         Image(
             painter = painterResource(imageRes),
-            contentDescription = "$name image",
+            contentDescription = "$outfitName image",
             modifier = Modifier.size(72.dp)
         )
         Text(
-            text = name,
+            text = outfitName,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
             textAlign = TextAlign.Center
         )

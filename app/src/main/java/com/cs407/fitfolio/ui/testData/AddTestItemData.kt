@@ -1,10 +1,8 @@
 package com.cs407.fitfolio.ui.testData
 
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-import com.cs407.fitfolio.ui.viewModels.OutfitEntry
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 @Composable
@@ -12,8 +10,6 @@ fun AddTestItemData(
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel
 ) {
-    val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-
     // Outfit 1
     outfitsViewModel.addOutfit(
         name = "Red Shirt & Jeans",
@@ -88,7 +84,7 @@ fun AddTestItemData(
     closetViewModel.addItem(
         name = "Orange Dress",
         type = "Dresses",
-        description = "Ripped jeans",
+        description = "",
         tags = listOf("Fall", "Orange"),
         isFavorites = false,
         photo = -1,
