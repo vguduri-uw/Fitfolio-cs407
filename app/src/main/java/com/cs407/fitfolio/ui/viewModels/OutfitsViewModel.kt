@@ -107,10 +107,18 @@ class OutfitsViewModel : ViewModel() {
     // SETTERS FOR ITEM PROPERTIES (for use in wardrobe screen and outfit modal)
     fun editOutfitName(outfit: OutfitEntry, name: String) {
         outfit.outfitName = name
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     fun editOutfitDescription(outfit: OutfitEntry, description: String) {
         outfit.outfitDescription = description
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     fun editOutfitTags(outfit: OutfitEntry, tag: String, isRemoving: Boolean) {
@@ -119,6 +127,10 @@ class OutfitsViewModel : ViewModel() {
         } else {
             outfit.outfitTags += tag
         }
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     fun toggleFavoritesProperty(outfit: OutfitEntry) {
@@ -144,6 +156,10 @@ class OutfitsViewModel : ViewModel() {
         } else {
             outfit.itemList += item
         }
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     /* ==========================================================================================
@@ -211,6 +227,10 @@ class OutfitsViewModel : ViewModel() {
         for (outfitWithTag in outfitsWithTag){
             editOutfitTags(outfitWithTag, tag, true)
         }
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     // toggles the favorites state for all outfits
