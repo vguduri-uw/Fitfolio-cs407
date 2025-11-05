@@ -1,22 +1,47 @@
 package com.cs407.fitfolio.ui.modals
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Favorite
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
+import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.ui.viewModels.OutfitEntry
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 @Composable
@@ -27,32 +52,187 @@ fun OutfitModal(
     onDismiss: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
 ) {
+    // Observe the current UI state from the ViewModel
+    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+
     // Track sheet state and open to full screen
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
 
-    // Scroll state for the item modal
+    // Scroll state for the outfit modal
     val scrollState = rememberScrollState()
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = Color(0xFFE0E0E0),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 64.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp, bottom = 48.dp, start = 24.dp, end = 24.dp)
+                .padding(bottom = 48.dp, start = 24.dp, end = 24.dp)
                 .verticalScroll(scrollState)
         ) {
-            //val outfit: OutfitEntry = outfitViewModal.getOutfit(outfitId)
-            //ItemOrOutfitModalBox(title = item.itemName, photo = item.itemPhoto)
-            //ItemOrOutfitModalBox(title = "Outfit Title", photo = 0, onNavigateToCalendarScreen = onNavigateToCalendarScreen)
-            
+            val outfit = outfitsState.outfits.find { it.outfitId == outfitId }
+                ?: throw NoSuchElementException("Item with id $outfitId not found")
+
+            // Track whether outfit is editable
+            var isEditing by remember { mutableStateOf(false) }
+
+            isEditing = OutfitIconBox(
+                outfit = outfit,
+                outfitsViewModel = outfitsViewModel,
+                onDismiss = onDismiss,
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+            )
+        }
+    }
+}
+
+@Composable
+fun OutfitIconBox (
+    outfit: OutfitEntry,
+    outfitsViewModel: OutfitsViewModel,
+    onDismiss: () -> Unit,
+    onNavigateToCalendarScreen: () -> Unit
+) : Boolean {
+    // Observe the current UI state from the ViewModel
+    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+
+    // Track whether outfit is editable
+    var isEditing by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White)
+    ) {
+        // TODO: get icons to line up vertically
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(vertical = 16.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+
+                // Calendar icon button
+                IconButton(
+                    onClick = { // TODO: make it show the days in the calendar its featured??
+                        onDismiss()
+                        onNavigateToCalendarScreen()
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.schedule),
+                        contentDescription = "Calendar",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                // Title
+                Text(
+                    text = outfit.outfitName,
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                // Edit icon button
+                IconButton(
+                    onClick = { isEditing = !isEditing }
+                ) {
+                    if (isEditing) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Save edits",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Edit outfit",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
+
+            // Image and bottom icons
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(R.drawable.shirt),
+                    contentDescription = "Item photo",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .align(Alignment.Center)
+                )
+
+                // Delete icon button
+                IconButton(
+                    // TODO: get rid of outfits view model pass in eventually...
+                    // TODO: add in alert dialog to warn about deleting outfits... make it its own reusable composable??
+                    onClick = {
+                        onDismiss()
+                        outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
+                        outfitsViewModel.setDeletionCandidates(outfit)
+                    },
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Delete outfit",
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
+
+                // Favorite icon button
+                IconButton(
+                    onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(8.dp)
+                ) {
+                    if (outfit.isFavorite) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = "Unfavorite outfit",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Favorite,
+                            contentDescription = "Favorite outfit",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
+            }
         }
 
+        if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
+            DeleteOutfitDialog(outfitsViewModel)
+        }
     }
+
+    return isEditing
 }

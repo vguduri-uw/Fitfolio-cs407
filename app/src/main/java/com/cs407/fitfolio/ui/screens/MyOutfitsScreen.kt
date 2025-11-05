@@ -371,7 +371,13 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 DeletionStates.Active.name -> {
                     // TODO: should this be the exit mode?? and we have a separate confirm button
                     // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
-                    IconButton(onClick = { outfitsViewModel.toggleDeleteState(DeletionStates.Confirmed.name) }) {
+                    IconButton(onClick = {
+                        if (outfitsState.deletionCandidates.isEmpty()) {
+                            outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                        } else {
+                            outfitsViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Outlined.Check,
                             contentDescription = "Confirm delete state",
