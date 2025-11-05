@@ -55,7 +55,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.ui.TestData.AddTestItemData
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.enums.DeletionStates
@@ -388,7 +387,13 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 DeletionStates.Active.name -> {
                     // TODO: should this be the exit mode?? and we have a separate confirm button
                     // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
-                    IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name) }) {
+                    IconButton(onClick = {
+                        if (closetState.deletionCandidates.isEmpty()) {
+                            closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                        } else {
+                            closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
+                        }
+                    }) {
                         Icon(
                             imageVector = Icons.Outlined.Check,
                             contentDescription = "Confirm delete state",
@@ -450,7 +455,7 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height((150..250).random().dp)
+                        .height(200.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .background(Color(0xFFE0E0E0))
                         .clickable(
@@ -458,7 +463,11 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                 closetState.isDeleteActive != DeletionStates.Confirmed.name,
                             onClick = {
                                 if (closetState.isDeleteActive == DeletionStates.Active.name) {
-                                    closetViewModel.setDeletionCandidates(item)
+                                    if (item.isDeletionCandidate) {
+                                        closetViewModel.removeDeletionCandidate(item)
+                                    } else {
+                                        closetViewModel.setDeletionCandidates(item)
+                                    }
                                 } else {
                                     closetViewModel.updateItemToShow(item.itemId)
                                 }

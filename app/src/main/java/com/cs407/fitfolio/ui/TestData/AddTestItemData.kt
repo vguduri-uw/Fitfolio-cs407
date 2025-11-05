@@ -63,7 +63,7 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
 
     // Item 6
     closetViewModel.addItem(
-        name = "Brown Outerwear Jacket",
+        name = "Brown Outerwear Jacket Brown Outerwear Jacket Brown Outerwear Jacket Brown Outerwear Jacket",
         type = "Outerwear",
         description = "Warm brown jacket for fall",
         tags = listOf("Fall", "Brown"),

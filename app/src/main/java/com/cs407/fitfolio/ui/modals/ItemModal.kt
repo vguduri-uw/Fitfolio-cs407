@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.modals
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -27,6 +28,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -83,6 +85,7 @@ fun ItemModal(
                 .padding(bottom = 48.dp, start = 24.dp, end = 24.dp)
                 .verticalScroll(scrollState)
         ) {
+            // TODO: fix the stale thingy
             val item = closetState.items.find { it.itemId == itemId }
                 ?: throw NoSuchElementException("Item with id $itemId not found")
 
@@ -108,6 +111,10 @@ fun IconBox (
 ) : Boolean {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(closetState.deletionCandidates) {
+        Log.d("deletionCandidtates", closetState.deletionCandidates.toString())
+    }
 
     // Track whether item is editable
     var isEditing by remember { mutableStateOf(false) }

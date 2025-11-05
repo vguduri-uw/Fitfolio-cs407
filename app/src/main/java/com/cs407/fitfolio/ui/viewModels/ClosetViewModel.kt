@@ -118,12 +118,6 @@ class ClosetViewModel : ViewModel() {
         _closetState.value = _closetState.value.copy(items = updatedItems)
         applyFilters()
     }
-    fun toggleDeletionCandidate(item: ItemEntry, isCandidate: Boolean) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(isDeletionCandidate = isCandidate) else it
-        }
-        _closetState.value = _closetState.value.copy(items = updatedItems)
-    }
     fun editItemPhoto(item: ItemEntry, photo: Int) {
         item.itemPhoto = photo
     }
@@ -297,25 +291,38 @@ class ClosetViewModel : ViewModel() {
 
     // Sets the deletion candidates list
     fun setDeletionCandidates(item: ItemEntry) {
-        // Update item isDeletionCandidate property
-        toggleDeletionCandidate(item, true)
-
-        // Update list
-        val updatedDeletionCandidates = _closetState.value.deletionCandidates + item
         _closetState.value = _closetState.value.copy(
-            deletionCandidates = updatedDeletionCandidates
+            // Update item isDeletionCandidate property
+            items = _closetState.value.items.map {
+                if (it.itemId == item.itemId) it.copy(isDeletionCandidate = true) else it
+            },
+
+            // Update list
+            deletionCandidates = _closetState.value.deletionCandidates + item.copy(isDeletionCandidate = true)
+        )
+    }
+
+    // Removes a candidate from the deletion list
+    fun removeDeletionCandidate(item: ItemEntry) {
+        // Update item isDeletionCandidate property
+        _closetState.value = _closetState.value.copy(
+            items = _closetState.value.items.map {
+                if (it.itemId == item.itemId) it.copy(isDeletionCandidate = false) else it
+            },
+
+            // Update list
+            deletionCandidates = _closetState.value.deletionCandidates.filterNot { it.itemId == item.itemId }
         )
     }
 
     // Clears the deletion candidates list
     fun clearDeletionCandidates() {
         // Update item isDeletionCandidate property
-        for (item in _closetState.value.deletionCandidates) {
-            toggleDeletionCandidate(item, false)
-        }
+        val updatedItems = _closetState.value.items.map { it.copy(isDeletionCandidate = false) }
 
         // Update list
         _closetState.value = _closetState.value.copy(
+            items = updatedItems,
             deletionCandidates = emptyList()
         )
     }
