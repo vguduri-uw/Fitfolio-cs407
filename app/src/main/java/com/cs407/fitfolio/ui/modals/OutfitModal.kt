@@ -28,10 +28,13 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -40,9 +43,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
@@ -92,16 +97,24 @@ fun OutfitModal(
             // Track whether outfit is editable
             var isEditing by remember { mutableStateOf(false) }
 
-            isEditing = outfitIconBox(
+            outfitHeaderBox(
+                outfit = outfit,
+                isEditing = isEditing,
+                outfitsViewModel = outfitsViewModel
+            )
+
+            outfitIconBox(
                 outfit = outfit,
                 outfitsViewModel = outfitsViewModel,
                 onDismiss = onDismiss,
-                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen,
+                isEditing = isEditing
             )
 
             outfitInformation(
                 outfit = outfit,
                 outfitsViewModel = outfitsViewModel,
+                isEditing = isEditing,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -313,8 +326,11 @@ private fun TagsEditableCard(
             .background(Color.White)
             .fillMaxWidth()
     ) {
-        Column(modifier = Modifier.padding(15.dp)) {
-
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 15.dp)
+                .padding(bottom = 15.dp)
+        ) {
             // header row: title + actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -326,37 +342,32 @@ private fun TagsEditableCard(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
 
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (editMode) {
-                        // + Add tag
-                        ClickableIcon(
-                            onClick = { showAddDialog = true },
-                            contentDescription = "Add tag"
-                        ) {
-                            Icon(Icons.Outlined.Add, contentDescription = null)
-                        }
-                        // ✓ Save changes
-                        ClickableIcon(
-                            onClick = {
-                                val current = outfit.outfitTags.toSet()
-                                val toAdd = selectedTags - current
-                                val toRemove = current - selectedTags
-                                toAdd.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = false) }
-                                toRemove.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = true) }
-                                editMode = false
-                            },
-                            contentDescription = "Save changes"
-                        ) {
-                            Icon(Icons.Filled.Check, contentDescription = null)
-                        }
-                    } else {
-                        // ✎ Edit mode
-                        ClickableIcon(
-                            onClick = { editMode = true },
-                            contentDescription = "Edit tags"
-                        ) {
-                            Icon(Icons.Outlined.Edit, contentDescription = null)
-                        }
+                if (editMode) {
+                    // Add tag
+                    IconButton (
+                        onClick = { showAddDialog = true },
+                    ) {
+                        Icon(Icons.Outlined.Add, contentDescription = "Add tag")
+                    }
+                    // Save changes
+                    IconButton (
+                        onClick = {
+                            val current = outfit.outfitTags.toSet()
+                            val toAdd = selectedTags - current
+                            val toRemove = current - selectedTags
+                            toAdd.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = false) }
+                            toRemove.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = true) }
+                            editMode = false
+                        },
+                    ) {
+                        Icon(Icons.Filled.Check, contentDescription = "Save changes")
+                    }
+                } else {
+                    // Edit mode
+                    IconButton (
+                        onClick = { editMode = true }
+                    ) {
+                        Icon(Icons.Outlined.Edit, contentDescription = "Edit tags")
                     }
                 }
             }
@@ -364,8 +375,7 @@ private fun TagsEditableCard(
             // show ALL global tags as chips (selectable only when editing)
             val allTags = outfitsState.tags
             LazyRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 10.dp)
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(allTags.size) { idx ->
                     val tag = allTags[idx]
@@ -417,6 +427,68 @@ private fun TagsEditableCard(
     }
 }
 
+@Composable
+fun outfitHeaderBox (
+    outfit: OutfitEntry,
+    isEditing: Boolean,
+    outfitsViewModel: OutfitsViewModel
+) {
+    // track outfit editing state
+    var isEditing by remember { mutableStateOf(isEditing) }
+
+    // track outfit name
+    var outfitName by remember { mutableStateOf(outfit.outfitName) }
+
+    // outfit name
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White)
+            .fillMaxWidth()
+    ) {
+        TextField(
+            value = outfitName,
+            onValueChange = { newOutfitName: String ->
+                // updates locally within modal
+                outfitName = newOutfitName
+            },
+            enabled = isEditing,
+            textStyle = TextStyle(fontWeight = FontWeight.SemiBold, fontSize = 25.sp, textAlign = TextAlign.Center, color = Color.Black),
+            colors = TextFieldDefaults.colors(
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+                focusedContainerColor = Color.Transparent,
+                unfocusedContainerColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            modifier = Modifier
+                .padding(vertical = 15.dp)
+        )
+        // edit icon button
+        IconButton(
+            modifier = Modifier.align(Alignment.BottomEnd),
+            onClick = { isEditing = !isEditing }
+        ) {
+            if (isEditing) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = "Save edits",
+                    modifier = Modifier.size(28.dp)
+                )
+                // updates globally
+                outfitsViewModel.editOutfitName(outfit, outfitName)
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = "Edit outfit",
+                    modifier = Modifier.size(28.dp)
+                )
+            }
+        }
+    }
+}
+
 // top section of the outfit modal showing the outfit name, image, and action icons
 // provides actions to favorite, edit, delete, or open calendar for the outfit
 // remains pinned at the top while other content scrolls underneath
@@ -425,33 +497,21 @@ fun outfitIconBox (
     outfit: OutfitEntry,
     outfitsViewModel: OutfitsViewModel,
     onDismiss: () -> Unit,
-    onNavigateToCalendarScreen: () -> Unit
+    onNavigateToCalendarScreen: () -> Unit,
+    isEditing: Boolean
 ) : Boolean {
     // Observe the current UI state from the ViewModel
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
 
-    // Track whether outfit is editable
-    var isEditing by remember { mutableStateOf(false) }
+    // track outfit editing state
+    var isEditing by remember { mutableStateOf(isEditing) }
+
+    // track outfit photo
+    var outfitPhoto by remember { mutableIntStateOf(outfit.outfitPhoto) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // outfit name
-        Box(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color.White)
-                .fillMaxWidth()
-        ) {
-            Text(
-                text = outfit.outfitName,
-                style = MaterialTheme.typography.titleLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(vertical = 15.dp)
-            )
-        }
-
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
@@ -459,6 +519,7 @@ fun outfitIconBox (
                 .fillMaxWidth()
                 .height(300.dp)
         ) {
+            // todo: figure out logic on how to display updated photo
             // outfit photo
             Image(
                 painter = painterResource(R.drawable.shirt),
@@ -494,6 +555,9 @@ fun outfitIconBox (
                         contentDescription = "Save edits",
                         modifier = Modifier.size(28.dp)
                     )
+
+                    // updates globally
+                    outfitsViewModel.editOutfitPhoto(outfit, outfitPhoto)
                 } else {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
@@ -556,8 +620,15 @@ fun outfitIconBox (
 fun outfitInformation(
     outfit: OutfitEntry,
     outfitsViewModel: OutfitsViewModel,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isEditing: Boolean
 ) {
+    // track outfit editing state
+    var isEditing by remember { mutableStateOf(isEditing) }
+
+    // track initial outfit description
+    var outfitDescription by remember { mutableStateOf(outfit.outfitDescription) }
+
     LazyColumn(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -570,18 +641,50 @@ fun outfitInformation(
                     .background(Color.White)
                     .fillMaxWidth()
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.padding(15.dp)
-                ) {
+                Column {
                     Text(
                         text = "Description",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                        modifier = Modifier.padding(start = 15.dp, top = 15.dp)
                     )
-                    Text(
-                        text = outfit.outfitDescription,
-                        style = MaterialTheme.typography.bodySmall
+                    TextField(
+                        value = outfitDescription,
+                        onValueChange = { newOutfitDescription: String ->
+                            // updates locally within modal
+                            outfitDescription = newOutfitDescription
+                        },
+                        enabled = isEditing,
+                        textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Left, color = Color.Black),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        ),
                     )
+                }
+                // edit icon button
+                IconButton(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    onClick = { isEditing = !isEditing }
+                ) {
+                    if (isEditing) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Save edits",
+                            modifier = Modifier.size(28.dp)
+                        )
+                        // updates globally
+                        outfitsViewModel.editOutfitDescription(outfit, outfitDescription)
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Edit outfit",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
         }
@@ -611,6 +714,26 @@ fun outfitInformation(
                                 imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
                             )
                         }
+                    }
+                }
+
+                // edit icon button
+                IconButton(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    onClick = { isEditing = !isEditing }
+                ) {
+                    if (isEditing) {
+                        Icon(
+                            imageVector = Icons.Filled.Check,
+                            contentDescription = "Save edits",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.Edit,
+                            contentDescription = "Edit outfit",
+                            modifier = Modifier.size(28.dp)
+                        )
                     }
                 }
             }

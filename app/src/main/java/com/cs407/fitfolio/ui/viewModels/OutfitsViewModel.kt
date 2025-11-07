@@ -105,6 +105,15 @@ class OutfitsViewModel : ViewModel() {
     }
 
     // SETTERS FOR ITEM PROPERTIES (for use in wardrobe screen and outfit modal)
+    fun editOutfitPhoto(outfit: OutfitEntry, photo: Int){
+        outfit.outfitPhoto = photo
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
+    }
+
+
     fun editOutfitName(outfit: OutfitEntry, name: String) {
         outfit.outfitName = name
 
@@ -150,10 +159,18 @@ class OutfitsViewModel : ViewModel() {
         _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
     }
 
-    fun editItemList(outfit: OutfitEntry, item: ItemEntry, isRemoving: Boolean){
-        if (isRemoving) {
-            outfit.itemList -= item
-        } else {
+    fun removeItemFromItemsList(outfit: OutfitEntry, items: List<ItemEntry>){
+            for (item in items) {
+                outfit.itemList -= item
+            }
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
+    }
+
+    fun addItemToItemsList(outfit: OutfitEntry, items: List<ItemEntry>){
+        for (item in items) {
             outfit.itemList += item
         }
 
@@ -161,6 +178,7 @@ class OutfitsViewModel : ViewModel() {
             outfits = _outfitsState.value.outfits
         )
     }
+
 
     /* ==========================================================================================
                                             OUTFITS FUNCTIONS
