@@ -21,7 +21,9 @@ import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Favorite
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -52,8 +54,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.ui.viewModels.ItemEntry
 import com.cs407.fitfolio.ui.viewModels.OutfitEntry
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
+import androidx.compose.foundation.lazy.items
 
 // modal sheet that displays full outfit details and actions
 // shows outfit photo, description, items, and tags, with editing modes
@@ -111,14 +115,26 @@ fun OutfitModal(
                 isEditing = isEditing
             )
 
-            outfitInformation(
+            // outfit description
+            DescriptionCard(
                 outfit = outfit,
-                outfitsViewModel = outfitsViewModel,
                 isEditing = isEditing,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
+                outfitsViewModel = outfitsViewModel
             )
+
+            // items list
+            ItemsInOutfitCard(
+                outfit = outfit,
+                isEditing = isEditing,
+                outfitsViewModel = outfitsViewModel
+            )
+
+            // tags
+            TagsEditableCard(
+                outfit = outfit,
+                outfitsViewModel = outfitsViewModel
+            )
+
         }
     }
 }
@@ -213,7 +229,7 @@ private fun ConfirmDialog(
 private fun ItemCard(
     name: String,
     type: String,
-    imageRes: Int,
+    imageRes: Int
 ) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -343,13 +359,13 @@ private fun TagsEditableCard(
                 )
 
                 if (editMode) {
-                    // Add tag
+                    // add tag
                     IconButton (
                         onClick = { showAddDialog = true },
                     ) {
                         Icon(Icons.Outlined.Add, contentDescription = "Add tag")
                     }
-                    // Save changes
+                    // save changes
                     IconButton (
                         onClick = {
                             val current = outfit.outfitTags.toSet()
@@ -363,7 +379,7 @@ private fun TagsEditableCard(
                         Icon(Icons.Filled.Check, contentDescription = "Save changes")
                     }
                 } else {
-                    // Edit mode
+                    // edit mode
                     IconButton (
                         onClick = { editMode = true }
                     ) {
@@ -427,6 +443,9 @@ private fun TagsEditableCard(
     }
 }
 
+// card for viewing and editing the outfit's name
+// edit mode unlocks renaming the outfit and saving the updated name to the ViewModel
+// displayed at the top of the outfit modal for quick identification and editing
 @Composable
 fun outfitHeaderBox (
     outfit: OutfitEntry,
@@ -481,7 +500,7 @@ fun outfitHeaderBox (
             } else {
                 Icon(
                     imageVector = Icons.Outlined.Edit,
-                    contentDescription = "Edit outfit",
+                    contentDescription = "Edit outfit name",
                     modifier = Modifier.size(28.dp)
                 )
             }
@@ -561,7 +580,7 @@ fun outfitIconBox (
                 } else {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit outfit",
+                        contentDescription = "Edit outfit photo",
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -569,8 +588,6 @@ fun outfitIconBox (
 
             // delete icon button
             IconButton(
-                // TODO: get rid of outfits view model pass in eventually...
-                // TODO: add in alert dialog to warn about deleting outfits... make it its own reusable composable??
                 onClick = {
                     onDismiss()
                     outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
@@ -613,138 +630,245 @@ fun outfitIconBox (
     return isEditing
 }
 
-// main scrollable content of the outfit modal showing description, items, and tags
-// wraps the detailed information cards inside a LazyColumn for scrolling
-// placed below the pinned top section of the modal
+// card for viewing and editing the outfit's description
+// edit mode unlocks modifying the text and saving the updated description to the ViewModel
+// provides context and details about the outfit to help with organization and recall
 @Composable
-fun outfitInformation(
+private fun DescriptionCard(
     outfit: OutfitEntry,
-    outfitsViewModel: OutfitsViewModel,
-    modifier: Modifier = Modifier,
-    isEditing: Boolean
+    isEditing: Boolean,
+    outfitsViewModel: OutfitsViewModel
 ) {
-    // track outfit editing state
-    var isEditing by remember { mutableStateOf(isEditing) }
+    // tracks state of whether editing is enabled
+    var localEditing by remember { mutableStateOf(isEditing) }
 
-    // track initial outfit description
+    // tracks state of the outfit's description's value
     var outfitDescription by remember { mutableStateOf(outfit.outfitDescription) }
 
-    LazyColumn(
-        modifier = modifier,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White)
+            .fillMaxWidth()
     ) {
-        // description
-        item {
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color.White)
-                    .fillMaxWidth()
-            ) {
-                Column {
-                    Text(
-                        text = "Description",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                        modifier = Modifier.padding(start = 15.dp, top = 15.dp)
-                    )
-                    TextField(
-                        value = outfitDescription,
-                        onValueChange = { newOutfitDescription: String ->
-                            // updates locally within modal
-                            outfitDescription = newOutfitDescription
-                        },
-                        enabled = isEditing,
-                        textStyle = TextStyle(fontSize = 15.sp, textAlign = TextAlign.Left, color = Color.Black),
-                        colors = TextFieldDefaults.colors(
-                            focusedIndicatorColor = Color.Transparent,
-                            unfocusedIndicatorColor = Color.Transparent,
-                            disabledIndicatorColor = Color.Transparent,
-                            focusedContainerColor = Color.Transparent,
-                            unfocusedContainerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent
-                        ),
-                    )
-                }
-                // edit icon button
-                IconButton(
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    onClick = { isEditing = !isEditing }
-                ) {
-                    if (isEditing) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = "Save edits",
-                            modifier = Modifier.size(28.dp)
-                        )
-                        // updates globally
-                        outfitsViewModel.editOutfitDescription(outfit, outfitDescription)
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Edit outfit",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-            }
+        Column {
+            Text(
+                text = "Description",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                modifier = Modifier.padding(start = 15.dp, top = 15.dp)
+            )
+            TextField(
+                value = outfitDescription,
+                onValueChange = { outfitDescription = it },
+                enabled = localEditing,
+                textStyle = TextStyle(
+                    fontSize = 15.sp,
+                    textAlign = TextAlign.Left,
+                    color = Color.Black
+                ),
+                colors = TextFieldDefaults.colors(
+                    focusedIndicatorColor = Color.Transparent,
+                    unfocusedIndicatorColor = Color.Transparent,
+                    disabledIndicatorColor = Color.Transparent,
+                    focusedContainerColor = Color.Transparent,
+                    unfocusedContainerColor = Color.Transparent,
+                    disabledContainerColor = Color.Transparent
+                ),
+            )
         }
 
-        // items in this outfit
-        item {
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color.White)
-                    .fillMaxWidth()
+        // edit button
+        IconButton(
+            modifier = Modifier.align(Alignment.TopEnd),
+            onClick = {
+                localEditing = !localEditing
+                if (!localEditing) {
+                    outfitsViewModel.editOutfitDescription(outfit, outfitDescription)
+                }
+            }
+        ) {
+            if (localEditing) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = "Save edits",
+                    modifier = Modifier.size(28.dp)
+                )
+            } else {
+                Icon(
+                    imageVector = Icons.Outlined.Edit,
+                    contentDescription = "Edit outfit description",
+                    modifier = Modifier.size(28.dp),
+                )
+            }
+        }
+    }
+}
+
+// card for viewing and managing the list of items assigned to this outfit
+// edit mode unlocks multi-select delete, allowing users to remove one or more items at once
+// selected items can be removed in a single confirmation step; removed items stay in the Closet
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ItemsInOutfitCard(
+    outfit: OutfitEntry,
+    isEditing: Boolean,
+    outfitsViewModel: OutfitsViewModel
+) {
+    // tracks state of whether editing is enabled
+    var localEditing by remember { mutableStateOf(isEditing) }
+
+    // tracks state of ids of items selected to be deleted
+    var selectedIds by remember(outfit.outfitId) { mutableStateOf<Set<String>>(emptySet()) }
+
+    // tracks state of alert dialog
+    var showBatchDeleteDialog by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White)
+            .fillMaxWidth()
+    ) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(10.dp),
+            modifier = Modifier.padding(15.dp)
+        ) {
+            // header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.padding(15.dp)
+                Text(
+                    text = "Items in this outfit",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+
+                // actions on the right
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = "Items in this outfit",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        items(outfit.itemList.size) { idx ->
-                            val item = outfit.itemList[idx]
-                            ItemCard(
-                                name = item.itemName,
-                                type = item.itemType,
-                                imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
+                    if (localEditing) {
+                        // trash/delete icon (enabled only if there's a selection)
+                        IconButton(
+                            onClick = { showBatchDeleteDialog = true },
+                            enabled = selectedIds.isNotEmpty()
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Delete,
+                                contentDescription = "Delete selected items",
+                                modifier = Modifier.size(28.dp),
+                                tint = if (selectedIds.isNotEmpty()) Color.Red else Color.Gray
+                            )
+                        }
+                        // confirm/save changes (exists edit mode)
+                        IconButton(onClick = {
+                            localEditing = false
+                            selectedIds = emptySet()
+                        }) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = "Done editing",
+                                modifier = Modifier.size(28.dp)
+                            )
+                        }
+                    } else {
+                        // enter edit mode
+                        IconButton(onClick = { localEditing = true }) {
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Edit list of items",
+                                modifier = Modifier.size(28.dp)
                             )
                         }
                     }
                 }
+            }
 
-                // edit icon button
-                IconButton(
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    onClick = { isEditing = !isEditing }
-                ) {
-                    if (isEditing) {
-                        Icon(
-                            imageVector = Icons.Filled.Check,
-                            contentDescription = "Save edits",
-                            modifier = Modifier.size(28.dp)
+            // items row
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                items(
+                    items = outfit.itemList,
+                    key = { it.itemId }
+                ) { item ->
+                    val selected = item.itemId in selectedIds
+
+                    Box(
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(Color(0xFFF7F7F7))
+                            .clickable(enabled = localEditing) {
+                                selectedIds = if (selected) selectedIds - item.itemId
+                                else selectedIds + item.itemId
+                            }
+                    ) {
+                        ItemCard(
+                            name = item.itemName,
+                            type = item.itemType,
+                            imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
                         )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Edit outfit",
-                            modifier = Modifier.size(28.dp)
-                        )
+
+                        if (localEditing && selected) {
+                            Box(
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(6.dp)
+                                    .size(20.dp)
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(Color.Black.copy(alpha = 0.75f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Selected",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
+    }
 
-        // tags (editable)
-        item {
-            TagsEditableCard(
-                outfit = outfit,
-                outfitsViewModel = outfitsViewModel
-            )
-        }
+    // does deletion in batches
+    if (showBatchDeleteDialog) {
+        val count = selectedIds.size
+        AlertDialog(
+            onDismissRequest = { showBatchDeleteDialog = false },
+            title = { Text("Remove $count item${if (count == 1) "" else "s"} from this outfit?") },
+            text = {
+                Text(
+                    "This will remove the selected item${if (count == 1) "" else "s"} from this outfit. " +
+                            "They will remain in your Closet. This action cannot be undone."
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    // perform the deletions
+                    if (selectedIds.isNotEmpty()) {
+                        // Map back to actual ItemEntry objects
+                        val toDelete = outfit.itemList.filter { it.itemId in selectedIds }
+                        toDelete.forEach { item ->
+                            outfitsViewModel.removeItemFromItemsList(outfit, item)
+                        }
+                    }
+                    // exits edit mode
+                    showBatchDeleteDialog = false
+                    localEditing = false
+                    selectedIds = emptySet()
+                }) { Text("Delete") }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    // exits edit mode
+                    showBatchDeleteDialog = false
+                    localEditing = false
+                    selectedIds = emptySet()
+                }) { Text("Cancel") }
+            }
+        )
     }
 }

@@ -13,7 +13,7 @@ import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
 
-    val itemList: List<ItemEntry> = listOf(
+    val itemList1: List<ItemEntry> = listOf(
         ItemEntry(
             itemName = "Red Shirt",
             itemType = "Shirts",
@@ -23,7 +23,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             isDeletionCandidate = false,
             itemPhoto = -1,
             outfitList = emptyList(),
-            itemId = ""
+            itemId = "11"
         ),
         ItemEntry(
             itemName = "Black Skirt",
@@ -34,7 +34,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             isDeletionCandidate = false,
             itemPhoto = -1,
             outfitList = emptyList(),
-            itemId = ""
+            itemId = "12"
         ),
         ItemEntry(
             itemName = "Brown Outerwear Jacket",
@@ -45,7 +45,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             isDeletionCandidate = false,
             itemPhoto = -1,
             outfitList = emptyList(),
-            itemId = ""
+            itemId = "13"
         ),ItemEntry(
             itemName = "Purple Sneakers",
             itemType = "Shoes",
@@ -55,7 +55,329 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             isDeletionCandidate = false,
             itemPhoto = -1,
             outfitList = emptyList(),
-            itemId = ""
+            itemId = "14"
+        ),
+    )
+
+    val itemList2: List<ItemEntry> = listOf(
+        ItemEntry(
+            itemName = "Red Shirt",
+            itemType = "Shirts",
+            itemDescription = "Red satin shirt",
+            itemTags = listOf("Summer", "Red"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "21"
+        ),
+        ItemEntry(
+            itemName = "Black Skirt",
+            itemType = "Skirts",
+            itemDescription = "Elegant black skirt",
+            itemTags = listOf("Winter", "Black", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "22"
+        ),
+        ItemEntry(
+            itemName = "Brown Outerwear Jacket",
+            itemType = "Outerwear",
+            itemDescription = "Warm brown jacket for fall",
+            itemTags = listOf("Fall", "Brown"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "23"
+        ),ItemEntry(
+            itemName = "Purple Sneakers",
+            itemType = "Shoes",
+            itemDescription = "Comfortable purple sneakers",
+            itemTags = listOf("Spring", "Purple", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "24"
+        ),
+    )
+
+    val itemList3: List<ItemEntry> = listOf(
+        ItemEntry(
+            itemName = "Red Shirt",
+            itemType = "Shirts",
+            itemDescription = "Red satin shirt",
+            itemTags = listOf("Summer", "Red"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "31"
+        ),
+        ItemEntry(
+            itemName = "Black Skirt",
+            itemType = "Skirts",
+            itemDescription = "Elegant black skirt",
+            itemTags = listOf("Winter", "Black", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "32"
+        ),
+        ItemEntry(
+            itemName = "Brown Outerwear Jacket",
+            itemType = "Outerwear",
+            itemDescription = "Warm brown jacket for fall",
+            itemTags = listOf("Fall", "Brown"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "33"
+        ),ItemEntry(
+            itemName = "Purple Sneakers",
+            itemType = "Shoes",
+            itemDescription = "Comfortable purple sneakers",
+            itemTags = listOf("Spring", "Purple", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "34"
+        ),
+    )
+
+    val itemList4: List<ItemEntry> = listOf(
+        ItemEntry(
+            itemName = "Red Shirt",
+            itemType = "Shirts",
+            itemDescription = "Red satin shirt",
+            itemTags = listOf("Summer", "Red"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "41"
+        ),
+        ItemEntry(
+            itemName = "Black Skirt",
+            itemType = "Skirts",
+            itemDescription = "Elegant black skirt",
+            itemTags = listOf("Winter", "Black", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "42"
+        ),
+        ItemEntry(
+            itemName = "Brown Outerwear Jacket",
+            itemType = "Outerwear",
+            itemDescription = "Warm brown jacket for fall",
+            itemTags = listOf("Fall", "Brown"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "43"
+        ),ItemEntry(
+            itemName = "Purple Sneakers",
+            itemType = "Shoes",
+            itemDescription = "Comfortable purple sneakers",
+            itemTags = listOf("Spring", "Purple", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "44"
+        ),
+    )
+
+    val itemList5: List<ItemEntry> = listOf(
+        ItemEntry(
+            itemName = "Red Shirt",
+            itemType = "Shirts",
+            itemDescription = "Red satin shirt",
+            itemTags = listOf("Summer", "Red"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "51"
+        ),
+        ItemEntry(
+            itemName = "Black Skirt",
+            itemType = "Skirts",
+            itemDescription = "Elegant black skirt",
+            itemTags = listOf("Winter", "Black", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "52"
+        ),
+        ItemEntry(
+            itemName = "Brown Outerwear Jacket",
+            itemType = "Outerwear",
+            itemDescription = "Warm brown jacket for fall",
+            itemTags = listOf("Fall", "Brown"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "53"
+        ),ItemEntry(
+            itemName = "Purple Sneakers",
+            itemType = "Shoes",
+            itemDescription = "Comfortable purple sneakers",
+            itemTags = listOf("Spring", "Purple", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "54"
+        ),
+    )
+
+    val itemList6: List<ItemEntry> = listOf(
+        ItemEntry(
+            itemName = "Red Shirt",
+            itemType = "Shirts",
+            itemDescription = "Red satin shirt",
+            itemTags = listOf("Summer", "Red"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "61"
+        ),
+        ItemEntry(
+            itemName = "Black Skirt",
+            itemType = "Skirts",
+            itemDescription = "Elegant black skirt",
+            itemTags = listOf("Winter", "Black", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "62"
+        ),
+        ItemEntry(
+            itemName = "Brown Outerwear Jacket",
+            itemType = "Outerwear",
+            itemDescription = "Warm brown jacket for fall",
+            itemTags = listOf("Fall", "Brown"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "63"
+        ),ItemEntry(
+            itemName = "Purple Sneakers",
+            itemType = "Shoes",
+            itemDescription = "Comfortable purple sneakers",
+            itemTags = listOf("Spring", "Purple", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "64"
+        ),
+    )
+
+    val itemList7: List<ItemEntry> = listOf(
+        ItemEntry(
+            itemName = "Red Shirt",
+            itemType = "Shirts",
+            itemDescription = "Red satin shirt",
+            itemTags = listOf("Summer", "Red"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "71"
+        ),
+        ItemEntry(
+            itemName = "Black Skirt",
+            itemType = "Skirts",
+            itemDescription = "Elegant black skirt",
+            itemTags = listOf("Winter", "Black", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "72"
+        ),
+        ItemEntry(
+            itemName = "Brown Outerwear Jacket",
+            itemType = "Outerwear",
+            itemDescription = "Warm brown jacket for fall",
+            itemTags = listOf("Fall", "Brown"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "73"
+        ),ItemEntry(
+            itemName = "Purple Sneakers",
+            itemType = "Shoes",
+            itemDescription = "Comfortable purple sneakers",
+            itemTags = listOf("Spring", "Purple", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "74"
+        ),
+    )
+
+    val itemList8: List<ItemEntry> = listOf(
+        ItemEntry(
+            itemName = "Red Shirt",
+            itemType = "Shirts",
+            itemDescription = "Red satin shirt",
+            itemTags = listOf("Summer", "Red"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "81"
+        ),
+        ItemEntry(
+            itemName = "Black Skirt",
+            itemType = "Skirts",
+            itemDescription = "Elegant black skirt",
+            itemTags = listOf("Winter", "Black", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "82"
+        ),
+        ItemEntry(
+            itemName = "Brown Outerwear Jacket",
+            itemType = "Outerwear",
+            itemDescription = "Warm brown jacket for fall",
+            itemTags = listOf("Fall", "Brown"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "83"
+        ),ItemEntry(
+            itemName = "Purple Sneakers",
+            itemType = "Shoes",
+            itemDescription = "Comfortable purple sneakers",
+            itemTags = listOf("Spring", "Purple", "Casual"),
+            isFavorite = true,
+            isDeletionCandidate = false,
+            itemPhoto = -1,
+            outfitList = emptyList(),
+            itemId = "84"
         ),
     )
 
@@ -65,7 +387,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Summer and Red",
         tags = listOf("Athletic"),
         isFavorite = true,
-        itemList = itemList,
+        itemList = itemList1,
         photo = -1
     )
 
@@ -75,7 +397,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Fall and Blue",
         tags = listOf("Business"),
         isFavorite = true,
-        itemList = itemList,
+        itemList = itemList2,
         photo = -1
     )
 
@@ -85,7 +407,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Fall and Orange",
         tags = listOf("Business Casual"),
         isFavorite = false,
-        itemList = itemList,
+        itemList = itemList3,
         photo = -1
     )
 
@@ -95,7 +417,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Spring, Green, and Casual",
         tags = listOf("Casual"),
         isFavorite = false,
-        itemList = itemList,
+        itemList = itemList4,
         photo = -1
     )
 
@@ -105,7 +427,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Winter, Black, and Casual",
         tags = listOf("Formal"),
         isFavorite = true,
-        itemList = emptyList(),
+        itemList = itemList5,
         photo = -1
     )
 
@@ -115,7 +437,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Fall and Brown",
         tags = listOf("Streetwear"),
         isFavorite = false,
-        itemList = itemList,
+        itemList = itemList6,
         photo = -1
     )
 
@@ -125,17 +447,17 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Summer, Yellow, and Casual",
         tags = listOf("Loungewear"),
         isFavorite = true,
-        itemList = itemList,
+        itemList = itemList7,
         photo = -1
     )
 
-//    // Outfit 8
-//    outfitsViewModel.addOutfit(
-//        name = "Example Outfit Spring, Purple, and Casual",
-//        description = "Spring, Purple, and Casual",
-//        tags = listOf("Spring", "Purple", "Casual"),
-//        isFavorite = false,
-//        itemList = itemList,
-//        photo = -1
-//    )
+    // Outfit 8
+    outfitsViewModel.addOutfit(
+        name = "Example Outfit Spring, Purple, and Casual",
+        description = "Spring, Purple, and Casual",
+        tags = listOf("Spring", "Purple", "Casual"),
+        isFavorite = false,
+        itemList = itemList8,
+        photo = -1
+    )
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.cs407.fitfolio.ui.enums.DeletionStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.io.Serializable
 import java.util.UUID
 
@@ -159,20 +160,20 @@ class OutfitsViewModel : ViewModel() {
         _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
     }
 
-    fun removeItemFromItemsList(outfit: OutfitEntry, items: List<ItemEntry>){
-            for (item in items) {
-                outfit.itemList -= item
+    fun removeItemFromItemsList(outfit: OutfitEntry, item: ItemEntry){
+        _outfitsState.update { state ->
+            val updatedOutfits = state.outfits.map { o ->
+                if (o.outfitId == outfit.outfitId) {
+                    val newItems = o.itemList.filterNot { it.itemId == item.itemId }
+                    o.copy(itemList = newItems)
+                } else o
             }
-
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = _outfitsState.value.outfits
-        )
+            state.copy(outfits = updatedOutfits)
+        }
     }
 
-    fun addItemToItemsList(outfit: OutfitEntry, items: List<ItemEntry>){
-        for (item in items) {
-            outfit.itemList += item
-        }
+    fun addItemToItemsList(outfit: OutfitEntry, item: ItemEntry){
+        outfit.itemList += item
 
         _outfitsState.value = _outfitsState.value.copy(
             outfits = _outfitsState.value.outfits
