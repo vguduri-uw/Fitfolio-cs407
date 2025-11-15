@@ -1,4 +1,4 @@
-package com.cs407.fitfolio.ui.viewModels
+package com.cs407.fitfolio.viewModels
 
 // TODO: If the modal pops up, it shows the outfit planned for that day.
 // TODO: If a day has an outfit, the day is lightly greyed.

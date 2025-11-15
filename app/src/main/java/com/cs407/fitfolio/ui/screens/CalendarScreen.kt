@@ -49,7 +49,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.InformationModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
-import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
+import com.cs407.fitfolio.viewModels.WeatherViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle

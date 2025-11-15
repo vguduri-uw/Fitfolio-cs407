@@ -1,7 +1,7 @@
-package com.cs407.fitfolio.ui.viewModels
+package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
-import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow

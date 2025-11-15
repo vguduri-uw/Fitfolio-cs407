@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -53,10 +52,9 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
-import com.cs407.fitfolio.ui.enums.DeletionStates
-import com.cs407.fitfolio.ui.viewModels.ItemEntry
-import com.cs407.fitfolio.ui.viewModels.OutfitEntry
-import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.enums.DeletionStates
+import com.cs407.fitfolio.viewModels.OutfitEntry
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import androidx.compose.foundation.lazy.items
 
 // modal sheet that displays full outfit details and actions
