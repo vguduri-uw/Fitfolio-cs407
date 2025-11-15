@@ -18,10 +18,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -32,7 +32,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.cs407.fitfolio.ui.testData.AddTestItemData
-import com.cs407.fitfolio.ui.testData.AddTestOutfitData
 import com.cs407.fitfolio.ui.theme.FitfolioTheme
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
 import com.cs407.fitfolio.ui.screens.CalendarScreen
@@ -42,6 +41,7 @@ import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.navigation.BottomNavigationBar
 import com.cs407.fitfolio.ui.screens.SignUpScreen
 import com.cs407.fitfolio.ui.screens.SignInScreen
+import com.cs407.fitfolio.ui.testData.AddTestOutfitData
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
@@ -51,8 +51,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FitfolioTheme {
-                // TESTING PURPOSES ONLY-- populates a few items
                 val closetViewModel: ClosetViewModel = viewModel()
+                val outfitsViewModel: OutfitsViewModel = viewModel()
+
+                // TESTING PURPOSES ONLY-- populates a few items
                 var populateItemTestData by remember { mutableStateOf(false) }
                 val itemDataHasPopulated = remember { mutableStateOf(false) }
                 LaunchedEffect(Unit) {
@@ -61,10 +63,9 @@ class MainActivity : ComponentActivity() {
                         itemDataHasPopulated.value = true
                     }
                 }
-                if (populateItemTestData) AddTestItemData(closetViewModel = closetViewModel)
+                if (populateItemTestData) AddTestItemData(closetViewModel = closetViewModel, outfitsViewModel = outfitsViewModel)
 
                 // TESTING PURPOSES ONLY-- populates a few items in outfits screen
-                val outfitsViewModel: OutfitsViewModel = viewModel()
                 var populateTestData by remember { mutableStateOf(false) }
                 val hasPopulated = remember { mutableStateOf(false) }
                 LaunchedEffect(Unit) {

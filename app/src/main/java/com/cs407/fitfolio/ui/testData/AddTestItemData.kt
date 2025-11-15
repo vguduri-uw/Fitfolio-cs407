@@ -4,10 +4,63 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
+import com.cs407.fitfolio.ui.viewModels.OutfitEntry
+import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
 @Composable
-fun AddTestItemData(closetViewModel: ClosetViewModel) {
+fun AddTestItemData(
+    closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel
+) {
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
+
+    // Outfit 1
+    outfitsViewModel.addOutfit(
+        name = "Red Shirt & Jeans",
+        description = "Classic casual look",
+        tags = listOf("Casual", "Summer"),
+        isFavorite = true,
+        photo = -1,
+        itemList = emptyList()
+    )
+
+    // Outfit 2
+    outfitsViewModel.addOutfit(
+        name = "Green Tee & Black Skirt",
+        description = "Cute spring fit",
+        tags = listOf("Spring", "Casual"),
+        isFavorite = false,
+        photo = -1,
+        itemList = emptyList()
+    )
+
+    // Outfit 3
+    outfitsViewModel.addOutfit(
+        name = "Fall Jacket & Jeans",
+        description = "Cozy autumn streetwear",
+        tags = listOf("Fall", "Casual"),
+        isFavorite = false,
+        photo = -1,
+        itemList = emptyList()
+    )
+
+    // Outfit 4
+    outfitsViewModel.addOutfit(
+        name = "Summer Shorts & Sneakers",
+        description = "Bright casual summer look",
+        tags = listOf("Summer", "Casual"),
+        isFavorite = true,
+        photo = -1,
+        itemList = emptyList()
+    )
+
+    val outfitsState = outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+    val outfits = outfitsState.value.outfits
+
+    val redShirtJeans = outfits.find { it.outfitName == "Red Shirt & Jeans" }!!
+    val greenTeeBlackSkirt = outfits.find { it.outfitName == "Green Tee & Black Skirt" }!!
+    val fallJacketJeans = outfits.find { it.outfitName == "Fall Jacket & Jeans" }!!
+    val summerShortsSneakers = outfits.find { it.outfitName == "Summer Shorts & Sneakers" }!!
 
     // Item 1
     closetViewModel.addItem(
@@ -16,7 +69,8 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Red satin shirt",
         tags = listOf("Summer", "Red"),
         isFavorites = true,
-        photo = -1
+        photo = -1,
+        outfitList = listOf(redShirtJeans, fallJacketJeans, summerShortsSneakers)
     )
 
     // Item 2
@@ -26,7 +80,8 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Ripped jeans",
         tags = listOf("Fall", "Blue"),
         isFavorites = true,
-        photo = -1
+        photo = -1,
+        outfitList = listOf(redShirtJeans, fallJacketJeans)
     )
 
     // Item 3
@@ -36,7 +91,8 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Ripped jeans",
         tags = listOf("Fall", "Orange"),
         isFavorites = false,
-        photo = -1
+        photo = -1,
+        outfitList = emptyList()
     )
 
     // Item 4
@@ -46,7 +102,8 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Bright green casual t-shirt",
         tags = listOf("Spring", "Green", "Casual"),
         isFavorites = false,
-        photo = -1
+        photo = -1,
+        outfitList = listOf(greenTeeBlackSkirt, summerShortsSneakers)
     )
 
     // Item 5
@@ -56,7 +113,8 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Elegant black skirt",
         tags = listOf("Winter", "Black", "Casual"),
         isFavorites = true,
-        photo = -1
+        photo = -1,
+        outfitList = listOf(greenTeeBlackSkirt)
     )
 
     // Item 6
@@ -66,7 +124,8 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Warm brown jacket for fall",
         tags = listOf("Fall", "Brown"),
         isFavorites = false,
-        photo = -1
+        photo = -1,
+        outfitList = listOf(fallJacketJeans)
     )
 
     // Item 7
@@ -76,7 +135,8 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Bright yellow summer shorts",
         tags = listOf("Summer", "Yellow", "Casual"),
         isFavorites = true,
-        photo = -1
+        photo = -1,
+        outfitList = listOf(summerShortsSneakers)
     )
 
     // Item 8
@@ -86,6 +146,7 @@ fun AddTestItemData(closetViewModel: ClosetViewModel) {
         description = "Comfortable purple sneakers",
         tags = listOf("Spring", "Purple", "Casual"),
         isFavorites = false,
-        photo = -1
+        photo = -1,
+        outfitList = listOf(greenTeeBlackSkirt, redShirtJeans, fallJacketJeans, summerShortsSneakers)
     )
 }

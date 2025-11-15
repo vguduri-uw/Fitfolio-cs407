@@ -56,7 +56,7 @@ class ClosetViewModel : ViewModel() {
     // Adds an item to the closet to be used in add screen
     fun addItem(
         name: String, type: String, description: String, tags: List<String>,
-        isFavorites: Boolean, photo: Int
+        isFavorites: Boolean, photo: Int, outfitList: List<OutfitEntry>
     ) {
         val newItem = ItemEntry(
             itemName = name,
@@ -67,7 +67,8 @@ class ClosetViewModel : ViewModel() {
             isDeletionCandidate = false,
             itemPhoto = photo,
             itemId = UUID.randomUUID().toString(),
-            outfitList = emptyList()
+            outfitList = outfitList //emptyList()
+            // TODO: turn outfitList back into empty list after testing
         )
 
         val updatedItems = _closetState.value.items + newItem
