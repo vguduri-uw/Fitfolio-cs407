@@ -137,7 +137,7 @@ fun MyOutfitsScreen(
 
         // pull up settings modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false })
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
         }
 
         // show outfit modal
@@ -151,24 +151,24 @@ fun MyOutfitsScreen(
         }
 
         // navigate to sign up and sign in screens
-        Column(
-            modifier = Modifier
-                .align(alignment = Alignment.TopStart)
-                .padding(bottom = 16.dp)
-        ) {
-            Button(
-                onClick = { onNavigateToSignUpScreen() },
-                modifier = Modifier.width(100.dp)
-            ) {
-                Text("Sign Up")
-            }
-            Button(
-                onClick = { onNavigateToSignInScreen() },
-                modifier = Modifier.width(100.dp)
-            ) {
-                Text("Sign In")
-            }
-        }
+//        Column(
+//            modifier = Modifier
+//                .align(alignment = Alignment.TopStart)
+//                .padding(bottom = 16.dp)
+//        ) {
+//            Button(
+//                onClick = { onNavigateToSignUpScreen() },
+//                modifier = Modifier.width(100.dp)
+//            ) {
+//                Text("Sign Up")
+//            }
+//            Button(
+//                onClick = { onNavigateToSignInScreen() },
+//                modifier = Modifier.width(100.dp)
+//            ) {
+//                Text("Sign In")
+//            }
+//        }
     }
 }
 

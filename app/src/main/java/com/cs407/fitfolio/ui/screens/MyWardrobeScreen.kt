@@ -56,6 +56,7 @@ fun MyWardrobeScreen(
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
+    onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
     weatherViewModel: WeatherViewModel
 ) {

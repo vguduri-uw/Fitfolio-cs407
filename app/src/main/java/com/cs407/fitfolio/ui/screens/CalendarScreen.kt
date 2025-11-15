@@ -61,6 +61,7 @@ fun CalendarScreen(
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
+    onNavigateToSignInScreen: () -> Unit,
     weatherViewModel: WeatherViewModel
 ) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
@@ -223,7 +224,7 @@ fun CalendarScreen(
 
         // modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false })
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
         }
     }
 

@@ -22,6 +22,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,13 +38,19 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.viewModels.UserViewModel
+import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SettingsModal (onDismiss: () -> Unit) {
+fun SettingsModal (
+//    userViewModel: UserViewModel,
+    onDismiss: () -> Unit,
+    onSignOut: () -> Unit) {
     // User information
+//    val userState by userViewModel.userState.collectAsState()
     // TODO: implement the way to get this from storage (these are placeholders)
-    var name by remember { mutableStateOf("Name") }
+    var name by remember { mutableStateOf("name") }
     var email by remember { mutableStateOf("emailaddress@gmail.com") }
     var password by remember { mutableStateOf("password") }
 
@@ -54,6 +61,8 @@ fun SettingsModal (onDismiss: () -> Unit) {
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+    // Track whether sign-out dialog is showing
+    var showSignOutDialog by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
@@ -108,7 +117,10 @@ fun SettingsModal (onDismiss: () -> Unit) {
             // Sign out button
             Button( // TODO: implement sign out functionality
                 // there should be an alert dialog that requires them to confirm
-                onClick = {},
+                onClick = {
+                    showSignOutDialog = true
+
+                },
                 content = { Text("Sign Out") },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
@@ -126,6 +138,30 @@ fun SettingsModal (onDismiss: () -> Unit) {
                 // there should be an alert dialog that requires them to confirm
             )
         }
+    }
+    // Confirmation dialog for sign out
+    if (showSignOutDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showSignOutDialog = false },
+            title = { Text("Sign Out") },
+            text = { Text("Are you sure you want to sign out?") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        FirebaseAuth.getInstance().signOut()
+                        showSignOutDialog = false
+                        onSignOut() // navigate back to login screen
+                    }
+                ) {
+                    Text("Yes")
+                }
+            },
+            dismissButton = {
+                Button(onClick = { showSignOutDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
     }
 }
 

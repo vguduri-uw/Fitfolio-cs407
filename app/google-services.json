@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "650219639033",
+    "project_id": "fitfolio-10dfd",
+    "storage_bucket": "fitfolio-10dfd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:650219639033:android:3c4f68066d69078cee5228",
+        "android_client_info": {
+          "package_name": "com.cs407.fitfolio"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDjJHamZJZdQFhd6dxoyQbw80kXTa77amk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

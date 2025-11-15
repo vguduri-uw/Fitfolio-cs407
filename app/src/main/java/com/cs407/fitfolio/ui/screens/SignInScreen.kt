@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
@@ -20,6 +21,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -29,21 +31,47 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.UserDao
 import com.cs407.fitfolio.ui.modals.EditableField
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseUser
+
+@Composable
+fun ErrorText(error: String?, modifier: Modifier = Modifier) {
+    if (error != null)
+        Text(text = error, color = Color.Red, textAlign = TextAlign.Center)
+}
+
+fun signIn(
+    email: String,
+    password: String,
+    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit,
+) {
+    val auth = FirebaseAuth.getInstance()
+    auth.signInWithEmailAndPassword(email, password)
+        .addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                onComplete(true, null, auth.currentUser)
+            } else {
+                onComplete(false, task.exception, null)
+            }
+        }
+}
 
 @Composable
 fun SignInScreen (
     onNavigateToOutfitsScreen: () -> Unit,
-    onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToWardrobeScreen: () -> Unit,
-    onNavigateToAddScreen: () -> Unit,
-    onNavigateToClosetScreen: () -> Unit,
     onNavigateToSignUpScreen: () -> Unit,
 ) {
 
@@ -63,22 +91,9 @@ fun SignInScreen (
             SignInScreenTopHeader()
 
             // sign in form - name, email, password
-            SignInForm(onNavigateToSignUpScreen)
+            SignInForm(onNavigateToSignUpScreen, onNavigateToOutfitsScreen)
         }
 
-        // back button (navigates back to my outfits for now)
-        // navigate to sign up and sign in screens
-        IconButton(
-            onClick = { onNavigateToOutfitsScreen() },
-            modifier = Modifier
-                .align(alignment = Alignment.TopStart)
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Outlined.ArrowBack,
-                contentDescription = "Back arrow",
-                Modifier.size(36.dp)
-            )
-        }
     }
 }
 
@@ -104,12 +119,16 @@ fun SignInScreenTopHeader() {
 }
 
 @Composable
-fun SignInForm( onNavigateToSignUpScreen: () -> Unit ) {
+fun SignInForm(
+    onNavigateToSignUpScreen: () -> Unit,
+    onSignInSuccess: () -> Unit,
+//    userDao: UserDao,
+) {
     // User information
     // TODO: implement the way to get this from storage (these are placeholders)
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-
+    var errorMessage by remember { mutableStateOf<String?>(null)}
     // Track whether all fields are filled (to make sign in button available)
     val allFieldsFilled by remember {
         derivedStateOf {
@@ -141,10 +160,19 @@ fun SignInForm( onNavigateToSignUpScreen: () -> Unit ) {
             )
 
             Spacer(modifier = Modifier.size(10.dp))
-
+            ErrorText(error = errorMessage)
             // Sign in button
             Button(
-                onClick = { },
+                onClick = {
+                    signIn(email, password) { success, exception, user ->
+                        if (success && user != null) {
+                            onSignInSuccess()
+                            // e.g., onSignInSuccess()
+                        } else {
+                            errorMessage = exception?.message ?: "Sign in failed"
+                        }
+                    }
+                },
                 enabled = allFieldsFilled,
                 content = { Text("Sign In") },
             )

@@ -72,6 +72,7 @@ fun MyClosetScreen(
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
+    onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel
 ) {
@@ -130,7 +131,7 @@ fun MyClosetScreen(
 
         // Show settings
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false })
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
         }
 
         // Show item modal
