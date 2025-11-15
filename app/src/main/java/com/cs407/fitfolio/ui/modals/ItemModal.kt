@@ -6,9 +6,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,14 +14,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -32,9 +31,12 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -115,27 +117,81 @@ fun IconBox (
     val item = closetState.items.find { it.itemId == itemId }
         ?: throw NoSuchElementException("Item with id $itemId not found")
 
-    // Track whether item is editable
+    // Mutable states
     var isEditing by remember { mutableStateOf(false) }
+    var expanded by remember { mutableStateOf(false) }
+    var selectedItemType by remember { mutableStateOf(item.itemType)}
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Item name
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color.White)
                 .fillMaxWidth()
+                .padding(horizontal = 20.dp, vertical = 14.dp)
         ) {
-            Text(
-                text = item.itemName,
-                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .padding(vertical = 15.dp)
-                    .align(Alignment.Center)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Item name
+                Text(
+                    text = item.itemName,
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
+
+                // Item type dropdown
+                Box {
+                    Row(
+                        modifier = Modifier
+                            .clip(MaterialTheme.shapes.small)
+                            .background(Color(0xFFF7F7F7))
+                            .clickable { expanded = true }
+                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(selectedItemType)
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = "Change item type",
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false }
+                    ) {
+                        closetState.itemTypes.forEach { option ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    closetViewModel.editItemType(item, option)
+                                    selectedItemType = option
+                                    expanded = false
+                                },
+                                text = {
+                                    Row {
+                                        Text(option)
+                                        if (option == selectedItemType) {
+                                            Icon(
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = null,
+                                                tint = Color(0xFF2E7D32),
+                                                modifier = Modifier
+                                                    .padding(start = 6.dp)
+                                                    .size(16.dp)
+                                            )
+                                        }
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
         }
 
         // Item photo and icon buttons
@@ -319,10 +375,9 @@ fun ItemInformation(
         }
 
         item {
-            TagsAndItemType(
+            TagsEditableCard(
                 itemId = itemId,
-                closetViewModel = closetViewModel,
-                modifier = modifier
+                closetViewModel = closetViewModel
             )
         }
     }
@@ -369,6 +424,7 @@ private fun OutfitsCard(
     }
 }
 
+// TODO: get rid of eventually
 @Composable
 fun TagsAndItemType(
     itemId: String,
@@ -401,7 +457,9 @@ fun TagsAndItemType(
                     style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                 )
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    item.itemTags.forEach { tag ->
+                    item.itemTags
+                        .sortedByDescending { it in item.itemTags }
+                        .forEach { tag ->
                         Box(
                             modifier = Modifier
                                 .clip(MaterialTheme.shapes.small)
@@ -414,7 +472,6 @@ fun TagsAndItemType(
                 }
             }
         }
-
         // Item type
         Box(
             modifier = Modifier
@@ -490,4 +547,264 @@ fun TagsAndItemType(
     }
 }
 
+// Card for viewing and editing tags assigned to this item
+// Edit mode unlocks selecting tags, adding new tags, or deleting global tags
+// Displays all global tags so user can modify which apply to this item
+@Composable
+private fun TagsEditableCard(
+    itemId: String,
+    closetViewModel: ClosetViewModel
+) {
+    val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
+    val item = closetState.items.find { it.itemId == itemId }
+        ?: throw NoSuchElementException("Item with id $itemId not found")
 
+    var editMode by remember { mutableStateOf(false) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var pendingGlobalDelete by remember { mutableStateOf<String?>(null) }
+
+    // local selection buffer for tags; sync when item changes
+    var selectedTags by remember(item.itemId) { mutableStateOf(item.itemTags.toSet()) }
+    LaunchedEffect(item.itemTags) { selectedTags = item.itemTags.toSet() }
+
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color.White)
+            .fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 15.dp)
+                .padding(bottom = 15.dp)
+        ) {
+            // header row: title + actions
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                Text(
+                    text = "Tags",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+
+                if (editMode) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        // add tag
+                        IconButton(
+                            onClick = { showAddDialog = true },
+                        ) {
+                            Icon(Icons.Outlined.Add, contentDescription = "Add tag")
+                        }
+                        // save changes
+                        IconButton(
+                            onClick = {
+                                val current = item.itemTags.toSet()
+                                val toAdd = selectedTags - current
+                                val toRemove = current - selectedTags
+                                toAdd.forEach { t ->
+                                    closetViewModel.editItemTags(
+                                        item,
+                                        t,
+                                        isRemoving = false
+                                    )
+                                }
+                                toRemove.forEach { t ->
+                                    closetViewModel.editItemTags(
+                                        item,
+                                        t,
+                                        isRemoving = true
+                                    )
+                                }
+                                editMode = false
+                            },
+                        ) {
+                            Icon(Icons.Filled.Check, contentDescription = "Save changes")
+                        }
+                    }
+                } else {
+                    // edit mode
+                    IconButton (
+                        onClick = { editMode = true }
+                    ) {
+                        Icon(Icons.Outlined.Edit, contentDescription = "Edit tags")
+                    }
+                }
+            }
+
+            // show ALL global tags as chips (selectable only when editing)
+            val sortedTags = closetState.tags.sortedByDescending { it in selectedTags }
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(sortedTags.size) { idx ->
+                    val tag = sortedTags[idx]
+                    val isSelected = tag in selectedTags
+                    TagChipSelectable(
+                        text = tag,
+                        selected = isSelected,
+                        editing = editMode,
+                        onToggleForItem = {
+                            selectedTags = if (isSelected) selectedTags - tag else selectedTags + tag
+                        },
+                        onDeleteGlobal = {
+                            if (editMode) pendingGlobalDelete = tag
+                        }
+                    )
+                }
+            }
+        }
+
+        // add-tag dialog
+        if (showAddDialog) {
+            AddTagDialog(
+                onDismiss = { showAddDialog = false },
+                onConfirm = { newTag ->
+                    val t = newTag.trim()
+                    if (t.isNotEmpty()) {
+                        closetViewModel.addTag(t)      // add globally
+                        selectedTags = selectedTags + t // preselect to apply on Save
+                    }
+                    showAddDialog = false
+                }
+            )
+        }
+
+        // confirm global delete dialog
+        pendingGlobalDelete?.let { tag ->
+            ConfirmDialog(
+                title = "Delete tag everywhere?",
+                message = "Deleting \"$tag\" removes it from your tag list and from ALL items. This cannot be undone.",
+                confirmText = "Delete",
+                onDismiss = { pendingGlobalDelete = null },
+                onConfirm = {
+                    closetViewModel.deleteTag(tag)
+                    selectedTags = selectedTags - tag
+                    pendingGlobalDelete = null
+                }
+            )
+        }
+    }
+}
+
+// Chip used for showing a single tag with optional interaction
+// Supports select/deselect for the current item when editing
+// Can show a delete icon in edit mode to remove a tag globally
+@Composable
+private fun TagChipSelectable(
+    text: String,
+    selected: Boolean,
+    editing: Boolean,
+    onToggleForItem: () -> Unit,
+    onDeleteGlobal: () -> Unit
+) {
+    // Your chosen colors
+    val backgroundColor = when {
+        selected && editing -> Color(0xFFB8B8B8) // darker gray (when selected + editing)
+        selected -> Color(0xFFD0D0D0)            // medium gray (when selected)
+        else -> Color(0xFFF2F2F2)                // light gray (default)
+    }
+
+    // if not editing, no clickable modifier
+    val chipModifier =
+        if (editing) {
+            Modifier
+                .clip(MaterialTheme.shapes.small)
+                .background(backgroundColor)
+                .clickable { onToggleForItem() }
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        } else {
+            Modifier
+                .clip(MaterialTheme.shapes.small)
+                .background(backgroundColor)
+                .padding(horizontal = 12.dp, vertical = 8.dp)
+        }
+
+    Row(
+        modifier = chipModifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodySmall.copy(
+                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
+                color = Color.Black
+            )
+        )
+
+        // show small delete icon ONLY when editing
+        if (editing) {
+            Icon(
+                imageVector = Icons.Outlined.Delete,
+                contentDescription = "Delete tag",
+                tint = Color.Red.copy(alpha = 0.85f),
+                modifier = Modifier
+                    .size(14.dp)
+                    .clickable { onDeleteGlobal() }
+            )
+        }
+    }
+}
+
+@Composable
+private fun AddTagDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (String) -> Unit
+) {
+    var text by remember { mutableStateOf("") }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Add a tag") },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { text = it },
+                label = { Text("Tag name") },
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(onClick = { onConfirm(text) }) {
+                Text("Add")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
+
+// Confirmation dialog for dangerous or irreversible actions
+// Displays a title, message, and confirm/cancel actions
+// Used for deleting a global tag from all items
+@Composable
+private fun ConfirmDialog(
+    title: String,
+    message: String,
+    confirmText: String,
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = { Text(message) },
+        confirmButton = {
+            TextButton(onClick = onConfirm) {
+                Text(confirmText)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Cancel")
+            }
+        }
+    )
+}
