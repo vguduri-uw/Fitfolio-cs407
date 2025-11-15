@@ -65,8 +65,6 @@ import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
-// TODO: different item icons?, add coroutines for filtering calls?, add toast messages for delete mode??
-// TODO: make sure i do not pass closet state as a parameter... the function can get it from the VM
 @Composable
 fun MyClosetScreen(
     onNavigateToOutfitsScreen: () -> Unit,

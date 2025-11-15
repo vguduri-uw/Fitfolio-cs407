@@ -14,7 +14,7 @@ fun AddTestItemData(
     outfitsViewModel.addOutfit(
         name = "Red Shirt & Jeans",
         description = "Classic casual look",
-        tags = listOf("Casual", "Summer"),
+        tags = listOf("Casual", "Summer, Red, Tag, Tag, Tag"),
         isFavorite = true,
         photo = -1,
         itemList = emptyList()

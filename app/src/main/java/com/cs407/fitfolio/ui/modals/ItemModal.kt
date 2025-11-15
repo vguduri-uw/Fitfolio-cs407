@@ -6,6 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
@@ -20,6 +24,8 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -285,11 +291,11 @@ fun ItemInformation(
                     verticalArrangement = Arrangement.spacedBy(10.dp),
                     modifier = Modifier.padding(15.dp)
                 ) {
+                    Text(
+                        text = "Outfits featuring this item",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
                     if (item.outfitList.isNotEmpty()) {
-                        Text(
-                            text = "Outfits featuring this item",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             items(item.outfitList.size) { idx ->
                                 val outfit = item.outfitList[idx]
@@ -304,15 +310,19 @@ fun ItemInformation(
                         }
                     } else {
                         Text(
-                            text = "Outfits featuring this item",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                        )
-                        Text(
                             text = "No outfits found."
                         )
                     }
                 }
             }
+        }
+
+        item {
+            TagsAndItemType(
+                itemId = itemId,
+                closetViewModel = closetViewModel,
+                modifier = modifier
+            )
         }
     }
 }
@@ -334,11 +344,11 @@ private fun OutfitsCard(
             .padding(10.dp)
             .fillMaxSize()
         // TODO: uncomment when ready
-            /*.clickable(
+            /*clickable(
                 OutfitsModal(
                     outfitsViewModel = outfitsViewModel,
                     outfitId = outfitId,
-                    onDismiss = { }, // ???
+                    onDismiss = { onNavigateToClosetScreen(itemToBeShown: item.itemId) }, // ???
                     onNavigateToCalendarScreen = onNavigateToCalendarScreen
                 )
             )*/
@@ -355,6 +365,99 @@ private fun OutfitsCard(
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
             textAlign = TextAlign.Center
         )
+    }
+}
+
+@Composable
+fun TagsAndItemType(
+    itemId: String,
+    closetViewModel: ClosetViewModel,
+    modifier: Modifier
+) {
+    // Observe the current UI state from the ViewModel
+    val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
+    val item = closetState.items.find { it.itemId == itemId }
+        ?: throw NoSuchElementException("Item with id $itemId not found")
+    var expanded by remember { mutableStateOf(false) }
+
+    Row(
+        modifier = modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.Top
+    ) {
+        // Item tags
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color.White)
+                .padding(15.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Item Tags",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    item.itemTags.forEach { tag ->
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.small)
+                                .background(Color(0xFFF7F7F7))
+                                .padding(horizontal = 10.dp, vertical = 6.dp)
+                        ) {
+                            Text(tag)
+                        }
+                    }
+                }
+            }
+        }
+
+        // Item type
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color.White)
+                .padding(15.dp)
+        ) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(
+                    "Item Type",
+                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.small)
+                        .background(Color(0xFFF7F7F7))
+                        .clickable { expanded = true }
+                        .padding(horizontal = 12.dp, vertical = 10.dp)
+                ) {
+                    Text(item.itemType)
+                }
+
+                DropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    closetState.itemTypes.forEach { option ->
+                        DropdownMenuItem(
+                            onClick = {
+                                closetViewModel.editItemType(item, option)
+                                expanded = false
+                            },
+                            text = {
+                                Text(
+                                    text = option,
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 
