@@ -1,13 +1,14 @@
 package com.cs407.fitfolio.ui.modals
 
-import android.R.attr.onClick
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,8 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -47,9 +50,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.enums.DeletionStates
@@ -69,6 +74,9 @@ fun ItemModal(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+
+    // Tracks whether item is in editing mode
+    var isEditing by remember { mutableStateOf(false) }
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
@@ -90,6 +98,8 @@ fun ItemModal(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
                 onDismiss = onDismiss,
+                isEditing = isEditing,
+                onToggleEditing = { isEditing = !isEditing },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
@@ -97,6 +107,8 @@ fun ItemModal(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
                 outfitsViewModel = outfitsViewModel,
+                isEditing = isEditing,
+                onToggleEditing = { isEditing = !isEditing },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen,
                 modifier = Modifier
                     .weight(1f)
@@ -112,6 +124,8 @@ fun IconBox (
     itemId: String,
     closetViewModel: ClosetViewModel,
     onDismiss: () -> Unit,
+    isEditing: Boolean,
+    onToggleEditing: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit
 ) {
     // Observe the current UI state from the ViewModel
@@ -120,9 +134,10 @@ fun IconBox (
         ?: throw NoSuchElementException("Item with id $itemId not found")
 
     // Mutable states
-    var isEditing by remember { mutableStateOf(false) }
     var expanded by remember { mutableStateOf(false) }
-    var selectedItemType by remember { mutableStateOf(item.itemType)}
+    var selectedItemType by remember { mutableStateOf(item.itemType) }
+    var isEditingName by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf(item.itemName) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -132,22 +147,54 @@ fun IconBox (
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color.White)
                 .fillMaxWidth()
-                .padding(horizontal = 20.dp, vertical = 14.dp)
         ) {
             Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(end = 16.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Start
             ) {
                 // Item name
-                Text(
-                    text = item.itemName,
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
-                    modifier = Modifier
-                        .weight(1f)
-                        .padding(end = 4.dp),
-                    maxLines = Int.MAX_VALUE
+                TextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    enabled = isEditingName || isEditing,
+                    textStyle = TextStyle(
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 24.sp,
+                        color = Color.Black
+                    ),
+                    maxLines = Int.MAX_VALUE,
+                    modifier = Modifier.weight(1f),
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        disabledIndicatorColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        disabledContainerColor = Color.Transparent
+                    )
                 )
+
+                // Edit icon
+                IconButton(
+                    onClick = {
+                        if (isEditingName || isEditing) {
+                            closetViewModel.editItemName(item, name)
+                            isEditingName = false
+                            onToggleEditing()
+                        } else {
+                            isEditingName = true
+                        }
+                    }
+                ) {
+                    Icon(
+                        imageVector = if (isEditingName || isEditing) Icons.Filled.Check else Icons.Outlined.Edit,
+                        contentDescription = "Edit title",
+                        modifier = Modifier.size(24.dp)
+                    )
+                }
 
                 // Item type dropdown
                 Box {
@@ -156,13 +203,13 @@ fun IconBox (
                             .clip(MaterialTheme.shapes.small)
                             .background(Color(0xFFF7F7F7))
                             .clickable { expanded = true }
-                            .padding(horizontal = 10.dp, vertical = 6.dp),
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(selectedItemType)
                         Icon(
                             imageVector = Icons.Filled.ArrowDropDown,
-                            contentDescription = "Change item type",
+                            contentDescription = "Item type dropdown",
                             modifier = Modifier.size(18.dp)
                         )
                     }
@@ -184,7 +231,7 @@ fun IconBox (
                                         if (option == selectedItemType) {
                                             Icon(
                                                 imageVector = Icons.Filled.Check,
-                                                contentDescription = null,
+                                                contentDescription = "Item type",
                                                 tint = Color(0xFF2E7D32),
                                                 modifier = Modifier
                                                     .padding(start = 6.dp)
@@ -235,7 +282,7 @@ fun IconBox (
             // Edit icon button
             IconButton(
                 modifier = Modifier.align(Alignment.TopEnd),
-                onClick = { isEditing = !isEditing }
+                onClick = { onToggleEditing() }
             ) {
                 if (isEditing) {
                     Icon(
@@ -300,6 +347,8 @@ fun ItemInformation(
     itemId: String,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
+    isEditing: Boolean,
+    onToggleEditing: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
     modifier: Modifier
 ) {
@@ -307,6 +356,9 @@ fun ItemInformation(
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
     val item = closetState.items.find { it.itemId == itemId }
         ?: throw NoSuchElementException("Item with id $itemId not found")
+
+    var isEditingDescription by remember { mutableStateOf(false) }
+    var description by remember { mutableStateOf(item.itemDescription) }
 
     LazyColumn(
         modifier = modifier,
@@ -320,18 +372,61 @@ fun ItemInformation(
                     .background(Color.White)
                     .fillMaxWidth()
             ) {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                    modifier = Modifier.padding(15.dp)
-                ) {
-                    Text(
-                        text = "Description",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    if (item.itemDescription.isNotEmpty()) {
+                Column {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(start = 15.dp, end = 15.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
                         Text(
-                            text = item.itemDescription,
-                            style = MaterialTheme.typography.bodySmall
+                            text = "Description",
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        )
+                        if (isEditingDescription || isEditing) {
+                            IconButton(onClick = {
+                                // updates globally
+                                closetViewModel.editItemDescription(item, description)
+
+                                isEditingDescription = false
+                                onToggleEditing()
+                            } ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = "Save edits",
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        } else {
+                            IconButton(onClick = { isEditingDescription = true } ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = "Edit description",
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
+                        }
+                    }
+                    if (item.itemDescription.isNotEmpty()) {
+                        TextField(
+                            value = description,
+                            onValueChange = { description = it },
+                            enabled = isEditing || isEditingDescription,
+                            textStyle = TextStyle(
+                                fontSize = 15.sp,
+                                color = Color.Black
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            colors = TextFieldDefaults.colors(
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent,
+                                disabledIndicatorColor = Color.Transparent,
+                                focusedContainerColor = Color.Transparent,
+                                unfocusedContainerColor = Color.Transparent,
+                                disabledContainerColor = Color.Transparent
+                            )
                         )
                     } else {
                         Text(
