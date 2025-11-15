@@ -209,7 +209,6 @@ fun AppNavigation() {
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
-                    )
                     weatherViewModel = weatherViewModel
                 )
             }
