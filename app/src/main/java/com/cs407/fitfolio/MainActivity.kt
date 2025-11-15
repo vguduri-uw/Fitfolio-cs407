@@ -51,17 +51,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FitfolioTheme {
-
-                // FOR TEST PURPOSES ONLY
+                // FOR TESTING PURPOSES ONLY
                 val closetViewModel: ClosetViewModel = viewModel()
                 val outfitsViewModel: OutfitsViewModel = viewModel()
 
+                var populateTestData by remember { mutableStateOf(true) }
                 var hasPopulated = remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) { if (!hasPopulated.value) { hasPopulated.value = true } }
+                LaunchedEffect(hasPopulated) { if (hasPopulated.value) { populateTestData = false } }
 
-                if (!hasPopulated.value) {
+                if (populateTestData) {
                     AddTestItemData(closetViewModel = closetViewModel, outfitsViewModel = outfitsViewModel)
                     AddTestOutfitData(outfitsViewModel)
+                    hasPopulated.value = true
                 }
 
                 AppNavigation()
