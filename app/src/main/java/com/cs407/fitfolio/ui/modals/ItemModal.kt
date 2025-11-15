@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.modals
 
+import android.R.attr.onClick
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,7 +49,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
@@ -106,6 +106,7 @@ fun ItemModal(
     }
 }
 
+// Item photo and icon buttons
 @Composable
 fun IconBox (
     itemId: String,
@@ -293,6 +294,7 @@ fun IconBox (
     }
 }
 
+// Item description, outfits featuring the item, and composable call for item tags
 @Composable
 fun ItemInformation(
     itemId: String,
@@ -388,6 +390,7 @@ fun ItemInformation(
     }
 }
 
+// Card for each outfit an item features
 @Composable
 private fun OutfitsCard(
     outfitName: String,
@@ -396,6 +399,8 @@ private fun OutfitsCard(
     onNavigateToCalendarScreen: () -> Unit,
     imageRes: Int,
 ) {
+    var showOutfitModal by remember { mutableStateOf(false) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -404,17 +409,7 @@ private fun OutfitsCard(
             .background(Color(0xFFF7F7F7))
             .padding(10.dp)
             .fillMaxSize()
-        // TODO: uncomment when ready
-            /*clickable(
-                OutfitsModal(
-                    outfitsViewModel = outfitsViewModel,
-                    outfitId = outfitId,
-                    onDismiss = { onNavigateToClosetScreen(itemToBeShown: item.itemId) }, // ???
-                    onNavigateToCalendarScreen = onNavigateToCalendarScreen
-                )
-            )*/
-        // outfitsViewModel, outfitId, onDismiss, onNavigateToCalendarScreen
-
+            .clickable{showOutfitModal = true}
     ) {
         Image(
             painter = painterResource(imageRes),
@@ -427,128 +422,14 @@ private fun OutfitsCard(
             textAlign = TextAlign.Center
         )
     }
-}
 
-// TODO: get rid of eventually
-@Composable
-fun TagsAndItemType(
-    itemId: String,
-    closetViewModel: ClosetViewModel,
-    modifier: Modifier
-) {
-    // Observe the current UI state from the ViewModel
-    val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-    val item = closetState.items.find { it.itemId == itemId }
-        ?: throw NoSuchElementException("Item with id $itemId not found")
-    var expanded by remember { mutableStateOf(false) }
-    var selectedItemType by remember { mutableStateOf(item.itemType)}
-
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.Top
-    ) {
-        // Item tags
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color.White)
-                .padding(15.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Item Tags",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    item.itemTags
-                        .sortedByDescending { it in item.itemTags }
-                        .forEach { tag ->
-                        Box(
-                            modifier = Modifier
-                                .clip(MaterialTheme.shapes.small)
-                                .background(Color(0xFFF7F7F7))
-                                .padding(horizontal = 10.dp, vertical = 6.dp)
-                        ) {
-                            Text(tag)
-                        }
-                    }
-                }
-            }
-        }
-        // Item type
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color.White)
-                .padding(15.dp)
-        ) {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Text(
-                        "Item Type",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                    )
-                    IconButton(
-                        onClick = {expanded = true}
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.ArrowDropDown,
-                            contentDescription = "Item type dropdown",
-                            modifier = Modifier.size(28.dp)
-                        )
-                    }
-                }
-
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.small)
-                        .background(Color(0xFFF7F7F7))
-                        .clickable { expanded = true }
-                        .padding(horizontal = 12.dp, vertical = 10.dp)
-                ) {
-                    Text(item.itemType)
-                }
-
-                DropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    closetState.itemTypes.forEach { option ->
-                        DropdownMenuItem(
-                            onClick = {
-                                closetViewModel.editItemType(item, option)
-                                selectedItemType = option
-                                expanded = false
-                            },
-                            text = {
-                                Row() {
-                                    Text(
-                                        text = option,
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                    if (option == selectedItemType) {
-                                        Icon(
-                                            imageVector = Icons.Filled.Check,
-                                            contentDescription = "Selected",
-                                            modifier = Modifier
-                                                .padding(start = 8.dp)
-                                                .size(18.dp),
-                                            tint = Color(0xFF2E7D32)
-                                        )
-                                    }
-                                }
-                            }
-                        )
-                    }
-                }
-            }
-        }
+    if (showOutfitModal) {
+        OutfitModal(
+            outfitsViewModel = outfitsViewModel,
+            outfitId = outfitId,
+            onDismiss = { showOutfitModal = false },
+            onNavigateToCalendarScreen = onNavigateToCalendarScreen
+        )
     }
 }
 
@@ -756,6 +637,7 @@ private fun TagChipSelectable(
     }
 }
 
+// Dialog for user to type a custom tag
 @Composable
 private fun AddTagDialog(
     onDismiss: () -> Unit,
