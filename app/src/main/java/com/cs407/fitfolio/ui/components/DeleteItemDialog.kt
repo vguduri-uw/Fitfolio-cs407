@@ -27,12 +27,7 @@ fun DeleteItemDialog(
             Text("Are you sure you want to delete these item(s)?")
         },
         text = {
-            Text( // TODO: should this logic actually be true.... also make a better message
-                // TODO: implement this logic if we want it to be like this
-                "Deleting these item(s) will delete all of the outfits they are featured in. " +
-                        "Check the items' outfit(s) before deleting and remove the item(s) from the " +
-                        "outfit(s) if you would like the outfit(s) to be saved."
-            )
+            Text("Deleting these items will delete all of the outfits they are featured in.")
         },
         dismissButton = {
             Button(onClick = {
