@@ -64,7 +64,7 @@ import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 
-// TODO: different item icons?, add coroutines for filtering calls?, add scroll bars?, implement item card, add toast messages for delete mode??
+// TODO: different item icons?, add coroutines for filtering calls?, add toast messages for delete mode??
 // TODO: make sure i do not pass closet state as a parameter... the function can get it from the VM
 @Composable
 fun MyClosetScreen(
@@ -217,11 +217,11 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 }
 
 // Row of action buttons for filtering, shuffling, and searching
-// TODO: can this be created into 1 composable that both closet screen and outfit screen can share and pass in their own view models?? (if have the same named functions)
 @Composable
 fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     // Track whether tags filter is expanded or not
     var expanded by remember { mutableStateOf(false) }
+    var showSearchDialog by remember { mutableStateOf(false) }
 
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
@@ -254,7 +254,10 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = {closetViewModel.shuffleItems()}) {
+            IconButton(
+                onClick = {closetViewModel.shuffleItems()},
+                enabled = closetState.filteredItems.size > 1
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.shuffle),
                     contentDescription = "shuffle",
@@ -271,7 +274,10 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.CenterStart
         ) {
-            IconButton(onClick = { closetViewModel.toggleSearchState(true) }) {
+            IconButton(onClick = {
+                closetViewModel.toggleSearchState(true)
+                showSearchDialog = true
+            }) {
                 Icon(
                     imageVector = Icons.Outlined.Search,
                     contentDescription = "Search",
@@ -282,7 +288,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         }
 
         // Search bar dialog
-        if (closetState.isSearchActive) {
+        if (showSearchDialog) {
             AlertDialog(
                 title = {
                     Text(text = "Search for an item")
@@ -294,11 +300,11 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         placeholder = { Text("Enter item name") },
                     )
                 },
-                onDismissRequest = { closetViewModel.toggleSearchState(false) },
+                onDismissRequest = { showSearchDialog = false },
                 confirmButton = {
                     Button(onClick = {
-                        closetViewModel.toggleSearchState(false)
                         closetViewModel.applyFilters()
+                        showSearchDialog = false
                     }) {
                         Text(text = "Search")
                     }

@@ -67,8 +67,7 @@ class ClosetViewModel : ViewModel() {
             isDeletionCandidate = false,
             itemPhoto = photo,
             itemId = UUID.randomUUID().toString(),
-            outfitList = outfitList //emptyList()
-            // TODO: turn outfitList back into empty list after testing
+            outfitList = outfitList // emptyList() // TODO: turn back to emptyList() after testing
         )
 
         val updatedItems = _closetState.value.items + newItem
@@ -80,13 +79,14 @@ class ClosetViewModel : ViewModel() {
     // Deletes specified items from the closet
     // TODO: implement Room database (then I don't think the outfitsViewModel needs to be passed in)
     fun deleteItem(items: List<ItemEntry>, outfitsViewModel: OutfitsViewModel) {
+        // delete the selected items
         for (item in items) {
             val updatedItems = _closetState.value.items - item
             _closetState.value = _closetState.value.copy(
                 items = updatedItems
             )
 
-            // TODO: decide if we do indeed want to delete the outfits if an item is deleted
+            // delete outfits associated with the items
             var outfitsList: List<OutfitEntry> = emptyList()
             for (outfit in item.outfitList) {
                 outfitsList += outfit
@@ -99,20 +99,38 @@ class ClosetViewModel : ViewModel() {
     // TODO: gonna have to make a copy or something because the item for the closet state needs to be updated
     // also this is prob the same stale issue for all of these
     fun editItemName(item: ItemEntry, name: String) {
-        item.itemName = name
+        val updatedItems = _closetState.value.items.map {
+            if (it.itemId == item.itemId) it.copy(itemName = name)
+            else it
+        }
+
+        _closetState.value = _closetState.value.copy(items = updatedItems)
     }
     fun editItemType(item: ItemEntry, type: String) {
-        item.itemType = type
+        val updatedItems = _closetState.value.items.map {
+            if (it.itemId == item.itemId) it.copy(itemType = type)
+            else it
+        }
+
+        _closetState.value = _closetState.value.copy(items = updatedItems)
     }
     fun editItemDescription(item: ItemEntry, description: String) {
-        item.itemDescription = description
+        val updatedItems = _closetState.value.items.map {
+            if (it.itemId == item.itemId) it.copy(itemDescription = description)
+            else it
+        }
+
+        _closetState.value = _closetState.value.copy(items = updatedItems)
     }
     fun editItemTags(item: ItemEntry, tag: String, isRemoving: Boolean) {
-        if (isRemoving) {
-            item.itemTags -= tag
-        } else {
-            item.itemTags += tag
+        val updatedItems = _closetState.value.items.map {
+            if (it.itemId == item.itemId) {
+                if (isRemoving) it.copy(itemTags = item.itemTags - tag)
+                else it.copy(itemTags = item.itemTags + tag)
+            } else it
         }
+
+        _closetState.value = _closetState.value.copy(items = updatedItems)
     }
     fun toggleFavoritesProperty(item: ItemEntry) {
         val updatedItems = _closetState.value.items.map {
@@ -121,17 +139,24 @@ class ClosetViewModel : ViewModel() {
         }
 
         _closetState.value = _closetState.value.copy(items = updatedItems)
-        applyFilters()
     }
     fun editItemPhoto(item: ItemEntry, photo: Int) {
-        item.itemPhoto = photo
+        val updatedItems = _closetState.value.items.map {
+            if (it.itemId == item.itemId) it.copy(itemPhoto = photo)
+            else it
+        }
+
+        _closetState.value = _closetState.value.copy(items = updatedItems)
     }
     fun editOutfitList(item: ItemEntry, outfit: OutfitEntry, isRemoving: Boolean) {
-        if (isRemoving) {
-            item.outfitList -= outfit
-        } else {
-            item.outfitList += outfit
+        val updatedItems = _closetState.value.items.map {
+            if (it.itemId == item.itemId) {
+                if (isRemoving) it.copy(outfitList = item.outfitList - outfit)
+                else it.copy(outfitList = item.outfitList + outfit)
+            } else it
         }
+
+        _closetState.value = _closetState.value.copy(items = updatedItems)
     }
 
     // CLOSET FUNCTIONS //
@@ -339,6 +364,8 @@ class ClosetViewModel : ViewModel() {
 
     // Clears any applied filters and resets properties
     fun clearFilters() {
+        clearDeletionCandidates()
+
         _closetState.value = _closetState.value.copy(
             filteredItems = _closetState.value.items,
             activeItemType = "All",
@@ -347,7 +374,5 @@ class ClosetViewModel : ViewModel() {
             searchQuery = "",
             isDeleteActive = DeletionStates.Inactive.name,
         )
-
-        clearDeletionCandidates()
     }
 }
