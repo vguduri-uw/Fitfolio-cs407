@@ -18,6 +18,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Delete
@@ -129,7 +130,7 @@ fun IconBox (
         ) {
             Text(
                 text = item.itemName,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold),
                 textAlign = TextAlign.Center,
                 modifier = Modifier
                     .padding(vertical = 15.dp)
@@ -379,6 +380,7 @@ fun TagsAndItemType(
     val item = closetState.items.find { it.itemId == itemId }
         ?: throw NoSuchElementException("Item with id $itemId not found")
     var expanded by remember { mutableStateOf(false) }
+    var selectedItemType by remember { mutableStateOf(item.itemType)}
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -422,10 +424,24 @@ fun TagsAndItemType(
                 .padding(15.dp)
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(
-                    "Item Type",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
-                )
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Text(
+                        "Item Type",
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    )
+                    IconButton(
+                        onClick = {expanded = true}
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.ArrowDropDown,
+                            contentDescription = "Item type dropdown",
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
+                }
 
                 Box(
                     modifier = Modifier
@@ -445,13 +461,26 @@ fun TagsAndItemType(
                         DropdownMenuItem(
                             onClick = {
                                 closetViewModel.editItemType(item, option)
+                                selectedItemType = option
                                 expanded = false
                             },
                             text = {
-                                Text(
-                                    text = option,
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
+                                Row() {
+                                    Text(
+                                        text = option,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                    if (option == selectedItemType) {
+                                        Icon(
+                                            imageVector = Icons.Filled.Check,
+                                            contentDescription = "Selected",
+                                            modifier = Modifier
+                                                .padding(start = 8.dp)
+                                                .size(18.dp),
+                                            tint = Color(0xFF2E7D32)
+                                        )
+                                    }
+                                }
                             }
                         )
                     }
