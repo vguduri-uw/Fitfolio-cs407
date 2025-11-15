@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
@@ -33,7 +32,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -57,13 +55,12 @@ import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
-import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
-import com.cs407.fitfolio.ui.viewModels.OutfitsState
-import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
-import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
-import com.cs407.fitfolio.ui.components.WeatherCarousel
+import com.cs407.fitfolio.viewModels.OutfitsState
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.viewModels.WeatherViewModel
 
 @Composable
 fun MyOutfitsScreen(

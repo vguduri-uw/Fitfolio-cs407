@@ -30,7 +30,6 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -59,12 +58,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
-import com.cs407.fitfolio.ui.enums.DeletionStates
+import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
-import com.cs407.fitfolio.ui.viewModels.ClosetState
-import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.viewModels.ClosetState
+import com.cs407.fitfolio.viewModels.ClosetViewModel
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
 
 @Composable
 fun MyClosetScreen(

@@ -1,6 +1,5 @@
 package com.cs407.fitfolio
 
-import android.os.Build
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
@@ -8,7 +7,6 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -17,8 +15,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -28,7 +24,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -45,26 +40,24 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.cs407.fitfolio.ui.testData.AddTestItemData
+import com.cs407.fitfolio.data.testData.AddTestItemData
 import com.cs407.fitfolio.ui.theme.FitfolioTheme
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
 import com.cs407.fitfolio.ui.screens.CalendarScreen
 import com.cs407.fitfolio.ui.screens.MyWardrobeScreen
 import com.cs407.fitfolio.ui.screens.AddScreen
 import com.cs407.fitfolio.ui.screens.MyClosetScreen
-import com.cs407.fitfolio.ui.navigation.BottomNavigationBar
+import com.cs407.fitfolio.navigation.BottomNavigationBar
 import com.cs407.fitfolio.ui.screens.SignUpScreen
 import com.cs407.fitfolio.ui.screens.SignInScreen
-import com.cs407.fitfolio.ui.testData.AddTestOutfitData
-import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
-import com.cs407.fitfolio.ui.viewModels.UserViewModel
+import com.cs407.fitfolio.data.testData.AddTestOutfitData
+import com.cs407.fitfolio.viewModels.ClosetViewModel
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
+import com.cs407.fitfolio.viewModels.WeatherViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth

@@ -6,8 +6,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cs407.fitfolio.ui.enums.DeletionStates
-import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.enums.DeletionStates
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
 
 @Composable
 fun DeleteOutfitDialog(outfitsViewModel: OutfitsViewModel) {

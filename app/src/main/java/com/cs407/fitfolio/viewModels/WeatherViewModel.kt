@@ -1,4 +1,4 @@
-package com.cs407.fitfolio.ui.viewModels
+package com.cs407.fitfolio.viewModels
 
 import android.annotation.SuppressLint
 import android.content.Context

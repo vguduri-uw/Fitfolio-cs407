@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -42,12 +41,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.SimpleHeader
-import com.cs407.fitfolio.ui.components.WeatherCard
-import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.components.WeatherDataChip
-import com.cs407.fitfolio.ui.viewModels.ClosetState
-import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
+import com.cs407.fitfolio.viewModels.ClosetState
+import com.cs407.fitfolio.viewModels.ClosetViewModel
+import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 
 @Composable

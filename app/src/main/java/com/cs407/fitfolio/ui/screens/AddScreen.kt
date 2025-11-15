@@ -28,12 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
-import androidx.compose.runtime.getValue
+import com.cs407.fitfolio.viewModels.ClosetViewModel
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import com.cs407.fitfolio.ui.modals.InformationModal
-import com.cs407.fitfolio.ui.modals.SettingsModal
 
 @Composable
 fun AddScreen(

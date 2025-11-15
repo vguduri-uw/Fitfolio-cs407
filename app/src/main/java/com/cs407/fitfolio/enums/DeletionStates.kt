@@ -1,4 +1,4 @@
-package com.cs407.fitfolio.ui.enums
+package com.cs407.fitfolio.enums
 
 import androidx.annotation.StringRes
 import com.cs407.fitfolio.R

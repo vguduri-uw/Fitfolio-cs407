@@ -1,4 +1,4 @@
-package com.cs407.fitfolio.ui.navigation
+package com.cs407.fitfolio.navigation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row

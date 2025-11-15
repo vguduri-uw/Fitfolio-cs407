@@ -1,4 +1,4 @@
-package com.cs407.fitfolio.ui.viewModels
+package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
 import com.google.firebase.Firebase
