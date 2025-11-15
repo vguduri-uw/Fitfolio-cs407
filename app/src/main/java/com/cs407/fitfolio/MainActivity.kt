@@ -51,31 +51,18 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FitfolioTheme {
+
+                // FOR TEST PURPOSES ONLY
                 val closetViewModel: ClosetViewModel = viewModel()
                 val outfitsViewModel: OutfitsViewModel = viewModel()
 
-                // TESTING PURPOSES ONLY-- populates a few items
-                var populateItemTestData by remember { mutableStateOf(false) }
-                val itemDataHasPopulated = remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) {
-                    if (!itemDataHasPopulated.value) {
-                        populateItemTestData = true
-                        itemDataHasPopulated.value = true
-                    }
-                }
-                if (populateItemTestData) AddTestItemData(closetViewModel = closetViewModel, outfitsViewModel = outfitsViewModel)
+                var hasPopulated = remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) { if (!hasPopulated.value) { hasPopulated.value = true } }
 
-                // TESTING PURPOSES ONLY-- populates a few items in outfits screen
-                var populateTestData by remember { mutableStateOf(false) }
-                val hasPopulated = remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) {
-                    if (!hasPopulated.value) {
-                        hasPopulated.value = true
-                    }
+                if (!hasPopulated.value) {
+                    AddTestItemData(closetViewModel = closetViewModel, outfitsViewModel = outfitsViewModel)
+                    AddTestOutfitData(outfitsViewModel)
                 }
-
-                if (populateTestData) AddTestOutfitData(outfitsViewModel = outfitsViewModel)
-                if (!hasPopulated.value) AddTestItemData(closetViewModel = closetViewModel, outfitsViewModel = outfitsViewModel)
 
                 AppNavigation()
             }
@@ -88,6 +75,7 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     // Creates and remembers a NavController to manage navigation state
     val navController = rememberNavController()
+
     val closetViewModel: ClosetViewModel = viewModel()
     val outfitsViewModel: OutfitsViewModel = viewModel()
 
