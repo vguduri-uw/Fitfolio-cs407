@@ -56,11 +56,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
+import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.viewModels.OutfitsState
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
+import com.cs407.fitfolio.ui.components.WeatherCarousel
 
 @Composable
 fun MyOutfitsScreen(
@@ -70,10 +73,13 @@ fun MyOutfitsScreen(
     onNavigateToAddScreen: () -> Unit,
     onNavigateToSignUpScreen: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
-    outfitsViewModel: OutfitsViewModel
+    outfitsViewModel: OutfitsViewModel,
+    weatherViewModel: WeatherViewModel
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+    //for weather
+    val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
 
     // re-filter when an item is added or deleted
     LaunchedEffect(outfitsState.outfits) {
@@ -100,7 +106,10 @@ fun MyOutfitsScreen(
             Spacer(modifier = Modifier.size(10.dp))
 
             // horizontally scrollable weather info row
-            WeatherRow()
+            WeatherCarousel(
+                weatherData = weatherState.weatherData,
+                isLoading = weatherState.isLoading
+            )
 
             Spacer(modifier = Modifier.size(10.dp))
 
@@ -164,27 +173,27 @@ fun MyOutfitsScreen(
 }
 
 // TODO: Veda will provide weather section
-@Composable
-fun WeatherRow() {
-    LazyRow (
-        horizontalArrangement = Arrangement.spacedBy(15.dp),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        items(7) { index ->
-            Box (
-                modifier = Modifier
-                    .clip(shape = MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
-            ) {
-                Text(
-                    "Weather for Day ${index + 1}",
-                    modifier = Modifier
-                        .padding(horizontal = 55.dp, vertical = 20.dp)
-                )
-            }
-        }
-    }
-}
+//@Composable
+//fun WeatherRow() {
+//    LazyRow (
+//        horizontalArrangement = Arrangement.spacedBy(15.dp),
+//        modifier = Modifier.fillMaxWidth()
+//    ) {
+//        items(7) { index ->
+//            Box (
+//                modifier = Modifier
+//                    .clip(shape = MaterialTheme.shapes.medium)
+//                    .background(Color(0xFFE0E0E0)),
+//            ) {
+//                Text(
+//                    "Weather for Day ${index + 1}",
+//                    modifier = Modifier
+//                        .padding(horizontal = 55.dp, vertical = 20.dp)
+//                )
+//            }
+//        }
+//    }
+//}
 
 @Composable
 fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {

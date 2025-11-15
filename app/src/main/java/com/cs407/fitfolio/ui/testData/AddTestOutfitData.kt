@@ -1,4 +1,4 @@
-package com.cs407.fitfolio.ui.TestData
+package com.cs407.fitfolio.ui.testData
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue

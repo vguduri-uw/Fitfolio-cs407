@@ -1,8 +1,11 @@
 package com.cs407.fitfolio
 
 import android.os.Build
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.FabPosition
@@ -28,20 +32,20 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import com.cs407.fitfolio.ui.TestData.AddTestItemData
-import com.cs407.fitfolio.ui.TestData.AddTestOutfitData
+import com.cs407.fitfolio.ui.testData.AddTestItemData
 import com.cs407.fitfolio.ui.theme.FitfolioTheme
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
 import com.cs407.fitfolio.ui.screens.CalendarScreen
@@ -51,6 +55,7 @@ import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.navigation.BottomNavigationBar
 import com.cs407.fitfolio.ui.screens.SignUpScreen
 import com.cs407.fitfolio.ui.screens.SignInScreen
+import com.cs407.fitfolio.ui.testData.AddTestOutfitData
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.ui.viewModels.UserViewModel
@@ -59,6 +64,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
 
 class MainActivity : ComponentActivity() {
     private lateinit var auth: FirebaseAuth
@@ -68,29 +74,20 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FitfolioTheme {
-                // TESTING PURPOSES ONLY-- populates a few items
-//                val closetViewModel: ClosetViewModel = viewModel()
-//                var populateItemTestData by remember { mutableStateOf(false) }
-//                val hasPopulated = remember { mutableStateOf(false) }
-//                LaunchedEffect(Unit) {
-//                    if (!hasPopulated.value) {
-//                        populateTestData = true
-//                        hasPopulated.value = true
-//                    }
-//                }
-//                if (populateTestData) AddTestItemData(closetViewModel = closetViewModel)
-
-                // TESTING PURPOSES ONLY-- populates a few items in outfits screen
+                // FOR TESTING PURPOSES ONLY
+                val closetViewModel: ClosetViewModel = viewModel()
                 val outfitsViewModel: OutfitsViewModel = viewModel()
-                var populateTestData by remember { mutableStateOf(false) }
-                val hasPopulated = remember { mutableStateOf(false) }
-                LaunchedEffect(Unit) {
-                    if (!hasPopulated.value) {
-                        populateTestData = true
-                        hasPopulated.value = true
-                    }
+
+                var populateTestData by remember { mutableStateOf(true) }
+                var hasPopulated = remember { mutableStateOf(false) }
+                LaunchedEffect(hasPopulated) { if (hasPopulated.value) { populateTestData = false } }
+
+                if (populateTestData) {
+                    AddTestItemData(closetViewModel = closetViewModel, outfitsViewModel = outfitsViewModel)
+                    AddTestOutfitData(outfitsViewModel)
+                    hasPopulated.value = true
                 }
-                if (populateTestData) AddTestOutfitData(outfitsViewModel = outfitsViewModel)
+
                 AppNavigation()
             }
         }
@@ -102,10 +99,35 @@ class MainActivity : ComponentActivity() {
 fun AppNavigation() {
     // Creates and remembers a NavController to manage navigation state
     val navController = rememberNavController()
+
     val closetViewModel: ClosetViewModel = viewModel()
     val outfitsViewModel: OutfitsViewModel = viewModel()
     val viewModel: UserViewModel = viewModel()
     val userState by viewModel.userState.collectAsState()
+    val weatherViewModel: WeatherViewModel = viewModel()
+
+    val context = LocalContext.current
+    //weather permissions for app
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        weatherViewModel.updateLocationPermission(isGranted)
+    }
+
+    LaunchedEffect(Unit) {
+        weatherViewModel.initializeLocationClient(context)
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            weatherViewModel.updateLocationPermission(true)
+        } else {
+            // Request permission if not granted
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
 
     LaunchedEffect(userState) {
         if (userState.id == 0 || userState.name.isEmpty()) {
@@ -170,10 +192,12 @@ fun AppNavigation() {
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     outfitsViewModel = outfitsViewModel,
+                    weatherViewModel = weatherViewModel,
 
-                    // temporary routes to sign in and sign up pages
+                            // temporary routes to sign in and sign up pages
                     onNavigateToSignUpScreen = { navController.navigate("sign_up") },
-                    onNavigateToSignInScreen = { navController.navigate("sign_in") }
+                    onNavigateToSignInScreen = { navController.navigate("sign_in") },
+
 
                 )
             }
@@ -186,6 +210,8 @@ fun AppNavigation() {
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
                     )
+                    weatherViewModel = weatherViewModel
+                )
             }
             // Defines the "wardrobe" route and what UI to display there
             composable(route = "wardrobe") {
@@ -195,7 +221,8 @@ fun AppNavigation() {
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
-                    closetViewModel = closetViewModel
+                    closetViewModel = closetViewModel,
+                    weatherViewModel = weatherViewModel
                 )
             }
             // Defines the "add" route and what UI to display there

@@ -2,7 +2,19 @@ package com.cs407.fitfolio.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,8 +24,19 @@ import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -22,12 +45,15 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.InformationModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.format.TextStyle
-import java.util.*
+import java.util.Locale
 
 @Composable
 fun CalendarScreen(
@@ -35,14 +61,15 @@ fun CalendarScreen(
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit
-    ) {
+    onNavigateToSignInScreen: () -> Unit,
+    weatherViewModel: WeatherViewModel
+) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
     var showModal by remember { mutableStateOf(false) }
     var showSettings by remember { mutableStateOf(false) }
-
+    val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
     val customGrey = Color(0xFFE0E0E0)
 
     Box(
@@ -106,36 +133,15 @@ fun CalendarScreen(
                 )
             )
 
-            Spacer(modifier = Modifier.size(20.dp))
-
             // Weather
-            //TODO: weather implementation
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                Card(
-                    modifier = Modifier
-                        .weight(1f)
-                        .height(80.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = customGrey
-                    )
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text(
-                            text = "weather implementation",
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
+            Spacer(modifier = Modifier.size(18.dp))
 
-            Spacer(modifier = Modifier.size(20.dp))
+            WeatherCarousel(
+                weatherData = weatherState.weatherData,
+                isLoading = weatherState.isLoading
+            )
+
+            Spacer(modifier = Modifier.size(18.dp))
 
             // Calendar
             Card(
