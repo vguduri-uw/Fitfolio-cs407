@@ -51,6 +51,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -488,10 +489,19 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 ) {
                     Row(modifier = Modifier
                         .align(alignment = Alignment.TopEnd)
-                        .padding(6.dp),
-                        horizontalArrangement = Arrangement.Center,
+                        .padding(6.dp)
+                        .fillMaxWidth(),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
+                        Text(
+                            item.itemName,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .padding(horizontal = 4.dp)
+                                .weight(1f)
+                        )
+
                         // Favorite item button (if not in delete state)
                         if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
                             IconButton(
@@ -515,7 +525,8 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 
                         }
                     }
-                    Text(item.itemName)
+
+                    Text("PHOTO OF ITEM HERE")
                 }
             }
         }
