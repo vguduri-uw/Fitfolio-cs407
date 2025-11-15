@@ -52,6 +52,7 @@ fun MyWardrobeScreen(
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
+    onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
 ) {
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()

@@ -41,6 +41,7 @@ fun AddScreen(
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
+    onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel? //used for adding single clothes?
 ) {
 

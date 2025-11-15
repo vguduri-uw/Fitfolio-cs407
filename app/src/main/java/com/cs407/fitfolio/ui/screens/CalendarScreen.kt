@@ -35,7 +35,8 @@ fun CalendarScreen(
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
-) {
+    onNavigateToSignInScreen: () -> Unit
+    ) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var searchQuery by remember { mutableStateOf("") }
     var selectedDate by remember { mutableStateOf<LocalDate?>(null) }
@@ -217,7 +218,7 @@ fun CalendarScreen(
 
         // modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false })
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
         }
     }
 
