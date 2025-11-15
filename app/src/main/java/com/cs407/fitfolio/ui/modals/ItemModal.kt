@@ -99,7 +99,7 @@ fun ItemModal(
                 closetViewModel = closetViewModel,
                 onDismiss = onDismiss,
                 isEditing = isEditing,
-                onToggleEditing = { isEditing = !isEditing },
+                onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
@@ -108,7 +108,7 @@ fun ItemModal(
                 closetViewModel = closetViewModel,
                 outfitsViewModel = outfitsViewModel,
                 isEditing = isEditing,
-                onToggleEditing = { isEditing = !isEditing },
+                onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen,
                 modifier = Modifier
                     .weight(1f)
@@ -125,7 +125,7 @@ fun IconBox (
     closetViewModel: ClosetViewModel,
     onDismiss: () -> Unit,
     isEditing: Boolean,
-    onToggleEditing: () -> Unit,
+    onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit
 ) {
     // Observe the current UI state from the ViewModel
@@ -183,7 +183,7 @@ fun IconBox (
                         if (isEditingName || isEditing) {
                             closetViewModel.editItemName(item, name)
                             isEditingName = false
-                            onToggleEditing()
+                            onToggleEditing(false)
                         } else {
                             isEditingName = true
                         }
@@ -280,17 +280,22 @@ fun IconBox (
             }
 
             // Edit icon button
-            IconButton(
-                modifier = Modifier.align(Alignment.TopEnd),
-                onClick = { onToggleEditing() }
-            ) {
-                if (isEditing) {
+            if (isEditing) {
+                IconButton(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    onClick = { onToggleEditing(false) }
+                ) {
                     Icon(
                         imageVector = Icons.Filled.Check,
                         contentDescription = "Save edits",
                         modifier = Modifier.size(28.dp)
                     )
-                } else {
+                }
+            } else {
+                IconButton(
+                    modifier = Modifier.align(Alignment.TopEnd),
+                    onClick = { onToggleEditing(true) }
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = "Edit item",
@@ -348,7 +353,7 @@ fun ItemInformation(
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
     isEditing: Boolean,
-    onToggleEditing: () -> Unit,
+    onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
     modifier: Modifier
 ) {
@@ -390,7 +395,7 @@ fun ItemInformation(
                                 closetViewModel.editItemDescription(item, description)
 
                                 isEditingDescription = false
-                                onToggleEditing()
+                                onToggleEditing(false)
                             } ) {
                                 Icon(
                                     imageVector = Icons.Filled.Check,
