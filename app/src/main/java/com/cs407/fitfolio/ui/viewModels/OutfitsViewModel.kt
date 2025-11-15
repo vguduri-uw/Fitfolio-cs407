@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.cs407.fitfolio.ui.enums.DeletionStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import java.io.Serializable
 import java.util.UUID
 
@@ -15,8 +16,8 @@ data class OutfitEntry(
     var isFavorite: Boolean,           // whether or not the item is in favorites
     var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
     var outfitPhoto: Int,              // todo: figure out what type...drawable? int?
-    var itemList: List<ItemEntry>,         // all the items featured in the outfit
-    val outfitId: String               // the unique id of the outfit
+    var itemList: List<ItemEntry>,     // all the items featured in the outfit
+    val outfitId: String,              // the unique id of the outfit
 ) : Serializable
 
 // data class representing the entire collection of outfits
@@ -42,7 +43,8 @@ data class OutfitsState(
     val isSearchActive: Boolean = false,                        // whether or not a search query is active
     val searchQuery: String = "",                               // current search input
     val deletionCandidates: List<OutfitEntry> = emptyList(),    // the item that is potentially deleted
-    val isDeleteActive: String = DeletionStates.Inactive.name   // the status of the deletion process
+    val isDeleteActive: String = DeletionStates.Inactive.name,  // the status of the deletion process
+    val outfitToShow: String = ""                               // outfit ID of the outfit to be shown
 )
 
 class OutfitsViewModel : ViewModel() {
@@ -75,13 +77,21 @@ class OutfitsViewModel : ViewModel() {
             isDeletionCandidate = false,
             outfitPhoto = photo,
             itemList = itemList,
-            outfitId = UUID.randomUUID().toString()
+            outfitId = UUID.randomUUID().toString(),
         )
 
         val updatedOutfits = _outfitsState.value.outfits + newOutfit
         _outfitsState.value = _outfitsState.value.copy(
             outfits = updatedOutfits,
         )
+    }
+
+    // Retrieves an ItemEntry based on it's itemId
+    // Throws an exception if item with that id is not found
+    // TODO: make sure wherever we call this catches the exception and displays error accordingly
+    fun getOutfit(outfitId: String): OutfitEntry {
+        return _outfitsState.value.outfits.find { it.outfitId == outfitId }
+            ?: throw NoSuchElementException("Outfit with id $outfitId not found")
     }
 
     // deletes all specified items
@@ -96,12 +106,29 @@ class OutfitsViewModel : ViewModel() {
     }
 
     // SETTERS FOR ITEM PROPERTIES (for use in wardrobe screen and outfit modal)
+    fun editOutfitPhoto(outfit: OutfitEntry, photo: Int){
+        outfit.outfitPhoto = photo
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
+    }
+
+
     fun editOutfitName(outfit: OutfitEntry, name: String) {
         outfit.outfitName = name
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     fun editOutfitDescription(outfit: OutfitEntry, description: String) {
         outfit.outfitDescription = description
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     fun editOutfitTags(outfit: OutfitEntry, tag: String, isRemoving: Boolean) {
@@ -110,23 +137,49 @@ class OutfitsViewModel : ViewModel() {
         } else {
             outfit.outfitTags += tag
         }
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     fun toggleFavoritesProperty(outfit: OutfitEntry) {
-        outfit.isFavorite = !outfit.isFavorite
+        val updatedOutfits = _outfitsState.value.outfits.map {
+            if (it.outfitId == outfit.outfitId) it.copy(isFavorite = !it.isFavorite) else it
+        }
+
+        _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+        applyFilters()
     }
 
     fun toggleDeletionCandidate(outfit: OutfitEntry, isCandidate: Boolean){
-        outfit.isDeletionCandidate = isCandidate
+        val updatedOutfits = _outfitsState.value.outfits.map {
+            if (it.outfitId == outfit.outfitId) it.copy(isDeletionCandidate = isCandidate) else it
+        }
+
+        _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
     }
 
-    fun editItemList(outfit: OutfitEntry, item: ItemEntry, isRemoving: Boolean){
-        if (isRemoving) {
-            outfit.itemList -= item
-        } else {
-            outfit.itemList += item
+    fun removeItemFromItemsList(outfit: OutfitEntry, item: ItemEntry){
+        _outfitsState.update { state ->
+            val updatedOutfits = state.outfits.map { o ->
+                if (o.outfitId == outfit.outfitId) {
+                    val newItems = o.itemList.filterNot { it.itemId == item.itemId }
+                    o.copy(itemList = newItems)
+                } else o
+            }
+            state.copy(outfits = updatedOutfits)
         }
     }
+
+    fun addItemToItemsList(outfit: OutfitEntry, item: ItemEntry){
+        outfit.itemList += item
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
+    }
+
 
     /* ==========================================================================================
                                             OUTFITS FUNCTIONS
@@ -193,6 +246,10 @@ class OutfitsViewModel : ViewModel() {
         for (outfitWithTag in outfitsWithTag){
             editOutfitTags(outfitWithTag, tag, true)
         }
+
+        _outfitsState.value = _outfitsState.value.copy(
+            outfits = _outfitsState.value.outfits
+        )
     }
 
     // toggles the favorites state for all outfits
@@ -227,6 +284,13 @@ class OutfitsViewModel : ViewModel() {
         )
     }
 
+    // update the outfit to show in outfit modal
+    fun updateOutfitToShow(outfitId: String) {
+        _outfitsState.value = _outfitsState.value.copy(
+            outfitToShow = outfitId
+        )
+    }
+
     // adds a tag to active tags
     fun addToActiveTags (tag: String) {
         val updatedActiveTags = _outfitsState.value.activeTags + tag
@@ -255,6 +319,17 @@ class OutfitsViewModel : ViewModel() {
             deletionCandidates = updatedDeletionCandidates
         )
 
+    }
+
+    // removes deletion candidates
+    fun removeDeletionCandidates(outfit: OutfitEntry) {
+        // update outfit's isDeletionCandidate property
+        toggleDeletionCandidate(outfit, false)
+
+        val updatedDeletionCandidates = outfitsState.value.deletionCandidates - outfit
+        _outfitsState.value = _outfitsState.value.copy(
+            deletionCandidates = updatedDeletionCandidates
+        )
     }
 
     // clears the deletion candidates

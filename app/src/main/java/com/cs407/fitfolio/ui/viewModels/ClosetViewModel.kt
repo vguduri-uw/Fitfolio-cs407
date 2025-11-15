@@ -83,9 +83,12 @@ class ClosetViewModel : ViewModel() {
             )
 
             // TODO: decide if we do indeed want to delete the outfits if an item is deleted
+            var outfitsList: List<OutfitEntry> = emptyList()
+
             for (outfit in item.outfitList) {
-                outfitsViewModel.delete(outfit)
+                outfitsList += outfit
             }
+            outfitsViewModel.delete(outfitsList)
         }
     }
 

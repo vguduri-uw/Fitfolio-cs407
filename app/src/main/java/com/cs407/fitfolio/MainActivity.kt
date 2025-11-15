@@ -19,6 +19,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -28,6 +33,8 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.cs407.fitfolio.ui.TestData.AddTestItemData
+import com.cs407.fitfolio.ui.TestData.AddTestOutfitData
 import com.cs407.fitfolio.ui.theme.FitfolioTheme
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
 import com.cs407.fitfolio.ui.screens.CalendarScreen
@@ -46,6 +53,29 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             FitfolioTheme {
+                // TESTING PURPOSES ONLY-- populates a few items
+//                val closetViewModel: ClosetViewModel = viewModel()
+//                var populateItemTestData by remember { mutableStateOf(false) }
+//                val hasPopulated = remember { mutableStateOf(false) }
+//                LaunchedEffect(Unit) {
+//                    if (!hasPopulated.value) {
+//                        populateTestData = true
+//                        hasPopulated.value = true
+//                    }
+//                }
+//                if (populateTestData) AddTestItemData(closetViewModel = closetViewModel)
+
+                // TESTING PURPOSES ONLY-- populates a few items in outfits screen
+                val outfitsViewModel: OutfitsViewModel = viewModel()
+                var populateTestData by remember { mutableStateOf(false) }
+                val hasPopulated = remember { mutableStateOf(false) }
+                LaunchedEffect(Unit) {
+                    if (!hasPopulated.value) {
+                        populateTestData = true
+                        hasPopulated.value = true
+                    }
+                }
+                if (populateTestData) AddTestOutfitData(outfitsViewModel = outfitsViewModel)
                 AppNavigation()
             }
         }
