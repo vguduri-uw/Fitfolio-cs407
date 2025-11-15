@@ -42,8 +42,12 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.SimpleHeader
+import com.cs407.fitfolio.ui.components.WeatherCard
+import com.cs407.fitfolio.ui.components.WeatherCarousel
+import com.cs407.fitfolio.ui.components.WeatherDataChip
 import com.cs407.fitfolio.ui.viewModels.ClosetState
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
+import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 
 @Composable
@@ -53,135 +57,119 @@ fun MyWardrobeScreen(
     onNavigateToAddScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
+    weatherViewModel: WeatherViewModel
 ) {
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-Box(modifier = Modifier.fillMaxSize()) {
-    //bacground sillouette
-    Image(
-        painter = painterResource(R.drawable.silouette),
-        contentDescription = "Silhouette background",
-        modifier = Modifier
-            .align(Alignment.Center)
-            .size(550.dp)
-            .alpha(0.12f),       // make semi-transparent
-        contentScale = ContentScale.Fit
-    )
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-    ) {
-        Row(
+    //for weather
+    val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        //bacground sillouette
+        Image(
+            painter = painterResource(R.drawable.silouette),
+            contentDescription = "Silhouette background",
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 30.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            //TODO: Title of Page and Weather
-            SimpleHeader("My Wardrobe")
-            Spacer(modifier = Modifier.weight(1f))
-            Weather()
-
-        }
-        //Scroller for head pieces
-        ClothingScroll(closetState, closetViewModel)
-        //Scroller for tops/shirts
-        ClothingScroll(closetState, closetViewModel)
-        //Scroller for bottoms/pants
-        ClothingScroll(closetState, closetViewModel)
-        //Scroller for shoes
-        ClothingScroll(closetState, closetViewModel)
-        Spacer(modifier = Modifier.size(10.dp))
-
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp), // space between icons
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 10.dp, vertical = 8.dp),
-        ) {
-            //adds outfit to the outfits page
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
-                contentAlignment = Alignment.Center
-            ) {
-                //change this to go to the pull up page
-                IconButton(onClick = { onNavigateToOutfitsScreen() }) {
-                    Icon(
-                        painter = painterResource(R.drawable.add),
-                        contentDescription = "add outfit",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-            //ensures the combo is never seen again
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(onClick = { closetViewModel.shuffleItems() }) {
-                    Icon(
-                        painter = painterResource(R.drawable.minus),
-                        contentDescription = "remove combination",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-            // shuffle button
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(onClick = { closetViewModel.shuffleItems() }) {
-                    Icon(
-                        painter = painterResource(R.drawable.shuffle),
-                        contentDescription = "shuffle",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp),
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            //TODO: Dress me icon
-            Button(
-                //change this when we figure out how we are implementing shuffleItems list
-                onClick = { closetViewModel.shuffleItems() },
-                modifier = Modifier.width(120.dp)
-            ) {
-                Text("Dress Me!")
-            }
-        }
-    }
-}
-}
-
-//TODO: include weather icon
-@Composable
-fun Weather() {
-    Box(
-        modifier = Modifier
-            .height(40.dp)
-            .width(100.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(Color(0xFFE0E0E0)),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "weather",
-            style = MaterialTheme.typography.bodyMedium,
-            color = Color.DarkGray
+                .align(Alignment.Center)
+                .size(550.dp)
+                .alpha(0.12f),       // make semi-transparent
+            contentScale = ContentScale.Fit
         )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 30.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                //TODO: Title of Page and Weather
+                SimpleHeader("My Wardrobe")
+                Spacer(modifier = Modifier.weight(1f))
+                WeatherDataChip(
+                    weatherData = weatherState.weatherData
+                )
+            }
+            //Scroller for head pieces
+            ClothingScroll(closetState, closetViewModel)
+            //Scroller for tops/shirts
+            ClothingScroll(closetState, closetViewModel)
+            //Scroller for bottoms/pants
+            ClothingScroll(closetState, closetViewModel)
+            //Scroller for shoes
+            ClothingScroll(closetState, closetViewModel)
+            Spacer(modifier = Modifier.size(10.dp))
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp), // space between icons
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 10.dp, vertical = 8.dp),
+            ) {
+                //adds outfit to the outfits page
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(Color(0xFFE0E0E0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    //change this to go to the pull up page
+                    IconButton(onClick = { onNavigateToOutfitsScreen() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.add),
+                            contentDescription = "add outfit",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+                //ensures the combo is never seen again
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(Color(0xFFE0E0E0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = { closetViewModel.shuffleItems() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.minus),
+                            contentDescription = "remove combination",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+                // shuffle button
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(Color(0xFFE0E0E0)),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(onClick = { closetViewModel.shuffleItems() }) {
+                        Icon(
+                            painter = painterResource(R.drawable.shuffle),
+                            contentDescription = "shuffle",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp),
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.weight(1f))
+                //TODO: Dress me icon
+                Button(
+                    //change this when we figure out how we are implementing shuffleItems list
+                    onClick = { closetViewModel.shuffleItems() },
+                    modifier = Modifier.width(120.dp)
+                ) {
+                    Text("Dress Me!")
+                }
+            }
+        }
     }
 }
-
-
 @Composable
 fun ClothingScroll(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     val itemsCount = 30

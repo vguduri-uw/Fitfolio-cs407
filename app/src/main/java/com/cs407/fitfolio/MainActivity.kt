@@ -1,7 +1,10 @@
 package com.cs407.fitfolio
 
+import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +14,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material3.FabPosition
@@ -26,9 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -46,6 +52,7 @@ import com.cs407.fitfolio.ui.screens.SignUpScreen
 import com.cs407.fitfolio.ui.screens.SignInScreen
 import com.cs407.fitfolio.ui.viewModels.ClosetViewModel
 import com.cs407.fitfolio.ui.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.ui.viewModels.WeatherViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,6 +96,30 @@ fun AppNavigation() {
     val navController = rememberNavController()
     val closetViewModel: ClosetViewModel = viewModel()
     val outfitsViewModel: OutfitsViewModel = viewModel()
+    val weatherViewModel: WeatherViewModel = viewModel()
+
+    val context = LocalContext.current
+    //weather permissions for app
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        weatherViewModel.updateLocationPermission(isGranted)
+    }
+
+    LaunchedEffect(Unit) {
+        weatherViewModel.initializeLocationClient(context)
+        val hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        ) == PackageManager.PERMISSION_GRANTED
+        if (hasPermission) {
+            weatherViewModel.updateLocationPermission(true)
+        } else {
+            // Request permission if not granted
+            permissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
 
     Scaffold(
         // Creates bottom navigation bar with centered floating action button
@@ -133,10 +164,12 @@ fun AppNavigation() {
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     outfitsViewModel = outfitsViewModel,
+                    weatherViewModel = weatherViewModel,
 
-                    // temporary routes to sign in and sign up pages
+                            // temporary routes to sign in and sign up pages
                     onNavigateToSignUpScreen = { navController.navigate("sign_up") },
-                    onNavigateToSignInScreen = { navController.navigate("sign_in") }
+                    onNavigateToSignInScreen = { navController.navigate("sign_in") },
+
 
                 )
             }
@@ -146,7 +179,8 @@ fun AppNavigation() {
                     onNavigateToOutfitsScreen = { navController.navigate("outfits") },
                     onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
                     onNavigateToAddScreen = { navController.navigate("add") },
-                    onNavigateToClosetScreen = { navController.navigate("closet") }
+                    onNavigateToClosetScreen = { navController.navigate("closet") },
+                    weatherViewModel = weatherViewModel
                 )
             }
             // Defines the "wardrobe" route and what UI to display there
@@ -156,7 +190,8 @@ fun AppNavigation() {
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
-                    closetViewModel = closetViewModel
+                    closetViewModel = closetViewModel,
+                    weatherViewModel = weatherViewModel
                 )
             }
             // Defines the "add" route and what UI to display there
