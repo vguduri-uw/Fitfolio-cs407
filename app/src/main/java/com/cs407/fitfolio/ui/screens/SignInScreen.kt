@@ -1,7 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,15 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -34,16 +27,17 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.data.UserDao
 import com.cs407.fitfolio.ui.modals.EditableField
+import com.cs407.fitfolio.ui.theme.Kudryashev_Bold_Regular
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 
@@ -100,21 +94,19 @@ fun SignInScreen (
 @Composable
 fun SignInScreenTopHeader() {
     Image(
-        // todo: replace with actual profile image
-        painter = painterResource(id = R.drawable.user),
-        contentDescription = "User profile image",
+        painter = painterResource(id = R.drawable.app_logo),
+        contentDescription = "App logo",
         contentScale = ContentScale.Fit,
         modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .size(160.dp)
+            .clip(CircleShape),
         alignment = Alignment.Center
     )
 
     Spacer(modifier = Modifier.size(15.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "FitFolio", style = MaterialTheme.typography.titleLarge)
+        Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 60.sp)
     }
 }
 
@@ -160,7 +152,9 @@ fun SignInForm(
             )
 
             Spacer(modifier = Modifier.size(10.dp))
+            // displays if passwords do not match
             ErrorText(error = errorMessage)
+
             // Sign in button
             Button(
                 onClick = {
@@ -174,21 +168,29 @@ fun SignInForm(
                     }
                 },
                 enabled = allFieldsFilled,
-                content = { Text("Sign In") },
+                content = {
+                    Text(
+                        text = "Sign Up",
+                        fontFamily = Kudryashev_Regular,
+                        fontSize = 18.sp,
+                        modifier = Modifier.padding(5.dp)
+                    )
+                },
             )
 
             // move to sign up page if account doesn't exist
             Row{
                 Text(
                     text = "Don't have an account?",
-                    style = MaterialTheme.typography.bodyMedium
+                    fontFamily = Kudryashev_Regular,
+                    fontSize = 15.sp
                 )
                 Spacer(modifier = Modifier.size(4.dp))
                 Text(
                     text = "Sign up",
-                    style = MaterialTheme.typography.bodyMedium.merge(
-                        TextStyle(textDecoration = TextDecoration.Underline)
-                    ),
+                    fontFamily = Kudryashev_Regular,
+                    fontSize = 15.sp,
+                    style = TextStyle(textDecoration = TextDecoration.Underline),
                     modifier = Modifier
                         .padding(bottom = 12.dp)
                         .clickable(onClick = { onNavigateToSignUpScreen() })

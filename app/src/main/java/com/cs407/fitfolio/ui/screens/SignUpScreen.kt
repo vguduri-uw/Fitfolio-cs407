@@ -32,10 +32,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.data.AppDatabase
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.User
 import com.cs407.fitfolio.ui.modals.EditableField
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 import com.cs407.fitfolio.viewModels.UserState
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.Firebase
@@ -95,21 +98,19 @@ fun SignUpScreen (
 @Composable
 fun SignUpScreenTopHeader() {
     Image(
-        // todo: replace with actual profile image
-        painter = painterResource(id = R.drawable.user),
-        contentDescription = "User profile image",
+        painter = painterResource(id = R.drawable.app_logo),
+        contentDescription = "App logo",
         contentScale = ContentScale.Fit,
         modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .size(160.dp)
+            .clip(CircleShape),
         alignment = Alignment.Center
     )
 
     Spacer(modifier = Modifier.size(15.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "FitFolio", style = MaterialTheme.typography.titleLarge)
+        Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 60.sp)
     }
 }
 
@@ -206,6 +207,8 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
             Text(text = "Passwords do not match", color = MaterialTheme.colorScheme.error)
         }
 
+        Spacer(modifier = Modifier.size(10.dp))
+
         // Sign up button
         Button(
             onClick = { createAccount(email, password,
@@ -226,20 +229,29 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
             )
             },
             enabled = allFieldsFilled && passwordsMatch,
-            content = { Text("Sign Up") },
+            content = {
+                Text(
+                    text = "Sign Up",
+                    fontFamily = Kudryashev_Regular,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(5.dp)
+                )
+            },
         )
 
         // move to sign in page if account exists already
         Row {
             Text(
                 text = "Already have an account?",
-                style = MaterialTheme.typography.bodyMedium
+                fontFamily = Kudryashev_Regular,
+                fontSize = 15.sp
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = "Sign in",
-                style = MaterialTheme.typography.bodyMedium.merge(
-                    TextStyle(textDecoration = TextDecoration.Underline)),
+                fontFamily = Kudryashev_Regular,
+                style = TextStyle(textDecoration = TextDecoration.Underline),
+                fontSize = 15.sp,
                 modifier = Modifier
                     .padding(bottom = 12.dp)
                     .clickable(onClick = { onNavigateToSignInScreen() })

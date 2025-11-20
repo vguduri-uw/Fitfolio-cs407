@@ -65,14 +65,12 @@ fun InformationModal (onDismiss: () -> Unit, screen: String) {
 @Composable
 fun InformationHeader() {
     Image(
-        // TODO: replace with LOGO
-        painter = painterResource(id = R.drawable.user),
-        contentDescription = "User profile image",
+        painter = painterResource(id = R.drawable.app_logo),
+        contentDescription = "App logo",
         contentScale = ContentScale.Fit,
         modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .size(150.dp)
+            .clip(CircleShape),
         alignment = Alignment.Center
     )
 
