@@ -196,6 +196,43 @@ class ClosetViewModel(
         return db.itemDao().getOutfitsByItemId(itemId)
     }
 
+    // TODO: remove after testing
+    fun addItemWithOutfitsTest(
+        name: String,
+        type: String,
+        description: String,
+        tags: List<String>,
+        isFavorites: Boolean,
+        photoUri: String?,
+        outfitList: List<OutfitEntry>
+    ) {
+        val newItem = ItemEntry(
+            itemId = 0,
+            itemName = name,
+            itemType = type,
+            itemDescription = description,
+            itemTags = tags,
+            isFavorite = isFavorites,
+            isDeletionCandidate = false,
+            itemPhotoUri = photoUri,
+        )
+
+        viewModelScope.launch {
+            // Insert item
+            val itemId = db.itemDao().upsertItem(newItem, userId)
+
+            // Insert relations between the item and each outfit
+            outfitList.forEach { outfit ->
+                db.outfitDao().insertRelation(
+                    ItemOutfitRelation(itemId, outfit.outfitId)
+                )
+            }
+
+            val items = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = items)
+        }
+    }
+
     // CLOSET FUNCTIONS //
 
     // TODO: add CircularProgressIndicator? when calling this (in closet screen), do in coroutine
