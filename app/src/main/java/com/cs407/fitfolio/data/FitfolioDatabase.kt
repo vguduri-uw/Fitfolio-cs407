@@ -13,6 +13,8 @@ import androidx.room.Query
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.Transaction
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
 import androidx.room.Upsert
 import com.cs407.fitfolio.enums.DeletionStates
 import java.io.Serializable
@@ -39,7 +41,7 @@ data class ItemEntry(
     var isFavorite: Boolean, // whether or not the item is in favorites
     var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
     var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
-    var outfitList: List<OutfitEntry>, // the outfits that the item is featured in
+    var outfitList: List<OutfitEntry>, // TODO: REMOVE!! this is what the relationship is for
 )
 
 @Entity
@@ -52,8 +54,17 @@ data class OutfitEntry(
     var isFavorite: Boolean,           // whether or not the item is in favorites
     var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
     var outfitPhoto: Int,              // todo: figure out what type...drawable? int?
-    var itemList: List<ItemEntry>,     // all the items featured in the outfit
+    var itemList: List<ItemEntry>,     // TODO: REMOVE!! this is what the relationship is for
 )
+
+class Converters {
+    @TypeConverter
+    fun fromStringList(list: List<String>): String = list.joinToString(",")
+
+    @TypeConverter
+    fun toStringList(data: String): List<String> =
+        if (data.isEmpty()) emptyList() else data.split(",")
+}
 
 @Entity(
     tableName = "user_item_relation",
@@ -149,7 +160,7 @@ interface UserDao {
 
 @Dao
 interface ItemDao {
-    @Query("SELECT * FROM user_item_relation WHERE itemId = :id")
+    @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
     suspend fun getById(id: Int): ItemEntry
 
     @Query("SELECT itemId FROM user_item_relation WHERE rowid = :rowId")
@@ -183,7 +194,7 @@ interface ItemDao {
 
 @Dao
 interface OutfitDao {
-    @Query("SELECT * FROM user_outfit_relation WHERE outfitId = :id")
+    @Query("SELECT * FROM OutfitEntry WHERE outfitId = :id")
     suspend fun getOutfitById(id: Int): OutfitEntry
 
     @Query("SELECT outfitId FROM user_outfit_relation WHERE rowid = :rowId")
@@ -214,8 +225,8 @@ interface OutfitDao {
     @Insert
     suspend fun insertRelation(userAndOutfit: UserOutfitRelation)
 
-    @Query("SELECT * FROM item_outfit_relation WHERE outfitId = :id")
-    suspend fun getItemById(id: Int): ItemEntry
+    @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
+    suspend fun getById(id: Int): ItemEntry
 
     @Query("SELECT itemId FROM item_outfit_relation WHERE rowid = :rowId")
     suspend fun getItemByRowId(rowId: Long): Int
@@ -242,9 +253,23 @@ interface DeleteDao {
 
 }
 
-@Database(entities = [User::class], version = 1)
+@Database(
+    entities = [
+        User::class,
+        ItemEntry::class,
+        OutfitEntry::class,
+        UserItemRelation::class,
+        UserOutfitRelation::class,
+        ItemOutfitRelation::class
+    ],
+    version = 1
+)
+@TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
+    abstract fun itemDao(): ItemDao
+    abstract fun outfitDao(): OutfitDao
+    abstract fun deleteDao(): DeleteDao
 
     companion object {
         @Volatile
@@ -255,7 +280,7 @@ abstract class FitfolioDatabase : RoomDatabase() {
                 val instance = Room.databaseBuilder(
                     context.applicationContext,
                     FitfolioDatabase::class.java,
-                    "user_database"
+                    "fitfolio_database"
                 ).build()
                 INSTANCE = instance
                 instance
