@@ -8,21 +8,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import java.util.UUID
-import java.io.Serializable
-
-// Data class representing a single item of clothing
-//data class ItemEntry(
-//    var itemName: String, // the name of the item
-//    var itemType: String, // the type of the item
-//    var itemDescription: String, // the description of the item
-//    var itemTags: List<String>, // the tags corresponding to the item
-//    var isFavorite: Boolean, // whether or not the item is in favorites
-//    var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
-//    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
-//    var outfitList: List<OutfitEntry>, // the outfits that the item is featured in
-//    val itemId : String, // the unique id of the item
-//) : Serializable
 
 // Data class representing the entire closet of clothing
 // TODO: update all of these methods to deal with database
@@ -58,18 +43,17 @@ class ClosetViewModel : ViewModel() {
     // Adds an item to the closet to be used in add screen
     fun addItem(
         name: String, type: String, description: String, tags: List<String>,
-        isFavorites: Boolean, photo: Int, outfitList: List<OutfitEntry>
+        isFavorites: Boolean, photoUri: String?
     ) {
         val newItem = ItemEntry(
+            itemId = 0, // TODO: update for whatever that is
             itemName = name,
             itemType = type,
             itemDescription = description,
             itemTags = tags,
             isFavorite = isFavorites,
             isDeletionCandidate = false,
-            itemPhoto = photo,
-            itemId = UUID.randomUUID().toString(),
-            outfitList = outfitList // emptyList() // TODO: turn back to emptyList() after testing
+            itemPhotoUri = photoUri,
         )
 
         val updatedItems = _closetState.value.items + newItem
@@ -81,6 +65,7 @@ class ClosetViewModel : ViewModel() {
     // Deletes specified items from the closet
     // TODO: implement Room database (then I don't think the outfitsViewModel needs to be passed in)
     fun deleteItem(items: List<ItemEntry>, outfitsViewModel: OutfitsViewModel) {
+        // TODO: when integrating room database, delete outfits first
         // delete the selected items
         for (item in items) {
             val updatedItems = _closetState.value.items - item

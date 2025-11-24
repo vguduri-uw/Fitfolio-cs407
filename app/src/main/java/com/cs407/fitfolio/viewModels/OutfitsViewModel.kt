@@ -7,19 +7,6 @@ import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.util.UUID
-
-//// data class representing a single saved outfit (a look made of multiple clothing items)
-//data class OutfitEntry(
-//    var outfitName: String,            // the name of the outfit
-//    var outfitDescription: String,     // the description of the outfit
-//    var outfitTags: List<String>,      // e.g. ["athletic", "winter", "interview"]
-//    var isFavorite: Boolean,           // whether or not the item is in favorites
-//    var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
-//    var outfitPhoto: Int,              // todo: figure out what type...drawable? int?
-//    var itemList: List<ItemEntry>,     // all the items featured in the outfit
-//    val outfitId: String,              // the unique id of the outfit
-//) : Serializable
 
 // data class representing the entire collection of outfits
 data class OutfitsState(
@@ -67,18 +54,16 @@ class OutfitsViewModel : ViewModel() {
         description: String,
         tags: List<String>,
         isFavorite: Boolean,
-        photo: Int,
-        itemList: List<ItemEntry>,
+        photoUri: String?,
     ) {
         val newOutfit = OutfitEntry(
+            outfitId = 0, // TODO: update to whatever that is
             outfitName = name,
             outfitDescription = description,
             outfitTags = tags,
             isFavorite = isFavorite,
             isDeletionCandidate = false,
-            outfitPhoto = photo,
-            itemList = itemList,
-            outfitId = UUID.randomUUID().toString(),
+            outfitPhotoUri = photoUri,
         )
 
         val updatedOutfits = _outfitsState.value.outfits + newOutfit

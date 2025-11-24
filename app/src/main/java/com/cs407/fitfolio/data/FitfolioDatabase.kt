@@ -1,6 +1,5 @@
 package com.cs407.fitfolio.data
 
-import android.R
 import android.content.Context
 import androidx.room.Dao
 import androidx.room.Database
@@ -16,9 +15,8 @@ import androidx.room.Transaction
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Upsert
-import com.cs407.fitfolio.enums.DeletionStates
-import java.io.Serializable
 
+// User table
 @Entity(
     indices = [Index(
         value = ["userUID"], unique = true
@@ -30,22 +28,21 @@ data class User(
     val username: String
 )
 
-// Data class representing a single item of clothing
+// Item table
 @Entity
 data class ItemEntry(
     @PrimaryKey(autoGenerate = true) val itemId : Int, // the unique id of the item
-    var itemName: String, // the name of the item
-    var itemType: String, // the type of the item
-    var itemDescription: String, // the description of the item
-    var itemTags: List<String>, // the tags corresponding to the item
-    var isFavorite: Boolean, // whether or not the item is in favorites
-    var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
-    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
-    var outfitList: List<OutfitEntry>, // TODO: REMOVE!! this is what the relationship is for
+    var itemName: String,               // the name of the item
+    var itemType: String,               // the type of the item
+    var itemDescription: String,        // the description of the item
+    var itemTags: List<String>,         // the tags corresponding to the item
+    var isFavorite: Boolean,            // whether or not the item is in favorites
+    var isDeletionCandidate: Boolean,   // whether or not the item is selected to be deleted
+    var itemPhotoUri: String?           // the item's photo
 )
 
 @Entity
-// data class representing a single saved outfit (a look made of multiple clothing items)
+// Outfit table
 data class OutfitEntry(
     @PrimaryKey(autoGenerate = true) val outfitId: Int, // the unique id of the outfit
     var outfitName: String,            // the name of the outfit
@@ -53,10 +50,10 @@ data class OutfitEntry(
     var outfitTags: List<String>,      // e.g. ["athletic", "winter", "interview"]
     var isFavorite: Boolean,           // whether or not the item is in favorites
     var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
-    var outfitPhoto: Int,              // todo: figure out what type...drawable? int?
-    var itemList: List<ItemEntry>,     // TODO: REMOVE!! this is what the relationship is for
+    var outfitPhotoUri: String?        // the outfit's photo
 )
 
+// Converter for storing List<String> in Room
 class Converters {
     @TypeConverter
     fun fromStringList(list: List<String>): String = list.joinToString(",")
@@ -66,6 +63,7 @@ class Converters {
         if (data.isEmpty()) emptyList() else data.split(",")
 }
 
+// User <--> Item relation
 @Entity(
     tableName = "user_item_relation",
     primaryKeys = ["userId", "itemId"],
@@ -87,6 +85,7 @@ data class UserItemRelation(
     val itemId: Int
 )
 
+// User <--> Outfit relation
 @Entity(
     tableName = "user_outfit_relation",
     primaryKeys = ["userId", "outfitId"],
@@ -109,6 +108,7 @@ data class UserOutfitRelation(
     val outfitId: Int
 )
 
+// Item <--> Outfit relation
 @Entity(
     tableName = "item_outfit_relation",
     primaryKeys = ["itemId", "outfitId"],
@@ -131,6 +131,7 @@ data class ItemOutfitRelation(
     val outfitId: Int
 )
 
+// User queries
 @Dao
 interface UserDao {
     @Query("SELECT * FROM user WHERE userUID = :uid")
@@ -158,6 +159,7 @@ interface UserDao {
     suspend fun getOutfitsByUserId(id: Int): List<OutfitEntry>
 }
 
+// Item queries
 @Dao
 interface ItemDao {
     @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
@@ -192,6 +194,7 @@ interface ItemDao {
     }
 }
 
+// Outfit queries
 @Dao
 interface OutfitDao {
     @Query("SELECT * FROM OutfitEntry WHERE outfitId = :id")
@@ -248,11 +251,43 @@ interface OutfitDao {
     }
 }
 
+// Delete queries
 @Dao
 interface DeleteDao {
+    @Query("DELETE FROM user WHERE userId = :userId")
+    suspend fun deleteUser(userId: Int)
 
+    @Query(
+        """SELECT ItemEntry.itemId FROM User, ItemEntry, user_item_relation
+              WHERE User.userId = :userId
+                AND user_item_relation.userId = User.userId
+                AND ItemEntry.itemId = user_item_relation.itemId"""
+    )
+    suspend fun getAllItemIdsByUserId(userId: Int): List<Int>
+
+    @Query(
+        """SELECT OutfitEntry.outfitId FROM User, OutfitEntry, user_outfit_relation
+              WHERE User.userId = :userId
+                AND user_outfit_relation.userId = User.userId
+                AND OutfitEntry.outfitId = user_outfit_relation.outfitId"""
+    )
+    suspend fun getAllOutfitIdsByUserId(userId: Int): List<Int>
+
+    @Query("DELETE FROM ItemEntry WHERE itemId IN (:itemsIds)")
+    suspend fun deleteItems(itemsIds: List<Int>)
+
+    @Query("DELETE FROM OutfitEntry WHERE outfitId IN (:outfitsIds)")
+    suspend fun deleteOutfits(outfitsIds: List<Int>)
+
+    @Transaction
+    suspend fun delete(userId: Int) {
+        deleteItems(getAllItemIdsByUserId(userId))
+        deleteOutfits(getAllOutfitIdsByUserId(userId))
+        deleteUser(userId)
+    }
 }
 
+// Room database for the app
 @Database(
     entities = [
         User::class,
