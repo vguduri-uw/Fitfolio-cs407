@@ -53,7 +53,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.enums.DeletionStates
-import com.cs407.fitfolio.viewModels.OutfitEntry
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import androidx.compose.foundation.lazy.items
 

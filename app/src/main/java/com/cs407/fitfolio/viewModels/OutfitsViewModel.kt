@@ -7,7 +7,6 @@ import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
-import java.io.Serializable
 import java.util.UUID
 
 //// data class representing a single saved outfit (a look made of multiple clothing items)

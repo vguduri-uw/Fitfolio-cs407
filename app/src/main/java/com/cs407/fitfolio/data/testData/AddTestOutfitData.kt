@@ -3,8 +3,9 @@ package com.cs407.fitfolio.data.testData
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cs407.fitfolio.viewModels.ItemEntry
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.data.ItemEntry
+import com.cs407.fitfolio.data.OutfitEntry
 
 @Composable
 fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
