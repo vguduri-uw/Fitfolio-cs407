@@ -55,6 +55,7 @@ import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import androidx.compose.foundation.lazy.items
+import com.cs407.fitfolio.data.OutfitEntry
 
 // modal sheet that displays full outfit details and actions
 // shows outfit photo, description, items, and tags, with editing modes
