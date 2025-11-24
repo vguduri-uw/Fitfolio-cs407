@@ -1,6 +1,8 @@
 package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
+import com.cs407.fitfolio.data.ItemEntry
+import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,17 +12,17 @@ import java.util.UUID
 import java.io.Serializable
 
 // Data class representing a single item of clothing
-data class ItemEntry(
-    var itemName: String, // the name of the item
-    var itemType: String, // the type of the item
-    var itemDescription: String, // the description of the item
-    var itemTags: List<String>, // the tags corresponding to the item
-    var isFavorite: Boolean, // whether or not the item is in favorites
-    var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
-    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
-    var outfitList: List<OutfitEntry>, // the outfits that the item is featured in
-    val itemId : String, // the unique id of the item
-) : Serializable
+//data class ItemEntry(
+//    var itemName: String, // the name of the item
+//    var itemType: String, // the type of the item
+//    var itemDescription: String, // the description of the item
+//    var itemTags: List<String>, // the tags corresponding to the item
+//    var isFavorite: Boolean, // whether or not the item is in favorites
+//    var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
+//    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
+//    var outfitList: List<OutfitEntry>, // the outfits that the item is featured in
+//    val itemId : String, // the unique id of the item
+//) : Serializable
 
 // Data class representing the entire closet of clothing
 // TODO: update all of these methods to deal with database

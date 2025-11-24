@@ -32,7 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.cs407.fitfolio.data.AppDatabase
+import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.User
 import com.cs407.fitfolio.ui.modals.EditableField
@@ -122,7 +122,7 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
     var password by remember { mutableStateOf("") }
     var error: String? by remember { mutableStateOf(null) }
     val context = LocalContext.current
-    val db = AppDatabase.getDatabase(context)
+    val db = FitfolioDatabase.getDatabase(context)
     // todo: replace with actual error handling
     var reenteredPassword by remember { mutableStateOf("") }
     val passwordsMatch = password == reenteredPassword
