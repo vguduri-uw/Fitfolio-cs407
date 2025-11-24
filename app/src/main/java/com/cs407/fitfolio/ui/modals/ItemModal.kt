@@ -58,15 +58,18 @@ import com.cs407.fitfolio.R
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.data.FitfolioDatabase
+import com.cs407.fitfolio.data.OutfitEntry
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 fun ItemModal(
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
-    itemId: String,
+    itemId: Int,
     onDismiss: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
+    db: FitfolioDatabase
 ) {
     // Track sheet state and open to full screen
     val sheetState = rememberModalBottomSheetState(
@@ -108,6 +111,7 @@ fun ItemModal(
                 isEditing = isEditing,
                 onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen,
+                db = db,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -119,7 +123,7 @@ fun ItemModal(
 // Item photo and icon buttons
 @Composable
 fun IconBox (
-    itemId: String,
+    itemId: Int,
     closetViewModel: ClosetViewModel,
     onDismiss: () -> Unit,
     isEditing: Boolean,
@@ -347,12 +351,13 @@ fun IconBox (
 // Item description, outfits featuring the item, and composable call for item tags
 @Composable
 fun ItemInformation(
-    itemId: String,
+    itemId: Int,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
     isEditing: Boolean,
     onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
+    db: FitfolioDatabase,
     modifier: Modifier
 ) {
     // Observe the current UI state from the ViewModel
@@ -362,6 +367,11 @@ fun ItemInformation(
 
     var isEditingDescription by remember { mutableStateOf(false) }
     var description by remember { mutableStateOf(item.itemDescription) }
+    var outfitList by remember { mutableStateOf(emptyList<OutfitEntry>()) }
+
+    LaunchedEffect(itemId, closetState.items) {
+        outfitList = closetViewModel.getOutfitsList(itemId)
+    }
 
     LazyColumn(
         modifier = modifier,
@@ -457,10 +467,10 @@ fun ItemInformation(
                         text = "Outfits featuring this item",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
                     )
-                    if (item.outfitList.isNotEmpty()) {
+                    if (outfitList.isNotEmpty()) {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                            items(item.outfitList.size) { idx ->
-                                val outfit = item.outfitList[idx]
+                            items(outfitList.size) { idx ->
+                                val outfit = outfitList[idx]
                                 OutfitsCard(
                                     outfitName = outfit.outfitName,
                                     outfitId = outfit.outfitId,
@@ -536,7 +546,7 @@ private fun OutfitsCard(
 // Displays all global tags so user can modify which apply to this item
 @Composable
 private fun TagsEditableCard(
-    itemId: String,
+    itemId: Int,
     closetViewModel: ClosetViewModel
 ) {
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()

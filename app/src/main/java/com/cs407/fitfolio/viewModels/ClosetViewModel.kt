@@ -1,11 +1,8 @@
 package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
-import com.cs407.fitfolio.data.ItemDao
 import com.cs407.fitfolio.data.ItemEntry
-import com.cs407.fitfolio.data.OutfitDao
 import com.cs407.fitfolio.data.OutfitEntry
-import com.cs407.fitfolio.data.UserDao
 import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +10,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import androidx.lifecycle.viewModelScope
 import com.cs407.fitfolio.data.FitfolioDatabase
+import com.cs407.fitfolio.data.ItemOutfitRelation
 import kotlinx.coroutines.launch
 
 // Data class representing the entire closet of clothing
@@ -28,11 +26,25 @@ data class ClosetState(
     val isSearchActive: Boolean = false, // whether or not a search query filter is active
     val searchQuery: String = "",
     // TODO: do better here...
-    val tags: List<String> = listOf("Spring", "Summer", "Fall", "Winter", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Black", "Brown", "Casual",), // all tags for closet items
+    val tags: List<String> = listOf(
+        "Spring",
+        "Summer",
+        "Fall",
+        "Winter",
+        "Red",
+        "Orange",
+        "Yellow",
+        "Green",
+        "Blue",
+        "Purple",
+        "Black",
+        "Brown",
+        "Casual",
+    ), // all tags for closet items
     val activeTags: List<String> = emptyList(), // the tags currently rendered on the screen
     val deletionCandidates: List<ItemEntry> = emptyList(), // the items that can be potentially deleted
     val isDeleteActive: String = DeletionStates.Inactive.name, // the status of the deletion process
-    val itemToShow: String = "" // itemId of the item to be shown
+    val itemToShow: Int = -1 // itemId of the item to be shown
 )
 
 // ViewModel representing the state of the closet
@@ -65,7 +77,7 @@ class ClosetViewModel(
         isFavorites: Boolean, photoUri: String?
     ) {
         val newItem = ItemEntry(
-            itemId = 0, // TODO: update for whatever that is
+            itemId = 0,
             itemName = name,
             itemType = type,
             itemDescription = description,
@@ -75,94 +87,113 @@ class ClosetViewModel(
             itemPhotoUri = photoUri,
         )
 
-        val updatedItems = _closetState.value.items + newItem
-        _closetState.value = _closetState.value.copy(
-            items = updatedItems
-        )
+        viewModelScope.launch {
+            // Insert item into database
+            db.itemDao().upsertItem(newItem, userId)
+
+            val items = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = items)
+        }
     }
 
     // Deletes specified items from the closet
-    // TODO: implement Room database (then I don't think the outfitsViewModel needs to be passed in)
-    fun deleteItem(items: List<ItemEntry>, outfitsViewModel: OutfitsViewModel) {
-        // TODO: when integrating room database, delete outfits first
-        // delete the selected items
-        for (item in items) {
-            val updatedItems = _closetState.value.items - item
-            _closetState.value = _closetState.value.copy(
-                items = updatedItems
-            )
+    fun deleteItem(items: List<ItemEntry>) {
+        viewModelScope.launch {
+            // Remove duplicate outfits associated with the items
+            val outfitIds = items.flatMap { item ->
+                db.itemDao().getOutfitsByItemId(item.itemId).map { it.outfitId }
+            }.toSet()
 
-            // delete outfits associated with the items
-            var outfitsList: List<OutfitEntry> = emptyList()
-            for (outfit in item.outfitList) {
-                outfitsList += outfit
-            }
-            outfitsViewModel.delete(outfitsList)
+            // Delete associated outfits
+            db.deleteDao().deleteOutfits(outfitIds.toList())
+
+            // Delete the items
+            db.deleteDao().deleteItems(items.map { it.itemId })
+
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
         }
     }
 
     // Setters for item properties to be used in the add screen and item modal
-    // TODO: gonna have to make a copy or something because the item for the closet state needs to be updated
-    // also this is prob the same stale issue for all of these
     fun editItemName(item: ItemEntry, name: String) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemName = name)
-            else it
-        }
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemName = name)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun editItemType(item: ItemEntry, type: String) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemType = type)
-            else it
-        }
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemType = type)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun editItemDescription(item: ItemEntry, description: String) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemDescription = description)
-            else it
-        }
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemDescription = description)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun editItemTags(item: ItemEntry, tag: String, isRemoving: Boolean) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) {
-                if (isRemoving) it.copy(itemTags = item.itemTags - tag)
-                else it.copy(itemTags = item.itemTags + tag)
-            } else it
-        }
+        viewModelScope.launch {
+            val updatedItem =
+                if (isRemoving) item.copy(itemTags = item.itemTags - tag)
+                else item.copy(itemTags = item.itemTags + tag)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            // Update database
+            db.itemDao().upsert(updatedItem)
+
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun toggleFavoritesProperty(item: ItemEntry) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(isFavorite = !it.isFavorite)
-            else it
-        }
+        viewModelScope.launch {
+            val updatedItem = item.copy(isFavorite = !item.isFavorite)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
-    fun editItemPhoto(item: ItemEntry, photo: Int) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemPhoto = photo)
-            else it
-        }
+    fun editItemPhoto(item: ItemEntry, photo: String?) {
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemPhotoUri = photo)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun editOutfitList(item: ItemEntry, outfit: OutfitEntry, isRemoving: Boolean) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) {
-                if (isRemoving) it.copy(outfitList = item.outfitList - outfit)
-                else it.copy(outfitList = item.outfitList + outfit)
-            } else it
-        }
+        viewModelScope.launch {
+            if (isRemoving) {
+                // Remove relation
+                db.outfitDao().deleteRelation(ItemOutfitRelation(item.itemId, outfit.outfitId))
+            } else {
+                // Add relation
+                db.outfitDao().insertRelation(ItemOutfitRelation(item.itemId, outfit.outfitId))
+            }
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
+    }
+    suspend fun getOutfitsList(itemId: Int): List<OutfitEntry> {
+        return db.itemDao().getOutfitsByItemId(itemId)
     }
 
     // CLOSET FUNCTIONS //
@@ -236,7 +267,7 @@ class ClosetViewModel(
 
     // Retrieves an ItemEntry based on it's itemId
     // TODO: make sure wherever we call this catches the exception and displays error accordingly
-    fun itemFlow(itemId: String): Flow<ItemEntry?> =
+    fun itemFlow(itemId: Int): Flow<ItemEntry?> =
         closetState.map { state -> state.items.find { it.itemId == itemId } }
 
     // Adds an item type to the itemTypes list (from the item modal)
@@ -298,7 +329,7 @@ class ClosetViewModel(
     }
 
     // Update the item to show in item modal
-    fun updateItemToShow(itemId: String) {
+    fun updateItemToShow(itemId: Int) {
         _closetState.value = _closetState.value.copy(
             itemToShow = itemId
         )

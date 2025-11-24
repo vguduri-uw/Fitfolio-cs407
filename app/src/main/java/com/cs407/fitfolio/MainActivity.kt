@@ -75,7 +75,7 @@ class MainActivity : ComponentActivity() {
                 val outfitsViewModel: OutfitsViewModel = viewModel()
 
                 var populateTestData by remember { mutableStateOf(true) }
-                var hasPopulated = remember { mutableStateOf(false) }
+                val hasPopulated = remember { mutableStateOf(false) }
                 LaunchedEffect(hasPopulated) { if (hasPopulated.value) { populateTestData = false } }
 
                 if (populateTestData) {
@@ -251,14 +251,11 @@ fun AppNavigation() {
             // Defines the "closet" route and what UI to display there
             composable(route = "closet") {
                 MyClosetScreen(
-                    onNavigateToOutfitsScreen = { navController.navigate("outfits") },
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
-                    onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
-                    onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
                     closetViewModel = closetViewModel,
                     outfitsViewModel = outfitsViewModel,
-                    userId = userState.id
+                    db = db
                 )
             }
             // Defines the "sign up" route and what UI to display there

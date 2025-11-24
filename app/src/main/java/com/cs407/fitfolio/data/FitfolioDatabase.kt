@@ -3,6 +3,7 @@ package com.cs407.fitfolio.data
 import android.content.Context
 import androidx.room.Dao
 import androidx.room.Database
+import androidx.room.Delete
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -240,6 +241,9 @@ interface OutfitDao {
     @Insert
     suspend fun insertRelation(itemAndOutfit: ItemOutfitRelation)
 
+    @Delete
+    suspend fun deleteRelation(itemAndOutfit: ItemOutfitRelation)
+
     @Transaction
     suspend fun upsertItem(item: ItemEntry, outfitId: Int): Int {
         val rowId = upsert(item)
@@ -249,6 +253,12 @@ interface OutfitDao {
         }
         return itemId
     }
+
+    // TODO: update this upsert to only establish the relationship (not upsert a whole new item)
+//    @Transaction
+//    suspend fun addItemToOutfit(itemId: Int, outfitId: Int) {
+//        insertRelation(ItemOutfitRelation(itemId, outfitId))
+//    }
 }
 
 // Delete queries
