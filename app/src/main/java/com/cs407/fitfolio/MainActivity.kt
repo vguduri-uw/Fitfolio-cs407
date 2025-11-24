@@ -40,6 +40,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.testData.AddTestItemData
 import com.cs407.fitfolio.ui.theme.FitfolioTheme
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
@@ -52,7 +53,9 @@ import com.cs407.fitfolio.ui.screens.SignUpScreen
 import com.cs407.fitfolio.ui.screens.SignInScreen
 import com.cs407.fitfolio.data.testData.AddTestOutfitData
 import com.cs407.fitfolio.viewModels.ClosetViewModel
+import com.cs407.fitfolio.viewModels.ClosetViewModelFactory
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.viewModels.OutfitsViewModelFactory
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -93,15 +96,32 @@ fun AppNavigation() {
     // Creates and remembers a NavController to manage navigation state
     val navController = rememberNavController()
 
-    val closetViewModel: ClosetViewModel = viewModel()
-    val outfitsViewModel: OutfitsViewModel = viewModel()
+    // Database instance
+    val context = LocalContext.current
+    val db = FitfolioDatabase.getDatabase(context)
+
+    // User state view model
     val viewModel: UserViewModel = viewModel()
     val userState by viewModel.userState.collectAsState()
+
+    // Closet view model
+    val closetFactory = ClosetViewModelFactory(
+        db = db,
+        userId = userState.id
+    )
+    val closetViewModel: ClosetViewModel = viewModel(factory = closetFactory)
+
+    // Outfits view model
+    val outfitsFactory = OutfitsViewModelFactory(
+        db = db,
+        userId = userState.id
+    )
+    val outfitsViewModel: OutfitsViewModel = viewModel(factory = outfitsFactory)
+
+    // Weather view model
     val weatherViewModel: WeatherViewModel = viewModel()
 
-    val context = LocalContext.current
     //weather permissions for app
-
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -237,7 +257,8 @@ fun AppNavigation() {
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
                     closetViewModel = closetViewModel,
-                    outfitsViewModel = outfitsViewModel
+                    outfitsViewModel = outfitsViewModel,
+                    userId = userState.id
                 )
             }
             // Defines the "sign up" route and what UI to display there

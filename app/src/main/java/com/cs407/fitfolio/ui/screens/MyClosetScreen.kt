@@ -73,7 +73,8 @@ fun MyClosetScreen(
     onNavigateToAddScreen: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
-    outfitsViewModel: OutfitsViewModel
+    outfitsViewModel: OutfitsViewModel,
+    userId: Int
 ) {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()

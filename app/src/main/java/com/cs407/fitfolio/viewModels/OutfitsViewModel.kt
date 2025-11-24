@@ -1,12 +1,15 @@
 package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 // data class representing the entire collection of outfits
 data class OutfitsState(
@@ -35,14 +38,26 @@ data class OutfitsState(
     val outfitToShow: String = ""                               // outfit ID of the outfit to be shown
 )
 
-class OutfitsViewModel : ViewModel() {
-
+class OutfitsViewModel(
+    private val db: FitfolioDatabase,
+    private val userId: Int
+) : ViewModel() {
     // backing property (private) for state
     private val _outfitsState = MutableStateFlow(OutfitsState())
 
     // publicly exposed immutable stateflow for the ui layer to observe changes safely
     val outfitsState = _outfitsState.asStateFlow()
 
+    // Initialize outfits state items and filtered items with data from db
+    init {
+        viewModelScope.launch {
+            val outfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(
+                outfits = outfits,
+                filteredOutfits = outfits
+            )
+        }
+    }
 
    /* ==========================================================================================
                                         OUTFIT FUNCTIONS

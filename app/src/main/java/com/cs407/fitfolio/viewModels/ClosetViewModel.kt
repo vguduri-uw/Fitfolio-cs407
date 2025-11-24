@@ -1,16 +1,21 @@
 package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
+import com.cs407.fitfolio.data.ItemDao
 import com.cs407.fitfolio.data.ItemEntry
+import com.cs407.fitfolio.data.OutfitDao
 import com.cs407.fitfolio.data.OutfitEntry
+import com.cs407.fitfolio.data.UserDao
 import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
+import androidx.lifecycle.viewModelScope
+import com.cs407.fitfolio.data.FitfolioDatabase
+import kotlinx.coroutines.launch
 
 // Data class representing the entire closet of clothing
-// TODO: update all of these methods to deal with database
 data class ClosetState(
     val items: List<ItemEntry> = emptyList(), // all items in the closet
     val filteredItems : List<ItemEntry> = emptyList(), // the items currently rendered on the screen
@@ -31,12 +36,26 @@ data class ClosetState(
 )
 
 // ViewModel representing the state of the closet
-class ClosetViewModel : ViewModel() {
+class ClosetViewModel(
+    private val db: FitfolioDatabase,
+    private val userId: Int
+) : ViewModel() {
     // Backing property (private) for state
     private val _closetState = MutableStateFlow(ClosetState())
 
     // Publicly exposed immutable StateFlow for the UI layer to observe changes safely
     val closetState = _closetState.asStateFlow()
+
+    // Initialize closet state items and filtered items with data from db
+    init {
+        viewModelScope.launch {
+            val items = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(
+                items = items,
+                filteredItems = items
+            )
+        }
+    }
 
     // ITEM FUNCTIONS //
 
