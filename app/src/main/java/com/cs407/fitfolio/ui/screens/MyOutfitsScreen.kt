@@ -65,16 +65,10 @@ import com.cs407.fitfolio.viewModels.WeatherViewModel
 
 @Composable
 fun MyOutfitsScreen(
-    onNavigateToClosetScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToWardrobeScreen: () -> Unit,
-    onNavigateToAddScreen: () -> Unit,
-    onNavigateToSignUpScreen: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
     outfitsViewModel: OutfitsViewModel,
     weatherViewModel: WeatherViewModel,
-    userId: Int,
-    db: FitfolioDatabase
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
@@ -141,7 +135,7 @@ fun MyOutfitsScreen(
         }
 
         // show outfit modal
-        if (outfitsState.outfitToShow != null) {
+        if (outfitsState.outfitToShow != -1) {
             OutfitModal(
                 outfitsViewModel = outfitsViewModel,
                 outfitId = outfitsState.outfitToShow,

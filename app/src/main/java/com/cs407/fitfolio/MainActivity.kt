@@ -56,6 +56,7 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.ClosetViewModelFactory
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModelFactory
+import com.cs407.fitfolio.viewModels.UserState
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -71,20 +72,36 @@ class MainActivity : ComponentActivity() {
         setContent {
             FitfolioTheme {
                 // FOR TESTING PURPOSES ONLY
-                val closetViewModel: ClosetViewModel = viewModel()
-                val outfitsViewModel: OutfitsViewModel = viewModel()
+                // TODO: remove testing, move all these declarations back, AppNav should be no-arg
+                // Database instance
+                val context = LocalContext.current
+                val db = FitfolioDatabase.getDatabase(context)
 
-                var populateTestData by remember { mutableStateOf(true) }
-                val hasPopulated = remember { mutableStateOf(false) }
-                LaunchedEffect(hasPopulated) { if (hasPopulated.value) { populateTestData = false } }
+                // User state view model
+                val viewModel: UserViewModel = viewModel()
+                val userState by viewModel.userState.collectAsState()
 
-                if (populateTestData) {
-                    AddTestItemData(closetViewModel = closetViewModel, outfitsViewModel = outfitsViewModel)
-                    AddTestOutfitData(outfitsViewModel)
-                    hasPopulated.value = true
+                // Closet view model
+                val closetFactory = ClosetViewModelFactory(
+                    db = db,
+                    userId = userState.id
+                )
+                val closetViewModel: ClosetViewModel = viewModel(factory = closetFactory)
+
+                // Outfits view model
+                val outfitsFactory = OutfitsViewModelFactory(
+                    db = db,
+                    userId = userState.id
+                )
+                val outfitsViewModel: OutfitsViewModel = viewModel(factory = outfitsFactory)
+
+                LaunchedEffect(userState.id) {
+                    if (userState.id != 0) {
+                        AddTestItemData(closetViewModel, outfitsViewModel)
+                    }
                 }
 
-                AppNavigation()
+                AppNavigation(closetViewModel, outfitsViewModel, userState, viewModel)
             }
         }
     }
@@ -92,36 +109,21 @@ class MainActivity : ComponentActivity() {
 
 // Composable function responsible for navigation between screens
 @Composable
-fun AppNavigation() {
+fun AppNavigation(
+    closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel,
+    userState: UserState,
+    viewModel: UserViewModel
+) {
     // Creates and remembers a NavController to manage navigation state
     val navController = rememberNavController()
 
-    // Database instance
     val context = LocalContext.current
-    val db = FitfolioDatabase.getDatabase(context)
-
-    // User state view model
-    val viewModel: UserViewModel = viewModel()
-    val userState by viewModel.userState.collectAsState()
-
-    // Closet view model
-    val closetFactory = ClosetViewModelFactory(
-        db = db,
-        userId = userState.id
-    )
-    val closetViewModel: ClosetViewModel = viewModel(factory = closetFactory)
-
-    // Outfits view model
-    val outfitsFactory = OutfitsViewModelFactory(
-        db = db,
-        userId = userState.id
-    )
-    val outfitsViewModel: OutfitsViewModel = viewModel(factory = outfitsFactory)
 
     // Weather view model
     val weatherViewModel: WeatherViewModel = viewModel()
 
-    //weather permissions for app
+    // Weather permissions for app
     val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
@@ -201,17 +203,9 @@ fun AppNavigation() {
             composable("outfits") {
                 MyOutfitsScreen(
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
-                    onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
-                    onNavigateToAddScreen = { navController.navigate("add") },
-                    onNavigateToClosetScreen = { navController.navigate("closet") },
                     outfitsViewModel = outfitsViewModel,
                     weatherViewModel = weatherViewModel,
-
-                            // temporary routes to sign in and sign up pages
-                    onNavigateToSignUpScreen = { navController.navigate("sign_up") },
                     onNavigateToSignInScreen = { navController.navigate("sign_in") },
-                    db = db,
-                    userId = userState.id
                 )
             }
             // Defines the "calendar" route and what UI to display there

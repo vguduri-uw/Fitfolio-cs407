@@ -75,7 +75,7 @@ class OutfitsViewModel(
         photoUri: String,
     ) {
         val newOutfit = OutfitEntry(
-            outfitId = 0, // TODO: update to whatever that is
+            outfitId = 0,
             outfitName = name,
             outfitDescription = description,
             outfitTags = tags,
