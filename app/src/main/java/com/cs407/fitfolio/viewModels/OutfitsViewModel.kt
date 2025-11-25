@@ -4,10 +4,13 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
+import com.cs407.fitfolio.data.ItemOutfitRelation
 import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.DeletionStates
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -35,7 +38,7 @@ data class OutfitsState(
     val searchQuery: String = "",                               // current search input
     val deletionCandidates: List<OutfitEntry> = emptyList(),    // the item that is potentially deleted
     val isDeleteActive: String = DeletionStates.Inactive.name,  // the status of the deletion process
-    val outfitToShow: String = ""                               // outfit ID of the outfit to be shown
+    val outfitToShow: Int = -1                                  // outfit ID of the outfit to be shown
 )
 
 class OutfitsViewModel(
@@ -69,7 +72,7 @@ class OutfitsViewModel(
         description: String,
         tags: List<String>,
         isFavorite: Boolean,
-        photoUri: String?,
+        photoUri: String,
     ) {
         val newOutfit = OutfitEntry(
             outfitId = 0, // TODO: update to whatever that is
@@ -81,38 +84,59 @@ class OutfitsViewModel(
             outfitPhotoUri = photoUri,
         )
 
-        val updatedOutfits = _outfitsState.value.outfits + newOutfit
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = updatedOutfits,
-        )
+        viewModelScope.launch {
+            // insert outfit into database
+            db.outfitDao().upsertOutfit(newOutfit, userId)
+
+            val outfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = outfits)
+        }
     }
 
-    // Retrieves an ItemEntry based on it's itemId
-    // Throws an exception if item with that id is not found
-    // TODO: make sure wherever we call this catches the exception and displays error accordingly
-    fun getOutfit(outfitId: String): OutfitEntry {
-        return _outfitsState.value.outfits.find { it.outfitId == outfitId }
-            ?: throw NoSuchElementException("Outfit with id $outfitId not found")
-    }
+//    // Retrieves an ItemEntry based on it's itemId
+//    // Throws an exception if item with that id is not found
+//    // TODO: make sure wherever we call this catches the exception and displays error accordingly
+//    fun getOutfit(outfitId: Int): OutfitEntry {
+//        return _outfitsState.value.outfits.find { it.outfitId == outfitId }
+//            ?: throw NoSuchElementException("Outfit with id $outfitId not found")
+//    }
 
-    // deletes all specified items
-    // todo: implement Room database (then I don't think the outfitsViewModel needs to be passed in)
-    fun delete(outfits: List<OutfitEntry>) {
-        for (outfit in outfits) {
-            val updatedOutfits = _outfitsState.value.outfits - outfit
-            _outfitsState.value = _outfitsState.value.copy(
-                outfits = updatedOutfits,
-            )
+    // deletes all specified outfits
+    fun deleteOutfits(outfits: List<OutfitEntry>) {
+        viewModelScope.launch {
+            // create list of ids for outfits to be deleted
+            val outfitIds = emptySet<Int>()
+            for (outfit in outfits) {
+                outfitIds + outfit.outfitId
+            }
+
+            // remove relation between outfit and items
+            for (outfit in outfits) {
+                for (item in getItemsList(outfit.outfitId)) {
+                    db.outfitDao().deleteRelation(ItemOutfitRelation(item.itemId, outfit.outfitId))
+                }
+            }
+
+            // remove outfits
+            db.deleteDao().deleteOutfits(outfitIds.toList())
+
+            // update global outfits
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
         }
     }
 
     // SETTERS FOR ITEM PROPERTIES (for use in wardrobe screen and outfit modal)
-    fun editOutfitPhoto(outfit: OutfitEntry, photo: Int){
-        outfit.outfitPhoto = photo
+    fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String){
+        viewModelScope.launch {
+            // update database with the updated outfit
+            val updatedOutfit = outfit.copy(outfitPhotoUri = photoUri)
+            db.outfitDao().upsert(updatedOutfit)
 
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = _outfitsState.value.outfits
-        )
+            // update global outfits
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+        }
     }
 
 
@@ -144,6 +168,19 @@ class OutfitsViewModel(
         )
     }
 
+    fun removeItemsFromItemsList(itemIds: List<Int>, outfitId: Int) {
+        viewModelScope.launch {
+            // remove relation between outfit and items
+            for (itemId in itemIds) {
+                db.outfitDao().deleteRelation(ItemOutfitRelation(itemId, outfitId))
+            }
+
+            // update global outfits
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+        }
+    }
+
     fun toggleFavoritesProperty(outfit: OutfitEntry) {
         val updatedOutfits = _outfitsState.value.outfits.map {
             if (it.outfitId == outfit.outfitId) it.copy(isFavorite = !it.isFavorite) else it
@@ -161,24 +198,43 @@ class OutfitsViewModel(
         _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
     }
 
-    fun removeItemFromItemsList(outfit: OutfitEntry, item: ItemEntry){
-        _outfitsState.update { state ->
-            val updatedOutfits = state.outfits.map { o ->
-                if (o.outfitId == outfit.outfitId) {
-                    val newItems = o.itemList.filterNot { it.itemId == item.itemId }
-                    o.copy(itemList = newItems)
-                } else o
-            }
-            state.copy(outfits = updatedOutfits)
-        }
+    suspend fun getItemsList(outfitId: Int): List<ItemEntry> {
+        return db.outfitDao().getItemsByOutfitId(outfitId)
     }
 
-    fun addItemToItemsList(outfit: OutfitEntry, item: ItemEntry){
-        outfit.itemList += item
-
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = _outfitsState.value.outfits
+    // todo: remove after testing
+    fun addOutfitWithItemsTest(
+        name: String,
+        description: String,
+        tags: List<String>,
+        isFavorites: Boolean,
+        photoUri: String?,
+        itemList: List<ItemEntry>
+    ) {
+        val newOutfit = OutfitEntry(
+            outfitId = 0,
+            outfitName = name,
+            outfitDescription = description,
+            outfitTags = tags,
+            isFavorite = isFavorites,
+            isDeletionCandidate = false,
+            outfitPhotoUri = photoUri,
         )
+
+        viewModelScope.launch {
+            // Insert outfit
+            val outfitId = db.outfitDao().upsertOutfit(newOutfit, userId)
+
+            // Insert relations between the outfit and each item in the item list
+            itemList.forEach { item ->
+                db.outfitDao().insertRelation(
+                    ItemOutfitRelation(outfitId, item.itemId)
+                )
+            }
+
+            val outfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = outfits)
+        }
     }
 
 
@@ -253,6 +309,9 @@ class OutfitsViewModel(
         )
     }
 
+    fun outfitFlow(outfitId: Int): Flow<OutfitEntry?> =
+        outfitsState.map { state -> state.outfits.find { it.outfitId == outfitId } }
+
     // toggles the favorites state for all outfits
     fun toggleFavoritesState() {
         val isToggled = _outfitsState.value.isFavoritesActive
@@ -286,7 +345,7 @@ class OutfitsViewModel(
     }
 
     // update the outfit to show in outfit modal
-    fun updateOutfitToShow(outfitId: String) {
+    fun updateOutfitToShow(outfitId: Int) {
         _outfitsState.value = _outfitsState.value.copy(
             outfitToShow = outfitId
         )
@@ -354,18 +413,20 @@ class OutfitsViewModel(
         )
     }
 
-    // todo: return a list of type string containing outfit Ids for each outfit containing the item
-    fun getOutfitsForItem(itm: ItemEntry) {
-        val outfitsWithItem = emptyList<OutfitEntry>().toMutableList()
-
-        for (outfit in _outfitsState.value.outfits) {
-            for (item in outfit.itemList) {
-                if (item.itemId == itm.itemId) {
-                    outfitsWithItem += outfit
-                }
-            }
-        }
-    }
+//    // todo: return a list of type string containing outfit Ids for each outfit containing the item
+//    fun getOutfitsForItem(itm: ItemEntry) {
+//        val outfitsWithItem = emptyList<OutfitEntry>().toMutableList()
+//
+//        viewModelScope.launch {
+//            for (outfit in _outfitsState.value.outfits) {
+//                for (item in getItemsList(outfit.outfitId)) {
+//                    if (item.itemId == itm.itemId) {
+//                        outfitsWithItem += outfit
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     // clears any applied filters and resets properties
     fun clearFilters() {

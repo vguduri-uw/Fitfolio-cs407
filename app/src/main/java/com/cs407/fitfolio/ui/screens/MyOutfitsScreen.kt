@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
@@ -71,7 +72,9 @@ fun MyOutfitsScreen(
     onNavigateToSignUpScreen: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
     outfitsViewModel: OutfitsViewModel,
-    weatherViewModel: WeatherViewModel
+    weatherViewModel: WeatherViewModel,
+    userId: Int,
+    db: FitfolioDatabase
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
@@ -138,11 +141,11 @@ fun MyOutfitsScreen(
         }
 
         // show outfit modal
-        if (outfitsState.outfitToShow.isNotEmpty()) {
+        if (outfitsState.outfitToShow != null) {
             OutfitModal(
                 outfitsViewModel = outfitsViewModel,
                 outfitId = outfitsState.outfitToShow,
-                onDismiss = { outfitsViewModel.updateOutfitToShow("") },
+                onDismiss = { outfitsViewModel.updateOutfitToShow(-1) },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
         }

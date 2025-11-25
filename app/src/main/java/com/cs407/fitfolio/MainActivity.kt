@@ -210,8 +210,8 @@ fun AppNavigation() {
                             // temporary routes to sign in and sign up pages
                     onNavigateToSignUpScreen = { navController.navigate("sign_up") },
                     onNavigateToSignInScreen = { navController.navigate("sign_in") },
-
-
+                    db = db,
+                    userId = userState.id
                 )
             }
             // Defines the "calendar" route and what UI to display there

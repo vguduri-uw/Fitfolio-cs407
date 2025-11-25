@@ -68,8 +68,7 @@ fun ItemModal(
     outfitsViewModel: OutfitsViewModel,
     itemId: Int,
     onDismiss: () -> Unit,
-    onNavigateToCalendarScreen: () -> Unit,
-    db: FitfolioDatabase
+    onNavigateToCalendarScreen: () -> Unit
 ) {
     // Track sheet state and open to full screen
     val sheetState = rememberModalBottomSheetState(
@@ -111,7 +110,6 @@ fun ItemModal(
                 isEditing = isEditing,
                 onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                db = db,
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth()
@@ -357,7 +355,6 @@ fun ItemInformation(
     isEditing: Boolean,
     onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
-    db: FitfolioDatabase,
     modifier: Modifier
 ) {
     // Observe the current UI state from the ViewModel
@@ -502,7 +499,7 @@ fun ItemInformation(
 @Composable
 private fun OutfitsCard(
     outfitName: String,
-    outfitId: String,
+    outfitId: Int,
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit,
     imageRes: Int,

@@ -16,7 +16,7 @@ fun AddTestItemData(
         description = "Classic casual look",
         tags = listOf("Casual", "Summer, Red, Tag, Tag, Tag"),
         isFavorite = true,
-        photoUri = null,
+        photoUri = ""
     )
 
     // Outfit 2
@@ -25,7 +25,7 @@ fun AddTestItemData(
         description = "Cute spring fit",
         tags = listOf("Spring", "Casual"),
         isFavorite = false,
-        photoUri = null
+        photoUri = ""
     )
 
     // Outfit 3
@@ -34,7 +34,7 @@ fun AddTestItemData(
         description = "Cozy autumn streetwear",
         tags = listOf("Fall", "Casual"),
         isFavorite = false,
-        photoUri = null
+        photoUri = ""
     )
 
     // Outfit 4
@@ -43,7 +43,7 @@ fun AddTestItemData(
         description = "Bright casual summer look",
         tags = listOf("Summer", "Casual"),
         isFavorite = true,
-        photoUri = null
+        photoUri = ""
     )
 
     val outfitsState = outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
@@ -61,7 +61,7 @@ fun AddTestItemData(
         description = "Red satin shirt",
         tags = listOf("Summer", "Red"),
         isFavorites = true,
-        photoUri = null,
+        photoUri = "",
         outfitList = listOf(redShirtJeans, fallJacketJeans, summerShortsSneakers)
     )
 
@@ -72,7 +72,7 @@ fun AddTestItemData(
         description = "Ripped jeans",
         tags = listOf("Fall", "Blue"),
         isFavorites = true,
-        photoUri = null,
+        photoUri = "",
         outfitList = listOf(redShirtJeans, fallJacketJeans)
     )
 
@@ -83,7 +83,7 @@ fun AddTestItemData(
         description = "",
         tags = listOf("Fall", "Orange"),
         isFavorites = false,
-        photoUri = null,
+        photoUri = "",
         outfitList = emptyList()
     )
 
@@ -94,7 +94,7 @@ fun AddTestItemData(
         description = "Bright green casual t-shirt",
         tags = listOf("Spring", "Green", "Casual"),
         isFavorites = false,
-        photoUri = null,
+        photoUri = "",
         outfitList = listOf(greenTeeBlackSkirt, summerShortsSneakers)
     )
 
@@ -105,7 +105,7 @@ fun AddTestItemData(
         description = "Elegant black skirt",
         tags = listOf("Winter", "Black", "Casual"),
         isFavorites = true,
-        photoUri = null,
+        photoUri = "",
         outfitList = listOf(greenTeeBlackSkirt)
     )
 
@@ -116,7 +116,7 @@ fun AddTestItemData(
         description = "Warm brown jacket for fall",
         tags = listOf("Fall", "Brown"),
         isFavorites = false,
-        photoUri = null,
+        photoUri = "",
         outfitList = listOf(fallJacketJeans)
     )
 
@@ -127,7 +127,7 @@ fun AddTestItemData(
         description = "Bright yellow summer shorts",
         tags = listOf("Summer", "Yellow", "Casual"),
         isFavorites = true,
-        photoUri = null,
+        photoUri = "",
         outfitList = listOf(summerShortsSneakers)
     )
 
@@ -138,7 +138,7 @@ fun AddTestItemData(
         description = "Comfortable purple sneakers",
         tags = listOf("Spring", "Purple", "Casual"),
         isFavorites = false,
-        photoUri = null,
+        photoUri = "",
         outfitList = listOf(greenTeeBlackSkirt, redShirtJeans, fallJacketJeans, summerShortsSneakers)
     )
 }
