@@ -70,7 +70,7 @@ import com.cs407.fitfolio.viewModels.OutfitsViewModel
 @Composable
 fun MyClosetScreen(
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
+    onSignOut: () -> Unit,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
 ) {
@@ -130,7 +130,7 @@ fun MyClosetScreen(
 
         // Show settings
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onSignOut)
         }
 
         // Show item modal

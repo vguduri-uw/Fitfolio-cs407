@@ -52,13 +52,14 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.data.FitfolioDatabase
+import com.cs407.fitfolio.data.testData.AddTestItemData
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
@@ -66,14 +67,24 @@ import com.cs407.fitfolio.viewModels.WeatherViewModel
 @Composable
 fun MyOutfitsScreen(
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
+    onSignOut: () -> Unit,
     outfitsViewModel: OutfitsViewModel,
     weatherViewModel: WeatherViewModel,
+    closetViewModel: ClosetViewModel // TODO: remove after testing
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
     //for weather
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
+
+    // TODO: remove after testing
+    LaunchedEffect(Unit) {
+        val dbOutfits = outfitsViewModel.getOutfits()
+
+        if (dbOutfits.isEmpty()) {
+            AddTestItemData(closetViewModel, outfitsViewModel)
+        }
+    }
 
     // re-filter when an item is added or deleted
     LaunchedEffect(outfitsState.outfits) {
@@ -131,7 +142,7 @@ fun MyOutfitsScreen(
 
         // pull up settings modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onSignOut)
         }
 
         // show outfit modal

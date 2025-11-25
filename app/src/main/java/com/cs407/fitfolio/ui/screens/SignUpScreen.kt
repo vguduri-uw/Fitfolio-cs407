@@ -63,7 +63,7 @@ fun createAccount(
 
 @Composable
 fun SignUpScreen (
-    onNavigateToOutfitsScreen: () -> Unit,
+    onNavigateToAppNav: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
     userViewModel: UserViewModel
 ) {
@@ -86,7 +86,7 @@ fun SignUpScreen (
             // sign up form - name, email, password, re-enter password
             SignUpForm(onNavigateToSignInScreen, {userState ->
                 userViewModel.setUser(userState)   // <- store user in ViewModel
-                onNavigateToOutfitsScreen()   })
+                onNavigateToAppNav()   })
         }
 
     }

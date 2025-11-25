@@ -11,7 +11,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
-import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 // data class representing the entire collection of outfits
@@ -42,8 +41,8 @@ data class OutfitsState(
 )
 
 class OutfitsViewModel(
-    private val db: FitfolioDatabase,
-    private val userId: Int
+    val db: FitfolioDatabase,
+    val userId: Int // TODO: make these private again after testing
 ) : ViewModel() {
     // backing property (private) for state
     private val _outfitsState = MutableStateFlow(OutfitsState())
@@ -60,6 +59,11 @@ class OutfitsViewModel(
                 filteredOutfits = outfits
             )
         }
+    }
+
+    // TODO: remove after testing
+    suspend fun getOutfits(): List<OutfitEntry> {
+        return db.userDao().getOutfitsByUserId(userId)
     }
 
    /* ==========================================================================================

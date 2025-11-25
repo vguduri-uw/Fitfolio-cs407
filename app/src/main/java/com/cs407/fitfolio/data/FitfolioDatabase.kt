@@ -8,6 +8,7 @@ import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.Insert
+import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Room
@@ -160,7 +161,7 @@ interface UserDao {
     suspend fun getByUID(uid: String): User?
 
     @Insert(entity = User::class)
-    suspend fun insert(user: User)
+    suspend fun insert(user: User): Long
 
     @Query(
         """SELECT * FROM User, ItemEntry, user_item_relation
@@ -187,8 +188,8 @@ interface ItemDao {
     @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
     suspend fun getById(id: Int): ItemEntry
 
-    @Query("SELECT itemId FROM user_item_relation WHERE rowid = :rowId")
-    suspend fun getByRowId(rowId: Long): Int
+    @Query("SELECT itemId FROM ItemEntry WHERE rowid = :rowId")
+    suspend fun getItemsByRowId(rowId: Long): Int
 
     @Query("SELECT * FROM ItemTag ORDER BY itemTag ASC")
     suspend fun getAllItemTags(): List<ItemTag>
@@ -198,7 +199,6 @@ interface ItemDao {
 
     @Query("SELECT * FROM ItemType ORDER BY itemType ASC")
     suspend fun getAllItemTypes(): List<ItemType>
-
     @Insert
     suspend fun insertItemType(type: ItemType)
 
@@ -220,7 +220,7 @@ interface ItemDao {
     @Transaction
     suspend fun upsertItem(item: ItemEntry, userId: Int): Int {
         val rowId = upsert(item)
-        val itemId = getByRowId(rowId)
+        val itemId = getItemsByRowId(rowId)
         if (item.itemId == 0) {
             insertRelation(UserItemRelation(userId, itemId))
         }
@@ -234,7 +234,7 @@ interface OutfitDao {
     @Query("SELECT * FROM OutfitEntry WHERE outfitId = :id")
     suspend fun getOutfitById(id: Int): OutfitEntry
 
-    @Query("SELECT outfitId FROM user_outfit_relation WHERE rowid = :rowId")
+    @Query("SELECT outfitId FROM OutfitEntry WHERE rowid = :rowId")
     suspend fun getOutfitByRowId(rowId: Long): Int
 
     @Query(
@@ -259,13 +259,12 @@ interface OutfitDao {
     suspend fun upsertOutfit(outfit: OutfitEntry, userId: Int): Int {
         val rowId = upsert(outfit)
         val outfitId = getOutfitByRowId(rowId)
-        if (outfit.outfitId == 0) {
-            insertRelation(UserOutfitRelation(userId, outfitId))
-        }
+        insertRelation(UserOutfitRelation(userId, outfitId))
+
         return outfitId
     }
 
-    @Insert
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
     suspend fun insertRelation(userAndOutfit: UserOutfitRelation)
 
     @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
