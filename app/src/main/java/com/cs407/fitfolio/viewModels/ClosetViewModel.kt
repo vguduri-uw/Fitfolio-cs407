@@ -80,7 +80,7 @@ class ClosetViewModel(
     // Adds an item to the closet to be used in add screen
     fun addItem(
         name: String, type: String, description: String, tags: List<String>,
-        isFavorites: Boolean, photoUri: String?
+        isFavorites: Boolean, photoUri: String
     ) {
         val newItem = ItemEntry(
             itemId = 0,
@@ -174,7 +174,7 @@ class ClosetViewModel(
             _closetState.value = _closetState.value.copy(items = updatedItems)
         }
     }
-    fun editItemPhoto(item: ItemEntry, photo: String?) {
+    fun editItemPhoto(item: ItemEntry, photo: String) {
         viewModelScope.launch {
             // Update database
             val updatedItem = item.copy(itemPhotoUri = photo)
@@ -195,7 +195,7 @@ class ClosetViewModel(
         description: String,
         tags: List<String>,
         isFavorites: Boolean,
-        photoUri: String?,
+        photoUri: String,
         outfitList: List<OutfitEntry>
     ) {
         val newItem = ItemEntry(

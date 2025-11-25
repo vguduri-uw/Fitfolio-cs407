@@ -19,7 +19,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 11
         ),
         ItemEntry(
@@ -29,7 +29,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 12
         ),
         ItemEntry(
@@ -39,7 +39,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 13
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -48,7 +48,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 14
         ),
     )
@@ -61,7 +61,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 21
         ),
         ItemEntry(
@@ -71,7 +71,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 22
         ),
         ItemEntry(
@@ -81,7 +81,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 23
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -90,7 +90,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 24
         ),
     )
@@ -103,7 +103,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 31
         ),
         ItemEntry(
@@ -113,7 +113,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 32
         ),
         ItemEntry(
@@ -123,7 +123,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 33
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -132,7 +132,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 34
         ),
     )
@@ -145,7 +145,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 41
         ),
         ItemEntry(
@@ -155,7 +155,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 42
         ),
         ItemEntry(
@@ -165,7 +165,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 43
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -174,7 +174,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 44
         ),
     )
@@ -187,7 +187,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 51
         ),
         ItemEntry(
@@ -197,7 +197,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 52
         ),
         ItemEntry(
@@ -207,7 +207,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 53
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -216,7 +216,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 54
         ),
     )
@@ -229,7 +229,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 61
         ),
         ItemEntry(
@@ -239,7 +239,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 62
         ),
         ItemEntry(
@@ -249,7 +249,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 63
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -258,7 +258,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 64
         ),
     )
@@ -271,7 +271,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 71
         ),
         ItemEntry(
@@ -281,7 +281,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 72
         ),
         ItemEntry(
@@ -291,7 +291,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 73
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -300,7 +300,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 74
         ),
     )
@@ -313,7 +313,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Summer", "Red"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 81
         ),
         ItemEntry(
@@ -323,7 +323,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Winter", "Black", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 82
         ),
         ItemEntry(
@@ -333,7 +333,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Fall", "Brown"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 83
         ),ItemEntry(
             itemName = "Purple Sneakers",
@@ -342,7 +342,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
             itemTags = listOf("Spring", "Purple", "Casual"),
             isFavorite = true,
             isDeletionCandidate = false,
-            itemPhotoUri = null,
+            itemPhotoUri = "",
             itemId = 84
         ),
     )

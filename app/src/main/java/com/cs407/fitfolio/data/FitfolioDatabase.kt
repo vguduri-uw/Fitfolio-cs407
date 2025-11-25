@@ -39,7 +39,7 @@ data class ItemEntry(
     var itemTags: List<String>,         // the tags corresponding to the item
     var isFavorite: Boolean,            // whether or not the item is in favorites
     var isDeletionCandidate: Boolean,   // whether or not the item is selected to be deleted
-    var itemPhotoUri: String?           // the item's photo
+    var itemPhotoUri: String           // the item's photo
 )
 
 // Outfit table
@@ -51,7 +51,7 @@ data class OutfitEntry(
     var outfitTags: List<String>,      // e.g. ["athletic", "winter", "interview"]
     var isFavorite: Boolean,           // whether or not the item is in favorites
     var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
-    var outfitPhotoUri: String?        // the outfit's photo
+    var outfitPhotoUri: String        // the outfit's photo
 )
 
 // Item tags table

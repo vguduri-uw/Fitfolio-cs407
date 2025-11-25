@@ -208,7 +208,7 @@ class OutfitsViewModel(
         description: String,
         tags: List<String>,
         isFavorites: Boolean,
-        photoUri: String?,
+        photoUri: String,
         itemList: List<ItemEntry>
     ) {
         val newOutfit = OutfitEntry(
