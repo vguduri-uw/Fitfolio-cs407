@@ -255,7 +255,6 @@ fun AppNavigation() {
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
                     closetViewModel = closetViewModel,
                     outfitsViewModel = outfitsViewModel,
-                    db = db
                 )
             }
             // Defines the "sign up" route and what UI to display there

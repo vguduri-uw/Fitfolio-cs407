@@ -42,8 +42,8 @@ data class ItemEntry(
     var itemPhotoUri: String?           // the item's photo
 )
 
-@Entity
 // Outfit table
+@Entity
 data class OutfitEntry(
     @PrimaryKey(autoGenerate = true) val outfitId: Int, // the unique id of the outfit
     var outfitName: String,            // the name of the outfit
@@ -52,6 +52,27 @@ data class OutfitEntry(
     var isFavorite: Boolean,           // whether or not the item is in favorites
     var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
     var outfitPhotoUri: String?        // the outfit's photo
+)
+
+// Item tags table
+@Entity
+data class ItemTag(
+    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    val itemTag: String
+)
+
+// Item types table
+@Entity
+data class ItemType(
+    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    val itemType: String
+)
+
+// Outfits tags table
+@Entity
+data class OutfitTag(
+    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    val outfitTag: String
 )
 
 // Converter for storing List<String> in Room
@@ -169,6 +190,18 @@ interface ItemDao {
     @Query("SELECT itemId FROM user_item_relation WHERE rowid = :rowId")
     suspend fun getByRowId(rowId: Long): Int
 
+    @Query("SELECT * FROM ItemTag ORDER BY itemTag ASC")
+    suspend fun getAllItemTags(): List<ItemTag>
+
+    @Insert
+    suspend fun insertItemTag(tag: ItemTag)
+
+    @Query("SELECT * FROM ItemType ORDER BY itemType ASC")
+    suspend fun getAllItemTypes(): List<ItemType>
+
+    @Insert
+    suspend fun insertItemType(type: ItemType)
+
     @Query(
         """SELECT * FROM ItemEntry, OutfitEntry, item_outfit_relation
               WHERE ItemEntry.itemId = :id
@@ -213,6 +246,12 @@ interface OutfitDao {
     )
     suspend fun getItemsByOutfitId(id: Int): List<ItemEntry>
 
+    @Query("SELECT * FROM OutfitTag ORDER BY outfitTag ASC")
+    suspend fun getAllOutfitTags(): List<OutfitTag>
+
+    @Insert
+    suspend fun insertOutfitTag(tag: OutfitTag)
+
     @Upsert(entity = OutfitEntry::class)
     suspend fun upsert(outfit: OutfitEntry): Long
 
@@ -241,24 +280,9 @@ interface OutfitDao {
     @Insert
     suspend fun insertRelation(itemAndOutfit: ItemOutfitRelation)
 
+    // TODO: move to delete dao??
     @Delete
     suspend fun deleteRelation(itemAndOutfit: ItemOutfitRelation)
-
-    @Transaction
-    suspend fun upsertItem(item: ItemEntry, outfitId: Int): Int {
-        val rowId = upsert(item)
-        val itemId = getItemByRowId(rowId)
-        if (item.itemId == 0) {
-            insertRelation(ItemOutfitRelation(itemId, outfitId))
-        }
-        return itemId
-    }
-
-    // TODO: update this upsert to only establish the relationship (not upsert a whole new item)
-//    @Transaction
-//    suspend fun addItemToOutfit(itemId: Int, outfitId: Int) {
-//        insertRelation(ItemOutfitRelation(itemId, outfitId))
-//    }
 }
 
 // Delete queries
@@ -286,8 +310,17 @@ interface DeleteDao {
     @Query("DELETE FROM ItemEntry WHERE itemId IN (:itemsIds)")
     suspend fun deleteItems(itemsIds: List<Int>)
 
+    @Query("DELETE FROM ItemTag WHERE itemTag = :tag")
+    suspend fun deleteItemTag(tag: String)
+
+    @Query("DELETE FROM ItemType WHERE itemType = :type")
+    suspend fun deleteItemType(type: String)
+
     @Query("DELETE FROM OutfitEntry WHERE outfitId IN (:outfitsIds)")
     suspend fun deleteOutfits(outfitsIds: List<Int>)
+
+    @Query("DELETE FROM OutfitTag WHERE outfitTag = :tag")
+    suspend fun deleteOutfitTag(tag: String)
 
     @Transaction
     suspend fun delete(userId: Int) {
@@ -305,7 +338,10 @@ interface DeleteDao {
         OutfitEntry::class,
         UserItemRelation::class,
         UserOutfitRelation::class,
-        ItemOutfitRelation::class
+        ItemOutfitRelation::class,
+        ItemTag::class,
+        ItemType::class,
+        OutfitTag::class
     ],
     version = 1
 )

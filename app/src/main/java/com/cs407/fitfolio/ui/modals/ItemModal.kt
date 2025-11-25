@@ -58,7 +58,6 @@ import com.cs407.fitfolio.R
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
-import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.OutfitEntry
 
 @Composable
@@ -473,7 +472,7 @@ fun ItemInformation(
                                     outfitId = outfit.outfitId,
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                                    imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
+                                    imageRes = R.drawable.shirt // swap to item.itemPhotoUri when ready
                                 )
                             }
                         }
