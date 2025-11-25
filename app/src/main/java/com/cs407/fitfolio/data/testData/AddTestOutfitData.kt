@@ -353,7 +353,8 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Summer and Red",
         tags = listOf("Athletic"),
         isFavorite = true,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 
     // Outfit 2
@@ -362,7 +363,8 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Fall and Blue",
         tags = listOf("Business"),
         isFavorite = true,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 
     // Outfit 3
@@ -371,7 +373,8 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Fall and Orange",
         tags = listOf("Business Casual"),
         isFavorite = false,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 
     // Outfit 4
@@ -380,7 +383,8 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Spring, Green, and Casual",
         tags = listOf("Casual"),
         isFavorite = false,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 
     // Outfit 5
@@ -389,7 +393,8 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Winter, Black, and Casual",
         tags = listOf("Formal"),
         isFavorite = true,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 
     // Outfit 6
@@ -398,7 +403,8 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Fall and Brown",
         tags = listOf("Streetwear"),
         isFavorite = false,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 
     // Outfit 7
@@ -407,7 +413,8 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Summer, Yellow, and Casual",
         tags = listOf("Loungewear"),
         isFavorite = true,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 
     // Outfit 8
@@ -416,6 +423,7 @@ fun AddTestOutfitData(outfitsViewModel: OutfitsViewModel) {
         description = "Spring, Purple, and Casual",
         tags = listOf("Spring", "Purple", "Casual"),
         isFavorite = false,
-        photoUri = ""
+        photoUri = "",
+        itemList = emptyList()
     )
 }

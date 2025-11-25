@@ -151,7 +151,8 @@ fun MyOutfitsScreen(
                 outfitsViewModel = outfitsViewModel,
                 outfitId = outfitsState.outfitToShow,
                 onDismiss = { outfitsViewModel.updateOutfitToShow(-1) },
-                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen,
+                closetViewModel = closetViewModel
             )
         }
 

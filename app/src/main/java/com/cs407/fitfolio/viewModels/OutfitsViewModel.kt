@@ -77,6 +77,7 @@ class OutfitsViewModel(
         tags: List<String>,
         isFavorite: Boolean,
         photoUri: String,
+        itemList: List<ItemEntry>
     ) {
         val newOutfit = OutfitEntry(
             outfitId = 0,
@@ -91,6 +92,13 @@ class OutfitsViewModel(
         viewModelScope.launch {
             // insert outfit into database
             db.outfitDao().upsertOutfit(newOutfit, userId)
+
+            // Insert relations between the outfit and each item in the item list
+            itemList.forEach { item ->
+                db.outfitDao().insertRelation(
+                    ItemOutfitRelation(newOutfit.outfitId, item.itemId)
+                )
+            }
 
             val outfits = db.userDao().getOutfitsByUserId(userId)
             _outfitsState.value = _outfitsState.value.copy(outfits = outfits)

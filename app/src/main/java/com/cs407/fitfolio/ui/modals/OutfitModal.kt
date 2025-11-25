@@ -58,6 +58,7 @@ import androidx.compose.foundation.lazy.items
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.OutfitEntry
+import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 
 // modal sheet that displays full outfit details and actions
@@ -67,6 +68,7 @@ import com.cs407.fitfolio.viewModels.OutfitsState
 @OptIn(ExperimentalMaterial3Api::class)
 fun OutfitModal(
     outfitsViewModel: OutfitsViewModel,
+    closetViewModel: ClosetViewModel,
     outfitId: Int,
     onDismiss: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
@@ -129,6 +131,8 @@ fun OutfitModal(
                 isEditing = isEditing,
                 outfitsViewModel = outfitsViewModel,
                 outfitsState = outfitsState,
+                closetViewModel = closetViewModel,
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
             // tags
@@ -231,8 +235,15 @@ private fun ConfirmDialog(
 private fun ItemCard(
     name: String,
     type: String,
-    imageRes: Int
+    imageRes: Int,
+    closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel,
+    itemId: Int,
+    onNavigateToCalendarScreen: () -> Unit
 ) {
+    // track item modal display state
+    var showItemModal by remember { mutableStateOf(false) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -241,6 +252,7 @@ private fun ItemCard(
             .background(Color(0xFFF7F7F7))
             .padding(10.dp)
             .fillMaxSize()
+            .clickable{ showItemModal = true }
     ) {
         Image(
             painter = painterResource(imageRes),
@@ -256,6 +268,16 @@ private fun ItemCard(
             text = type,
             style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF666666)),
             textAlign = TextAlign.Center
+        )
+    }
+
+    if (showItemModal) {
+        ItemModal(
+            closetViewModel = closetViewModel,
+            outfitsViewModel = outfitsViewModel,
+            itemId = itemId,
+            onDismiss = { showItemModal = false },
+            onNavigateToCalendarScreen = onNavigateToCalendarScreen
         )
     }
 }
@@ -392,11 +414,12 @@ private fun TagsEditableCard(
 
             // show ALL global tags as chips (selectable only when editing)
             val allTags = outfitsState.tags
+            val sortedTags = allTags.sortedByDescending { it in selectedTags }
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(allTags.size) { idx ->
-                    val tag = allTags[idx]
+                items(sortedTags.size) { idx ->
+                    val tag = sortedTags[idx]
                     val isSelected = tag in selectedTags
                     TagChipSelectable(
                         text = tag,
@@ -715,7 +738,9 @@ private fun ItemsInOutfitCard(
     outfit: OutfitEntry,
     isEditing: Boolean,
     outfitsViewModel: OutfitsViewModel,
-    outfitsState: OutfitsState
+    outfitsState: OutfitsState,
+    closetViewModel: ClosetViewModel,
+    onNavigateToCalendarScreen: () -> Unit
 ) {
     var itemList by remember { mutableStateOf(emptyList<ItemEntry>()) }
 
@@ -816,7 +841,11 @@ private fun ItemsInOutfitCard(
                             ItemCard(
                                 name = item.itemName,
                                 type = item.itemType,
-                                imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
+                                imageRes = R.drawable.shirt, // swap to item.itemPhoto when ready
+                                closetViewModel = closetViewModel,
+                                outfitsViewModel = outfitsViewModel,
+                                itemId = item.itemId,
+                                onNavigateToCalendarScreen = onNavigateToCalendarScreen
                             )
 
                             if (localEditing && selected) {

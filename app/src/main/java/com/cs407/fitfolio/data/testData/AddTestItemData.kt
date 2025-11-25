@@ -1,6 +1,7 @@
 package com.cs407.fitfolio.data.testData
 
 import android.util.Log
+import com.cs407.fitfolio.data.ItemEntry
 import kotlinx.coroutines.delay
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
@@ -18,19 +19,20 @@ suspend fun AddTestItemData(
 
     outfitsViewModel.addOutfit("Red Shirt & Jeans", "Classic casual look",
         listOf("Casual", "Summer", "Red", "Tag", "Tag", "Tag"),
-        true, ""
+        true, "", emptyList<ItemEntry>()
+
     )
     outfitsViewModel.addOutfit("Green Tee & Black Skirt", "Cute spring fit",
         listOf("Spring", "Casual"),
-        false, ""
+        false, "", emptyList<ItemEntry>()
     )
     outfitsViewModel.addOutfit("Fall Jacket & Jeans", "Cozy autumn streetwear",
         listOf("Fall", "Casual"),
-        false, ""
+        false, "", emptyList<ItemEntry>()
     )
     outfitsViewModel.addOutfit("Summer Shorts & Sneakers", "Bright casual summer look",
         listOf("Summer", "Casual"),
-        true, ""
+        true, "", emptyList<ItemEntry>()
     )
 
     Log.d("TestData", "Waiting for real DB outfit IDs...")

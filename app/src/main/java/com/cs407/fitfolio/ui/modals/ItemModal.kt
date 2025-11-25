@@ -472,7 +472,8 @@ fun ItemInformation(
                                     outfitId = outfit.outfitId,
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                                    imageRes = R.drawable.shirt // swap to item.itemPhotoUri when ready
+                                    imageRes = R.drawable.shirt, // swap to item.itemPhotoUri when ready
+                                    closetViewModel = closetViewModel
                                 )
                             }
                         }
@@ -501,6 +502,7 @@ private fun OutfitsCard(
     outfitId: Int,
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit,
+    closetViewModel: ClosetViewModel,
     imageRes: Int,
 ) {
     var showOutfitModal by remember { mutableStateOf(false) }
@@ -532,7 +534,8 @@ private fun OutfitsCard(
             outfitsViewModel = outfitsViewModel,
             outfitId = outfitId,
             onDismiss = { showOutfitModal = false },
-            onNavigateToCalendarScreen = onNavigateToCalendarScreen
+            onNavigateToCalendarScreen = onNavigateToCalendarScreen,
+            closetViewModel = closetViewModel
         )
     }
 }
