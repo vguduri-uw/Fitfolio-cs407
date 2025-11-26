@@ -3,6 +3,7 @@ package com.cs407.fitfolio.services
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.POST
+import com.cs407.fitfolio.BuildConfig
 
 // ===============================================================================================
 //                      DATA CLASSES (models used for requests and responses)
@@ -47,6 +48,6 @@ interface TryOnApiService {
 
 object TryOnApiClient {
     private const val BASE_URL = "https://api.fashn.ai/"
-    private const val API_KEY = BuildConfig.Fas
+    private const val API_KEY = BuildConfig.FASHN_API_KEY
 
 }
