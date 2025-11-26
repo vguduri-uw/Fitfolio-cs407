@@ -53,9 +53,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.enums.DeletionStates
-import com.cs407.fitfolio.viewModels.OutfitEntry
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import androidx.compose.foundation.lazy.items
+import com.cs407.fitfolio.data.FitfolioDatabase
+import com.cs407.fitfolio.data.ItemEntry
+import com.cs407.fitfolio.data.OutfitEntry
+import com.cs407.fitfolio.viewModels.ClosetViewModel
+import com.cs407.fitfolio.viewModels.OutfitsState
 
 // modal sheet that displays full outfit details and actions
 // shows outfit photo, description, items, and tags, with editing modes
@@ -64,7 +68,8 @@ import androidx.compose.foundation.lazy.items
 @OptIn(ExperimentalMaterial3Api::class)
 fun OutfitModal(
     outfitsViewModel: OutfitsViewModel,
-    outfitId: String,
+    closetViewModel: ClosetViewModel,
+    outfitId: Int,
     onDismiss: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
 ) {
@@ -124,7 +129,10 @@ fun OutfitModal(
             ItemsInOutfitCard(
                 outfit = outfit,
                 isEditing = isEditing,
-                outfitsViewModel = outfitsViewModel
+                outfitsViewModel = outfitsViewModel,
+                outfitsState = outfitsState,
+                closetViewModel = closetViewModel,
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
             // tags
@@ -168,7 +176,7 @@ private fun AddTagDialog(
     onConfirm: (String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
-    androidx.compose.material3.AlertDialog(
+    AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Add a tag") },
         text = {
@@ -227,8 +235,15 @@ private fun ConfirmDialog(
 private fun ItemCard(
     name: String,
     type: String,
-    imageRes: Int
+    imageRes: Int,
+    closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel,
+    itemId: Int,
+    onNavigateToCalendarScreen: () -> Unit
 ) {
+    // track item modal display state
+    var showItemModal by remember { mutableStateOf(false) }
+
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -237,6 +252,7 @@ private fun ItemCard(
             .background(Color(0xFFF7F7F7))
             .padding(10.dp)
             .fillMaxSize()
+            .clickable{ showItemModal = true }
     ) {
         Image(
             painter = painterResource(imageRes),
@@ -252,6 +268,16 @@ private fun ItemCard(
             text = type,
             style = MaterialTheme.typography.labelSmall.copy(color = Color(0xFF666666)),
             textAlign = TextAlign.Center
+        )
+    }
+
+    if (showItemModal) {
+        ItemModal(
+            closetViewModel = closetViewModel,
+            outfitsViewModel = outfitsViewModel,
+            itemId = itemId,
+            onDismiss = { showItemModal = false },
+            onNavigateToCalendarScreen = onNavigateToCalendarScreen
         )
     }
 }
@@ -388,11 +414,12 @@ private fun TagsEditableCard(
 
             // show ALL global tags as chips (selectable only when editing)
             val allTags = outfitsState.tags
+            val sortedTags = allTags.sortedByDescending { it in selectedTags }
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                items(allTags.size) { idx ->
-                    val tag = allTags[idx]
+                items(sortedTags.size) { idx ->
+                    val tag = sortedTags[idx]
                     val isSelected = tag in selectedTags
                     TagChipSelectable(
                         text = tag,
@@ -524,7 +551,7 @@ fun outfitIconBox (
     var isEditing by remember { mutableStateOf(isEditing) }
 
     // track outfit photo
-    var outfitPhoto by remember { mutableIntStateOf(outfit.outfitPhoto) }
+    var outfitPhotoUri by remember { mutableStateOf(outfit.outfitPhotoUri) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -574,7 +601,7 @@ fun outfitIconBox (
                     )
 
                     // updates globally
-                    outfitsViewModel.editOutfitPhoto(outfit, outfitPhoto)
+                    outfitsViewModel.editOutfitPhoto(outfit, outfitPhotoUri)
                 } else {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
@@ -710,13 +737,22 @@ private fun DescriptionCard(
 private fun ItemsInOutfitCard(
     outfit: OutfitEntry,
     isEditing: Boolean,
-    outfitsViewModel: OutfitsViewModel
+    outfitsViewModel: OutfitsViewModel,
+    outfitsState: OutfitsState,
+    closetViewModel: ClosetViewModel,
+    onNavigateToCalendarScreen: () -> Unit
 ) {
+    var itemList by remember { mutableStateOf(emptyList<ItemEntry>()) }
+
+    LaunchedEffect(outfit.outfitId, outfitsState.outfits) {
+        itemList = outfitsViewModel.getItemsList(outfit.outfitId)
+    }
+
     // tracks state of whether editing is enabled
     var localEditing by remember { mutableStateOf(isEditing) }
 
     // tracks state of ids of items selected to be deleted
-    var selectedIds by remember(outfit.outfitId) { mutableStateOf<Set<String>>(emptySet()) }
+    var selectedIds by remember(outfit.outfitId) { mutableStateOf<Set<Int>>(emptySet()) }
 
     // tracks state of alert dialog
     var showBatchDeleteDialog by remember { mutableStateOf(false) }
@@ -785,44 +821,50 @@ private fun ItemsInOutfitCard(
             }
 
             // items row
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(
-                    items = outfit.itemList,
-                    key = { it.itemId }
-                ) { item ->
-                    val selected = item.itemId in selectedIds
+            if (itemList.isNotEmpty()) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    items(
+                        items = itemList,
+                        key = { it.itemId }
+                    ) { item ->
+                        val selected = item.itemId in selectedIds
 
-                    Box(
-                        modifier = Modifier
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(Color(0xFFF7F7F7))
-                            .clickable(enabled = localEditing) {
-                                selectedIds = if (selected) selectedIds - item.itemId
-                                else selectedIds + item.itemId
-                            }
-                    ) {
-                        ItemCard(
-                            name = item.itemName,
-                            type = item.itemType,
-                            imageRes = R.drawable.shirt // swap to item.itemPhoto when ready
-                        )
+                        Box(
+                            modifier = Modifier
+                                .clip(MaterialTheme.shapes.medium)
+                                .background(Color(0xFFF7F7F7))
+                                .clickable(enabled = localEditing) {
+                                    selectedIds = if (selected) selectedIds - item.itemId
+                                    else selectedIds + item.itemId
+                                }
+                        ) {
+                            ItemCard(
+                                name = item.itemName,
+                                type = item.itemType,
+                                imageRes = R.drawable.shirt, // swap to item.itemPhoto when ready
+                                closetViewModel = closetViewModel,
+                                outfitsViewModel = outfitsViewModel,
+                                itemId = item.itemId,
+                                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+                            )
 
-                        if (localEditing && selected) {
-                            Box(
-                                modifier = Modifier
-                                    .align(Alignment.TopEnd)
-                                    .padding(6.dp)
-                                    .size(20.dp)
-                                    .clip(MaterialTheme.shapes.small)
-                                    .background(Color.Black.copy(alpha = 0.75f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = "Selected",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(14.dp)
-                                )
+                            if (localEditing && selected) {
+                                Box(
+                                    modifier = Modifier
+                                        .align(Alignment.TopEnd)
+                                        .padding(6.dp)
+                                        .size(20.dp)
+                                        .clip(MaterialTheme.shapes.small)
+                                        .background(Color.Black.copy(alpha = 0.75f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Filled.Check,
+                                        contentDescription = "Selected",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(14.dp)
+                                    )
+                                }
                             }
                         }
                     }
@@ -848,10 +890,11 @@ private fun ItemsInOutfitCard(
                     // perform the deletions
                     if (selectedIds.isNotEmpty()) {
                         // Map back to actual ItemEntry objects
-                        val toDelete = outfit.itemList.filter { it.itemId in selectedIds }
-                        toDelete.forEach { item ->
-                            outfitsViewModel.removeItemFromItemsList(outfit, item)
-                        }
+                        val itemIdsToDelete = itemList
+                            .filter { it.itemId in selectedIds }
+                            .map { it.itemId }
+
+                        outfitsViewModel.removeItemsFromItemsList(itemIdsToDelete, outfit.outfitId)
                     }
                     // exits edit mode
                     showBatchDeleteDialog = false
