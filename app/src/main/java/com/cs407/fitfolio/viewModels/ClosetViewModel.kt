@@ -25,13 +25,13 @@ data class ClosetState(
     val activeItemType: String = DefaultItemTypes.ALL.typeName, // item type that is currently rendered on the screen
     val isFavoritesActive: Boolean = false, // whether or not the favorites filter is active
     val isSearchActive: Boolean = false, // whether or not a search query filter is active
-    val searchQuery: String = "",
+    val searchQuery: String = "", // the active search query
     val tags: List<String> = emptyList(), // all tags for closet items
     val activeTags: List<String> = emptyList(), // the tags currently rendered on the screen
     val deletionCandidates: List<ItemEntry> = emptyList(), // the items that can be potentially deleted
     val isDeleteActive: String = DeletionStates.Inactive.name, // the status of the deletion process
     val itemToShow: Int = -1, // itemId of the item to be shown
-    val isFiltering: Boolean = false // whether the closet is actively in a filtering call
+    val isFiltering: Boolean = false // whether or not the closet is actively in a filtering call
 )
 
 // ViewModel representing the state of the closet
@@ -47,7 +47,7 @@ class ClosetViewModel(
 
     // Initialize closet state items and filtered items with data from db
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             var itemTypes = db.itemDao().getAllItemTypes().map { it.itemType }
             var tags = db.itemDao().getAllItemTags().map { it.itemTag }
             if (itemTypes.isEmpty()) {
@@ -96,7 +96,7 @@ class ClosetViewModel(
             itemPhotoUri = photoUri,
         )
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Insert item into database
             db.itemDao().upsertItem(newItem, userId)
 
@@ -109,7 +109,7 @@ class ClosetViewModel(
 
     // Deletes specified items from the closet
     fun deleteItem(items: List<ItemEntry>) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Remove duplicate outfits associated with the items
             val outfitIds = items.flatMap { item ->
                 db.itemDao().getOutfitsByItemId(item.itemId).map { it.outfitId }
@@ -128,7 +128,7 @@ class ClosetViewModel(
 
     // Setters for item properties to be used in the item modal
     fun editItemName(item: ItemEntry, name: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Update database
             val updatedItem = item.copy(itemName = name)
             db.itemDao().upsert(updatedItem)
@@ -138,7 +138,7 @@ class ClosetViewModel(
         }
     }
     fun editItemType(item: ItemEntry?, type: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Update database
             val updatedItem = item!!.copy(itemType = type)
             db.itemDao().upsert(updatedItem)
@@ -148,7 +148,7 @@ class ClosetViewModel(
         }
     }
     fun editItemDescription(item: ItemEntry, description: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Update database
             val updatedItem = item.copy(itemDescription = description)
             db.itemDao().upsert(updatedItem)
@@ -158,7 +158,7 @@ class ClosetViewModel(
         }
     }
     fun editItemTags(item: ItemEntry, tag: String, isRemoving: Boolean) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val updatedItem =
                 if (isRemoving) item.copy(itemTags = item.itemTags - tag)
                 else item.copy(itemTags = item.itemTags + tag)
@@ -171,7 +171,7 @@ class ClosetViewModel(
         }
     }
     fun toggleFavoritesProperty(item: ItemEntry) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val updatedItem = item.copy(isFavorite = !item.isFavorite)
             db.itemDao().upsert(updatedItem)
 
@@ -180,7 +180,7 @@ class ClosetViewModel(
         }
     }
     fun editItemPhoto(item: ItemEntry, photo: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Update database
             val updatedItem = item.copy(itemPhotoUri = photo)
             db.itemDao().upsert(updatedItem)
@@ -221,7 +221,7 @@ class ClosetViewModel(
             itemPhotoUri = photoUri,
         )
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Insert item
             val itemId = db.itemDao().upsertItem(newItem, userId)
 
@@ -239,7 +239,7 @@ class ClosetViewModel(
 
     // CLOSET FUNCTIONS //
 
-    // TODO: add CircularProgressIndicator? when calling this (in closet screen)
+    // Applies filters to the items shown in the closet (favorites, search queries, tags)
     fun applyFilters() {
         viewModelScope.launch(Dispatchers.Default) {
             // Begin filtering
@@ -269,7 +269,6 @@ class ClosetViewModel(
                 }
 
                 // Filter through active tags
-                // TODO: decide if this should be inclusive (1 matching tag means its valid, how it currently is rn), or if it must match all tags
                 if (_closetState.value.activeTags.isNotEmpty()) {
                     val hasMatchingTag = item.itemTags.any { it in _closetState.value.activeTags }
                     if (!hasMatchingTag) {
@@ -292,7 +291,7 @@ class ClosetViewModel(
 
     // Adds a new tag option the user can choose from
     fun addTag(newTag: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Prevent empty tags
             if (newTag.trim().isEmpty()) return@launch
 
@@ -314,7 +313,7 @@ class ClosetViewModel(
 
     // Removes a tag from the list of selectable tags
     fun deleteTag(tag: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Remove the tag from the tag table
             db.deleteDao().deleteItemTag(tag)
 
@@ -337,7 +336,7 @@ class ClosetViewModel(
 
     // Adds an item type to the itemTypes list (from the item modal)
     fun addItemType(itemType: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Prevent empty types
             if (itemType.trim().isEmpty()) return@launch
 
@@ -358,7 +357,7 @@ class ClosetViewModel(
 
     // Removes the specified item type from the itemTypes list (from the item modal)
     fun deleteItemType(itemType: String) {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             // Prevent deleting the default "All" type
             if (itemType == DefaultItemTypes.ALL.typeName) return@launch
 
