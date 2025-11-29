@@ -180,8 +180,9 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                             closetViewModel.updateActiveItemType(itemType)
                         })
                 ) {
+                    val icon = closetViewModel.getItemTypeIcon(itemType)
                     Icon(
-                        painter = painterResource(id = R.drawable.hanger),
+                        painter = painterResource(id = icon),
                         contentDescription = itemType,
                         modifier = Modifier.size(36.dp)
                     )

@@ -7,6 +7,7 @@ import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import androidx.lifecycle.viewModelScope
+import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemOutfitRelation
 import com.cs407.fitfolio.data.ItemTag
@@ -123,7 +124,7 @@ class ClosetViewModel(
         }
     }
 
-    // Setters for item properties to be used in the add screen and item modal
+    // Setters for item properties to be used in the item modal
     fun editItemName(item: ItemEntry, name: String) {
         viewModelScope.launch {
             // Update database
@@ -186,6 +187,13 @@ class ClosetViewModel(
             _closetState.value = _closetState.value.copy(items = updatedItems)
         }
     }
+
+    // Gets the icon image for item types (defined for default, hanger for custom)
+    fun getItemTypeIcon(typeName: String): Int {
+        return DefaultItemTypes.entries.firstOrNull { it.typeName == typeName }?.iconRes
+            ?: R.drawable.hanger // hanger icon for custom item types
+    }
+    // Gets the outfit list from the DB for an item
     suspend fun getOutfitsList(itemId: Int): List<OutfitEntry> {
         return db.itemDao().getOutfitsByItemId(itemId)
     }
