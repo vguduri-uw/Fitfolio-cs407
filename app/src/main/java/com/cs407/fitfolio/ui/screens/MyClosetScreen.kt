@@ -244,7 +244,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 Icon(
                     imageVector = if (closetState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = if (closetState.isFavoritesActive) "Remove favorites filter" else "Filter by favorites",
-                    tint = Color.Black,
+                    tint = if (closetState.isFavoritesActive) Color.Red else Color.Black,
                     modifier = Modifier.size(20.dp),
                 )
             }
