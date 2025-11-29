@@ -134,10 +134,10 @@ class ClosetViewModel(
             _closetState.value = _closetState.value.copy(items = updatedItems)
         }
     }
-    fun editItemType(item: ItemEntry, type: String) {
+    fun editItemType(item: ItemEntry?, type: String) {
         viewModelScope.launch {
             // Update database
-            val updatedItem = item.copy(itemType = type)
+            val updatedItem = item!!.copy(itemType = type)
             db.itemDao().upsert(updatedItem)
 
             val updatedItems = db.userDao().getItemsByUserId(userId)

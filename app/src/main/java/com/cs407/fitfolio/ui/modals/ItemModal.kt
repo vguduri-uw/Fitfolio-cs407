@@ -54,15 +54,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-
+import com.cs407.fitfolio.enums.DefaultItemTypes
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -141,6 +139,14 @@ fun IconBox (
     var selectedItemType by remember { mutableStateOf(item.itemType) }
     var isEditingName by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf(item.itemName) }
+    var pendingDeletingItemType: String? by remember { mutableStateOf(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var itemWithNewType: ItemEntry? by remember { mutableStateOf(null) }
+
+    // Update selected item type whenever it changes
+    LaunchedEffect(item.itemType) {
+        selectedItemType = item.itemType
+    }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -221,33 +227,111 @@ fun IconBox (
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
+                        // Add item type choice
+                        DropdownMenuItem(
+                            onClick = {
+
+//                                closetViewModel.editItemType(item, option)
+//                                selectedItemType = option
+                                expanded = false
+                            },
+                            text = {
+                                Row {
+                                    Text(
+                                        "Add Item Type",
+                                        color = Color(0xFF2E7D32)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Outlined.Add,
+                                        contentDescription = "Add an item type",
+                                        tint = Color(0xFF2E7D32),
+                                        modifier = Modifier
+                                            .padding(start = 6.dp)
+                                            .size(16.dp)
+                                            .clickable(
+                                                onClick = {
+                                                    itemWithNewType = item
+                                                    showAddDialog = true
+                                                }
+                                            )
+                                    )
+                                }
+                            }
+                        )
                         closetState.itemTypes.forEach { option ->
-                            DropdownMenuItem(
-                                onClick = {
-                                    closetViewModel.editItemType(item, option)
-                                    selectedItemType = option
-                                    expanded = false
-                                },
-                                text = {
-                                    Row {
-                                        Text(option)
-                                        if (option == selectedItemType) {
+                            // Exclude ALL type from options
+                            if (option == DefaultItemTypes.ALL.typeName) null
+                            else { // Valid item type options
+                                DropdownMenuItem(
+                                    onClick = {
+                                        closetViewModel.editItemType(item, option)
+                                        selectedItemType = option
+                                        expanded = false
+                                    },
+                                    text = {
+                                        Row {
+                                            Text(option)
+                                            if (option == selectedItemType) {
+                                                Icon(
+                                                    imageVector = Icons.Filled.Check,
+                                                    contentDescription = "Selected item type",
+                                                    tint = Color(0xFF2E7D32),
+                                                    modifier = Modifier
+                                                        .padding(start = 6.dp)
+                                                        .size(16.dp)
+                                                )
+                                            }
+                                            // Delete item type
                                             Icon(
-                                                imageVector = Icons.Filled.Check,
-                                                contentDescription = "Item type",
-                                                tint = Color(0xFF2E7D32),
+                                                imageVector = Icons.Outlined.Delete,
+                                                contentDescription = "Delete item type",
                                                 modifier = Modifier
                                                     .padding(start = 6.dp)
                                                     .size(16.dp)
+                                                    .clickable(
+                                                        onClick = { pendingDeletingItemType = option }
+                                                    )
                                             )
                                         }
                                     }
-                                }
-                            )
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+
+        // Confirm deletion of item type
+        pendingDeletingItemType?.let { option ->
+            ConfirmDialog(
+                title = "Delete item type?",
+                message = "This will remove \"$option\" from your item type list and resolve items of \"$option\" type to a default \"${DefaultItemTypes.ALL.typeName}\" type. This action cannot be undone.",
+                confirmText = "Delete",
+                onDismiss = { pendingDeletingItemType = null; expanded = false },
+                onConfirm = {
+                    closetViewModel.deleteItemType(option)
+                    pendingDeletingItemType = null
+                    expanded = false
+                }
+            )
+        }
+
+        // Add item type dialog
+        if (showAddDialog) {
+            AddDialog(
+                title = "Add an item type",
+                label = "Item type name",
+                onDismiss = { showAddDialog = false; itemWithNewType = null; expanded = false },
+                onConfirm = { itemType ->
+                    closetViewModel.addItemType(itemType)
+                    itemWithNewType?.let { closetViewModel.editItemType(it, itemType) }
+                    selectedItemType = itemType
+                    showAddDialog = false
+                    itemWithNewType = null
+                    expanded = false
+                }
+            )
         }
 
         // Item photo and icon buttons
@@ -258,25 +342,14 @@ fun IconBox (
                 .fillMaxWidth()
                 .height(300.dp)
         ) {
-            // Item photo, if uploaded picture is not found use placeholder picture
-            if(item.itemPhotoUri.isNotEmpty()){
-                AsyncImage(
-                    model = item.itemPhotoUri,
-                    contentDescription = "Item photo",
-                    modifier = Modifier
-                        .size(230.dp)
-                        .align(Alignment.Center),
-                    contentScale = ContentScale.Crop
-                )
-            }else{
-                Image(
-                    painter = painterResource(R.drawable.shirt),
-                    contentDescription = "Item photo placeholder",
-                    modifier = Modifier
-                        .size(180.dp)
-                        .align(Alignment.Center)
-                )
-            }
+            // Item photo
+            Image(
+                painter = painterResource(R.drawable.shirt),
+                contentDescription = "Item photo",
+                modifier = Modifier
+                    .size(180.dp)
+                    .align(Alignment.Center)
+            )
 
             // Calendar icon button
             IconButton(
@@ -488,7 +561,6 @@ fun ItemInformation(
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
                                     imageRes = R.drawable.shirt, // swap to item.itemPhotoUri when ready
-                                    photoUri = outfit.outfitPhotoUri, //item photo
                                     closetViewModel = closetViewModel
                                 )
                             }
@@ -520,7 +592,6 @@ private fun OutfitsCard(
     onNavigateToCalendarScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
     imageRes: Int,
-    photoUri: String,
 ) {
     var showOutfitModal by remember { mutableStateOf(false) }
 
@@ -534,21 +605,11 @@ private fun OutfitsCard(
             .fillMaxSize()
             .clickable{showOutfitModal = true}
     ) {
-        //check if there is available uploaded item picture
-        if (photoUri.isNotEmpty()) {
-            AsyncImage(
-                model = photoUri,
-                contentDescription = "$outfitName photo",
-                modifier = Modifier.size(72.dp),
-                contentScale = ContentScale.Crop
-            )
-        } else {
-            Image(
-                painter = painterResource(imageRes),
-                contentDescription = "$outfitName image",
-                modifier = Modifier.size(72.dp)
-            )
-        }
+        Image(
+            painter = painterResource(imageRes),
+            contentDescription = "$outfitName image",
+            modifier = Modifier.size(72.dp)
+        )
         Text(
             text = outfitName,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
@@ -681,7 +742,9 @@ private fun TagsEditableCard(
 
         // add-tag dialog
         if (showAddDialog) {
-            AddTagDialog(
+            AddDialog(
+                title = "Add a tag",
+                label = "Tag name",
                 onDismiss = { showAddDialog = false },
                 onConfirm = { newTag ->
                     val t = newTag.trim()
@@ -773,19 +836,21 @@ private fun TagChipSelectable(
 
 // Dialog for user to type a custom tag
 @Composable
-private fun AddTagDialog(
+private fun AddDialog(
+    title: String,
+    label: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add a tag") },
+        title = { Text(title) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Tag name") },
+                label = { Text(label) },
                 singleLine = true
             )
         },
@@ -804,7 +869,7 @@ private fun AddTagDialog(
 
 // Confirmation dialog for dangerous or irreversible actions
 // Displays a title, message, and confirm/cancel actions
-// Used for deleting a global tag from all items
+// Used for deleting a global tag or item type from all items
 @Composable
 private fun ConfirmDialog(
     title: String,

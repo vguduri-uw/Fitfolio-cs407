@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
@@ -79,7 +78,6 @@ fun MyClosetScreen(
 ) {
     // Observe the current UI states from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
 
     // Re-filter when an item is added or deleted
     LaunchedEffect(closetState.items) {
