@@ -258,44 +258,43 @@ fun IconBox (
                                 }
                             }
                         )
-                        closetState.itemTypes.forEach { option ->
-                            // Exclude ALL type from options
-                            if (option == DefaultItemTypes.ALL.typeName) null
-                            else { // Valid item type options
-                                DropdownMenuItem(
-                                    onClick = {
-                                        closetViewModel.editItemType(item, option)
-                                        selectedItemType = option
-                                        expanded = false
-                                    },
-                                    text = {
-                                        Row {
-                                            Text(option)
-                                            if (option == selectedItemType) {
-                                                Icon(
-                                                    imageVector = Icons.Filled.Check,
-                                                    contentDescription = "Selected item type",
-                                                    tint = Color(0xFF2E7D32),
-                                                    modifier = Modifier
-                                                        .padding(start = 6.dp)
-                                                        .size(16.dp)
-                                                )
-                                            }
-                                            // Delete item type
+                        val sortedTypes = closetState.itemTypes
+                            .filter { it != DefaultItemTypes.ALL.typeName } // exclude ALL item type
+                            .sortedByDescending { it == selectedItemType } // show selected type first
+                       sortedTypes.forEach { option ->
+                            DropdownMenuItem(
+                                onClick = {
+                                    closetViewModel.editItemType(item, option)
+                                    selectedItemType = option
+                                    expanded = false
+                                },
+                                text = {
+                                    Row {
+                                        Text(option)
+                                        if (option == selectedItemType) {
                                             Icon(
-                                                imageVector = Icons.Outlined.Delete,
-                                                contentDescription = "Delete item type",
+                                                imageVector = Icons.Filled.Check,
+                                                contentDescription = "Selected item type",
+                                                tint = Color(0xFF2E7D32),
                                                 modifier = Modifier
                                                     .padding(start = 6.dp)
                                                     .size(16.dp)
-                                                    .clickable(
-                                                        onClick = { pendingDeletingItemType = option }
-                                                    )
                                             )
                                         }
+                                        // Delete item type
+                                        Icon(
+                                            imageVector = Icons.Outlined.Delete,
+                                            contentDescription = "Delete item type",
+                                            modifier = Modifier
+                                                .padding(start = 6.dp)
+                                                .size(16.dp)
+                                                .clickable(
+                                                    onClick = { pendingDeletingItemType = option }
+                                                )
+                                        )
                                     }
-                                )
-                            }
+                                }
+                            )
                         }
                     }
                 }
@@ -307,7 +306,6 @@ fun IconBox (
             ConfirmDialog(
                 title = "Delete item type?",
                 message = "This will remove \"$option\" from your item type list and resolve items of \"$option\" type to a default \"${DefaultItemTypes.ALL.typeName}\" type. This action cannot be undone.",
-                confirmText = "Delete",
                 onDismiss = { pendingDeletingItemType = null; expanded = false },
                 onConfirm = {
                     closetViewModel.deleteItemType(option)
@@ -762,7 +760,6 @@ private fun TagsEditableCard(
             ConfirmDialog(
                 title = "Delete tag everywhere?",
                 message = "Deleting \"$tag\" removes it from your tag list and from ALL items. This cannot be undone.",
-                confirmText = "Delete",
                 onDismiss = { pendingGlobalDelete = null },
                 onConfirm = {
                     closetViewModel.deleteTag(tag)
@@ -834,7 +831,7 @@ private fun TagChipSelectable(
     }
 }
 
-// Dialog for user to type a custom tag
+// Dialog for user to type a custom tag or custom item type
 @Composable
 private fun AddDialog(
     title: String,
@@ -874,7 +871,6 @@ private fun AddDialog(
 private fun ConfirmDialog(
     title: String,
     message: String,
-    confirmText: String,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -884,7 +880,7 @@ private fun ConfirmDialog(
         text = { Text(message) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(confirmText)
+                Text("Delete")
             }
         },
         dismissButton = {
