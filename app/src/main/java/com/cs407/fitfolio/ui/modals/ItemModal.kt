@@ -303,7 +303,7 @@ fun IconBox (
 
         // Confirm deletion of item type
         pendingDeletingItemType?.let { option ->
-            ConfirmDialog(
+            DeleteDialog(
                 title = "Delete item type?",
                 message = "This will remove \"$option\" from your item type list and resolve items of \"$option\" type to a default \"${DefaultItemTypes.ALL.typeName}\" type. This action cannot be undone.",
                 onDismiss = { pendingDeletingItemType = null; expanded = false },
@@ -760,7 +760,7 @@ private fun TagsEditableCard(
 
         // confirm global delete dialog
         pendingGlobalDelete?.let { tag ->
-            ConfirmDialog(
+            DeleteDialog(
                 title = "Delete tag everywhere?",
                 message = "Deleting \"$tag\" removes it from your tag list and from ALL items. This cannot be undone.",
                 onDismiss = { pendingGlobalDelete = null },
@@ -871,7 +871,7 @@ private fun AddDialog(
 // Displays a title, message, and confirm/cancel actions
 // Used for deleting a global tag or item type from all items
 @Composable
-private fun ConfirmDialog(
+private fun DeleteDialog(
     title: String,
     message: String,
     onDismiss: () -> Unit,

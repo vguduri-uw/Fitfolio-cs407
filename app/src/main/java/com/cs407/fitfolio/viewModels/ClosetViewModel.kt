@@ -14,6 +14,7 @@ import com.cs407.fitfolio.data.ItemTag
 import com.cs407.fitfolio.data.ItemType
 import com.cs407.fitfolio.enums.DefaultItemTags
 import com.cs407.fitfolio.enums.DefaultItemTypes
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
 // Data class representing the entire closet of clothing
@@ -29,7 +30,8 @@ data class ClosetState(
     val activeTags: List<String> = emptyList(), // the tags currently rendered on the screen
     val deletionCandidates: List<ItemEntry> = emptyList(), // the items that can be potentially deleted
     val isDeleteActive: String = DeletionStates.Inactive.name, // the status of the deletion process
-    val itemToShow: Int = -1 // itemId of the item to be shown
+    val itemToShow: Int = -1, // itemId of the item to be shown
+    val isFiltering: Boolean = false // whether the closet is actively in a filtering call
 )
 
 // ViewModel representing the state of the closet
@@ -237,46 +239,55 @@ class ClosetViewModel(
 
     // CLOSET FUNCTIONS //
 
-    // TODO: add CircularProgressIndicator? when calling this (in closet screen), do in coroutine
+    // TODO: add CircularProgressIndicator? when calling this (in closet screen)
     fun applyFilters() {
-        val updatedFilteredItems = _closetState.value.items.filter { item ->
-            var passesAllFilters = true
+        viewModelScope.launch(Dispatchers.Default) {
+            // Begin filtering
+            _closetState.value = _closetState.value.copy(isFiltering = true)
 
-            // Filter through type
-            if (_closetState.value.activeItemType != DefaultItemTypes.ALL.typeName) {
-                if (item.itemType != _closetState.value.activeItemType) passesAllFilters = false
-            }
+            val updatedFilteredItems = _closetState.value.items.filter { item ->
+                var passesAllFilters = true
 
-            // Filter through favorites
-            if (_closetState.value.isFavoritesActive) {
-                if (!item.isFavorite) passesAllFilters = false
-            }
-
-            // Filter with search query
-            if (_closetState.value.isSearchActive) {
-                val query = _closetState.value.searchQuery.lowercase()
-                if (!(item.itemName.lowercase().contains(query) ||
-                            item.itemDescription.lowercase().contains(query))) {
-                    passesAllFilters = false
+                // Filter through type
+                if (_closetState.value.activeItemType != DefaultItemTypes.ALL.typeName) {
+                    if (item.itemType != _closetState.value.activeItemType) passesAllFilters = false
                 }
-            }
 
-            // Filter through active tags
-            // TODO: decide if this should be inclusive (1 matching tag means its valid, how it currently is rn), or if it must match all tags
-            if (_closetState.value.activeTags.isNotEmpty()) {
-                val hasMatchingTag = item.itemTags.any { it in _closetState.value.activeTags }
-                if (!hasMatchingTag) {
-                    passesAllFilters = false
+                // Filter through favorites
+                if (_closetState.value.isFavoritesActive) {
+                    if (!item.isFavorite) passesAllFilters = false
                 }
+
+                // Filter with search query
+                if (_closetState.value.isSearchActive) {
+                    val query = _closetState.value.searchQuery.lowercase()
+                    if (!(item.itemName.lowercase().contains(query) ||
+                                item.itemDescription.lowercase().contains(query))
+                    ) {
+                        passesAllFilters = false
+                    }
+                }
+
+                // Filter through active tags
+                // TODO: decide if this should be inclusive (1 matching tag means its valid, how it currently is rn), or if it must match all tags
+                if (_closetState.value.activeTags.isNotEmpty()) {
+                    val hasMatchingTag = item.itemTags.any { it in _closetState.value.activeTags }
+                    if (!hasMatchingTag) {
+                        passesAllFilters = false
+                    }
+                }
+
+                passesAllFilters
             }
 
-            passesAllFilters
+            // Update filteredItems
+            _closetState.value = _closetState.value.copy(
+                filteredItems = updatedFilteredItems
+            )
+
+            // Filtering is done
+            _closetState.value = _closetState.value.copy(isFiltering = false)
         }
-
-        // Update filteredItems
-        _closetState.value = _closetState.value.copy(
-            filteredItems = updatedFilteredItems
-        )
     }
 
     // Adds a new tag option the user can choose from

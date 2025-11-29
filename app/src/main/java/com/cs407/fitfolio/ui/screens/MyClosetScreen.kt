@@ -32,6 +32,7 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -425,7 +426,11 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
-    if (closetState.filteredItems.isEmpty()) {
+    if (closetState.isFiltering) {
+        CircularProgressIndicator(
+            modifier = Modifier.padding(32.dp)
+        )
+    } else if (closetState.filteredItems.isEmpty()) {
         Text(
             "No items found.",
             modifier = Modifier
