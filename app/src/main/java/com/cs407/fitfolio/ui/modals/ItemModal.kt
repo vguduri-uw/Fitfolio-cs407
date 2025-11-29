@@ -311,6 +311,9 @@ fun IconBox (
                     closetViewModel.deleteItemType(option)
                     pendingDeletingItemType = null
                     expanded = false
+                    if (closetState.activeItemType == option) {
+                        closetViewModel.updateActiveItemType(DefaultItemTypes.ALL.typeName)
+                    }
                 }
             )
         }

@@ -56,7 +56,6 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.enums.DeletionStates
@@ -165,30 +164,6 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
-                .background(color = if (closetState.activeItemType == DefaultItemTypes.ALL.typeName) Color(0xFFE0E0E0) else Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            // Show all items icon button
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable(onClick = {
-                        closetViewModel.updateActiveItemType(DefaultItemTypes.ALL.typeName)
-                    })
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.hanger),
-                    contentDescription = "All items",
-                    modifier = Modifier.size(36.dp)
-                )
-                Text(DefaultItemTypes.ALL.typeName)
-            }
-        }
-
         // Icon buttons for each item type to filter by
         closetState.itemTypes.forEach { itemType ->
             Box(
