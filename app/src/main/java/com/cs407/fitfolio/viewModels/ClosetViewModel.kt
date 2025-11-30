@@ -502,7 +502,6 @@ class ClosetViewModel(
             isFavoritesActive = false,
             activeTags = emptyList(),
             searchQuery = "",
-            isDeleteActive = DeletionStates.Inactive.name,
         )
     }
 }

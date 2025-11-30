@@ -21,9 +21,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Delete
@@ -35,6 +35,8 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -145,6 +147,66 @@ fun MyClosetScreen(
             )
         }
 
+        if (closetState.isDeleteActive == DeletionStates.Active.name) {
+            // Exit delete mode
+            FloatingActionButton(
+                onClick = { closetViewModel.toggleDeleteState(DeletionStates.Inactive.name) },
+                containerColor = Color.LightGray.copy(alpha = 0.75f),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(24.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("Cancel")
+                    Icon(
+                        imageVector = Icons.Outlined.Clear,
+                        contentDescription = "Exit delete mode",
+                        tint = Color.Black
+                    )
+                }
+            }
+
+            // Confirm delete mode
+            FloatingActionButton(
+                onClick = {
+                    if (closetState.deletionCandidates.isEmpty()) {
+                        closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                    } else {
+                        closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
+                    }
+                },
+                containerColor = Color.Red.copy(alpha = 0.75f),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(24.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("Delete", color = Color.White)
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Confirm delete mode",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+
         // Show deletion dialog
         if (closetState.isDeleteActive == DeletionStates.Confirmed.name) {
             DeleteItemDialog(closetViewModel)
@@ -158,7 +220,6 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     // Scroll state for the item type row
     val scrollState = rememberScrollState()
 
-    // TODO: update icons
     Row(modifier = Modifier
         .horizontalScroll(scrollState)
         .fillMaxWidth(),
@@ -374,29 +435,27 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     }
                 }
                 DeletionStates.Active.name -> {
-                    // TODO: should this be the exit mode?? and we have a separate confirm button
-                    // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
-                    IconButton(onClick = {
-                        if (closetState.deletionCandidates.isEmpty()) {
-                            closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                        } else {
-                            closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
-                        }
-                    }) {
+                    IconButton(
+                        onClick = {},
+                        enabled = closetState.isDeleteActive == DeletionStates.Inactive.name
+                    ) {
                         Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = "Confirm delete state",
-                            tint = Color.Black,
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Inactive delete icon during active delete state",
+                            tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
                 DeletionStates.Confirmed.name -> {
-                    IconButton(onClick = {}) {
+                    IconButton(
+                        onClick = {},
+                        enabled = closetState.isDeleteActive == DeletionStates.Inactive.name
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Placeholder during alert dialog composition",
-                            tint = Color.Black,
+                            tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
                     }
