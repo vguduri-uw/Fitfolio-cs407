@@ -52,31 +52,42 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.testData.AddTestItemData
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
+import android.widget.Toast
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MyOutfitsScreen(
-    onNavigateToClosetScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToWardrobeScreen: () -> Unit,
-    onNavigateToAddScreen: () -> Unit,
-    onNavigateToSignUpScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
+    onSignOut: () -> Unit,
     outfitsViewModel: OutfitsViewModel,
-    weatherViewModel: WeatherViewModel
+    weatherViewModel: WeatherViewModel,
+    closetViewModel: ClosetViewModel // TODO: remove after testing
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
     //for weather
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
+
+    // TODO: remove after testing
+    LaunchedEffect(Unit) {
+        val dbOutfits = outfitsViewModel.getOutfits()
+
+        if (dbOutfits.isEmpty()) {
+            AddTestItemData(closetViewModel, outfitsViewModel)
+        }
+    }
 
     // re-filter when an item is added or deleted
     LaunchedEffect(outfitsState.outfits) {
@@ -134,16 +145,17 @@ fun MyOutfitsScreen(
 
         // pull up settings modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onSignOut)
         }
 
         // show outfit modal
-        if (outfitsState.outfitToShow.isNotEmpty()) {
+        if (outfitsState.outfitToShow != -1) {
             OutfitModal(
                 outfitsViewModel = outfitsViewModel,
                 outfitId = outfitsState.outfitToShow,
-                onDismiss = { outfitsViewModel.updateOutfitToShow("") },
-                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+                onDismiss = { outfitsViewModel.updateOutfitToShow(-1) },
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen,
+                closetViewModel = closetViewModel
             )
         }
 
@@ -197,6 +209,8 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     // tracks whether tags dropdown is expanded
     var expanded by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth(), // matches rest of screen
@@ -217,7 +231,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 Icon(
                     imageVector = if (outfitsState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = if (outfitsState.isFavoritesActive) "Remove favorites filter" else "Filter by favorites",
-                    tint = Color.Black,
+                    tint = if (outfitsState.isFavoritesActive) Color.Red else Color.Black,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -365,7 +379,14 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         ) {
             when (outfitsState.isDeleteActive) {
                 DeletionStates.Inactive.name -> {
-                    IconButton(onClick = { outfitsViewModel.toggleDeleteState(DeletionStates.Active.name) }) {
+                    IconButton(onClick = {
+                        outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
+                        Toast.makeText(
+                            context,
+                            "Select outfits, then tap the filled delete icon to confirm deletion.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    }) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Enter deletion candidate state",
@@ -375,8 +396,6 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     }
                 }
                 DeletionStates.Active.name -> {
-                    // TODO: should this be the exit mode?? and we have a separate confirm button
-                    // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
                     IconButton(onClick = {
                         if (outfitsState.deletionCandidates.isEmpty()) {
                             outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
@@ -385,9 +404,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         }
                     }) {
                         Icon(
-                            imageVector = Icons.Outlined.Check,
+                            imageVector = Icons.Filled.Delete,
                             contentDescription = "Confirm delete state",
-                            tint = Color.Black,
+                            tint = Color.Red,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -395,9 +414,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 DeletionStates.Confirmed.name -> {
                     IconButton(onClick = {}) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            imageVector = Icons.Filled.Delete,
                             contentDescription = "Placeholder during alert dialog composition",
-                            tint = Color.Black,
+                            tint = Color.Red,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -481,7 +500,8 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                             ) {
                                 Icon(
                                     imageVector = if (outfit.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (outfit.isFavorite) "Remove item from favorites" else "Add item to favorites"
+                                    contentDescription = if (outfit.isFavorite) "Remove item from favorites" else "Add item to favorites",
+                                    tint = if (outfit.isFavorite) Color.Red else Color.Black
                                 )
                             }
                         }

@@ -56,6 +56,8 @@ import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.FitfolioDatabase
+import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.enums.DeletionStates
@@ -67,16 +69,14 @@ import com.cs407.fitfolio.viewModels.OutfitsViewModel
 
 @Composable
 fun MyClosetScreen(
-    onNavigateToOutfitsScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToWardrobeScreen: () -> Unit,
-    onNavigateToAddScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
+    onSignOut: () -> Unit,
     closetViewModel: ClosetViewModel,
-    outfitsViewModel: OutfitsViewModel
+    outfitsViewModel: OutfitsViewModel,
 ) {
-    // Observe the current UI state from the ViewModel
+    // Observe the current UI states from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
+    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
 
     // Re-filter when an item is added or deleted
     LaunchedEffect(closetState.items) {
@@ -130,23 +130,23 @@ fun MyClosetScreen(
 
         // Show settings
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
+            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onSignOut)
         }
 
         // Show item modal
-        if (closetState.itemToShow.isNotEmpty()) {
+        if (closetState.itemToShow != -1) {
             ItemModal(
                 closetViewModel = closetViewModel,
                 itemId = closetState.itemToShow,
-                onDismiss = { closetViewModel.updateItemToShow("")},
+                onDismiss = { closetViewModel.updateItemToShow(-1)},
                 outfitsViewModel = outfitsViewModel,
-                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen,
             )
         }
 
         // Show deletion dialog
         if (closetState.isDeleteActive == DeletionStates.Confirmed.name) {
-            DeleteItemDialog(closetViewModel, outfitsViewModel)
+            DeleteItemDialog(closetViewModel)
         }
     }
 }
@@ -167,7 +167,7 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.small)
-                .background(color = if (closetState.activeItemType == "All") Color(0xFFE0E0E0) else Color.Transparent),
+                .background(color = if (closetState.activeItemType == DefaultItemTypes.ALL.typeName) Color(0xFFE0E0E0) else Color.Transparent),
             contentAlignment = Alignment.Center
         ) {
             // Show all items icon button
@@ -176,7 +176,7 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 modifier = Modifier
                     .padding(8.dp)
                     .clickable(onClick = {
-                        closetViewModel.updateActiveItemType("All")
+                        closetViewModel.updateActiveItemType(DefaultItemTypes.ALL.typeName)
                     })
             ) {
                 Icon(
@@ -184,7 +184,7 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     contentDescription = "All items",
                     modifier = Modifier.size(36.dp)
                 )
-                Text("All")
+                Text(DefaultItemTypes.ALL.typeName)
             }
         }
 

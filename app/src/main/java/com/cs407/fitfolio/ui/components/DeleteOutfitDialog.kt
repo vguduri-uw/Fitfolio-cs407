@@ -34,7 +34,7 @@ fun DeleteOutfitDialog(outfitsViewModel: OutfitsViewModel) {
             Button(onClick = {
                 outfitsViewModel.clearDeletionCandidates()
                 outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                outfitsViewModel.delete(outfitsState.deletionCandidates)
+                outfitsViewModel.deleteOutfits(outfitsState.deletionCandidates)
             }) {
                 Text(text = "Delete")
             }

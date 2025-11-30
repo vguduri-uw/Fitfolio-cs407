@@ -1,0 +1,370 @@
+package com.cs407.fitfolio.data
+
+import android.content.Context
+import androidx.room.Dao
+import androidx.room.Database
+import androidx.room.Delete
+import androidx.room.Entity
+import androidx.room.ForeignKey
+import androidx.room.Index
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.PrimaryKey
+import androidx.room.Query
+import androidx.room.Room
+import androidx.room.RoomDatabase
+import androidx.room.Transaction
+import androidx.room.TypeConverter
+import androidx.room.TypeConverters
+import androidx.room.Upsert
+
+// User table
+@Entity(
+    indices = [Index(
+        value = ["userUID"], unique = true
+    )]
+)
+data class User(
+    @PrimaryKey(autoGenerate = true) val userId: Int = 0,
+    val userUID: String,
+    val username: String
+)
+
+// Item table
+@Entity
+data class ItemEntry(
+    @PrimaryKey(autoGenerate = true) val itemId : Int, // the unique id of the item
+    var itemName: String,               // the name of the item
+    var itemType: String,               // the type of the item
+    var itemDescription: String,        // the description of the item
+    var itemTags: List<String>,         // the tags corresponding to the item
+    var isFavorite: Boolean,            // whether or not the item is in favorites
+    var isDeletionCandidate: Boolean,   // whether or not the item is selected to be deleted
+    var itemPhotoUri: String           // the item's photo
+)
+
+// Outfit table
+@Entity
+data class OutfitEntry(
+    @PrimaryKey(autoGenerate = true) val outfitId: Int, // the unique id of the outfit
+    var outfitName: String,            // the name of the outfit
+    var outfitDescription: String,     // the description of the outfit
+    var outfitTags: List<String>,      // e.g. ["athletic", "winter", "interview"]
+    var isFavorite: Boolean,           // whether or not the item is in favorites
+    var isDeletionCandidate: Boolean,  // whether or not the item is selected to be deleted
+    var outfitPhotoUri: String        // the outfit's photo
+)
+
+// Item tags table
+@Entity
+data class ItemTag(
+    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    val itemTag: String
+)
+
+// Item types table
+@Entity
+data class ItemType(
+    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    val itemType: String
+)
+
+// Outfits tags table
+@Entity
+data class OutfitTag(
+    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    val outfitTag: String
+)
+
+// Converter for storing List<String> in Room
+class Converters {
+    @TypeConverter
+    fun fromStringList(list: List<String>): String = list.joinToString(",")
+
+    @TypeConverter
+    fun toStringList(data: String): List<String> =
+        if (data.isEmpty()) emptyList() else data.split(",")
+}
+
+// User <--> Item relation
+@Entity(
+    tableName = "user_item_relation",
+    primaryKeys = ["userId", "itemId"],
+    foreignKeys = [
+        ForeignKey(
+        entity = User::class,
+        parentColumns = ["userId"],
+        childColumns = ["userId"],
+        onDelete = ForeignKey.CASCADE
+    ), ForeignKey(
+        entity = ItemEntry::class,
+        parentColumns = ["itemId"],
+        childColumns = ["itemId"],
+        onDelete = ForeignKey.CASCADE
+    )]
+)
+data class UserItemRelation(
+    val userId: Int,
+    val itemId: Int
+)
+
+// User <--> Outfit relation
+@Entity(
+    tableName = "user_outfit_relation",
+    primaryKeys = ["userId", "outfitId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = User::class,
+            parentColumns = ["userId"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = OutfitEntry::class,
+            parentColumns = ["outfitId"],
+            childColumns = ["outfitId"],
+            onDelete = ForeignKey.CASCADE
+        )]
+)
+data class UserOutfitRelation(
+    val userId: Int,
+    val outfitId: Int
+)
+
+// Item <--> Outfit relation
+@Entity(
+    tableName = "item_outfit_relation",
+    primaryKeys = ["itemId", "outfitId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = ItemEntry::class,
+            parentColumns = ["itemId"],
+            childColumns = ["itemId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = OutfitEntry::class,
+            parentColumns = ["outfitId"],
+            childColumns = ["outfitId"],
+            onDelete = ForeignKey.CASCADE
+        )]
+)
+data class ItemOutfitRelation(
+    val itemId: Int,
+    val outfitId: Int
+)
+
+// User queries
+@Dao
+interface UserDao {
+    @Query("SELECT * FROM user WHERE userUID = :uid")
+    suspend fun getByUID(uid: String): User?
+
+    @Insert(entity = User::class)
+    suspend fun insert(user: User): Long
+
+    @Query(
+        """SELECT * FROM User, ItemEntry, user_item_relation
+              WHERE User.userId = :id
+                AND user_item_relation.userId = User.userId
+                AND ItemEntry.itemId = user_item_relation.itemId 
+              ORDER BY ItemEntry.itemId DESC"""
+    )
+    suspend fun getItemsByUserId(id: Int): List<ItemEntry>
+
+    @Query(
+        """SELECT * FROM User, OutfitEntry, user_outfit_relation
+              WHERE User.userId = :id
+                AND user_outfit_relation.userId = User.userId
+                AND OutfitEntry.outfitId = user_outfit_relation.outfitId 
+              ORDER BY OutfitEntry.outfitId DESC"""
+    )
+    suspend fun getOutfitsByUserId(id: Int): List<OutfitEntry>
+}
+
+// Item queries
+@Dao
+interface ItemDao {
+    @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
+    suspend fun getById(id: Int): ItemEntry
+
+    @Query("SELECT itemId FROM ItemEntry WHERE rowid = :rowId")
+    suspend fun getItemsByRowId(rowId: Long): Int
+
+    @Query("SELECT * FROM ItemTag ORDER BY itemTag ASC")
+    suspend fun getAllItemTags(): List<ItemTag>
+
+    @Insert
+    suspend fun insertItemTag(tag: ItemTag)
+
+    @Query("SELECT * FROM ItemType ORDER BY itemType ASC")
+    suspend fun getAllItemTypes(): List<ItemType>
+    @Insert
+    suspend fun insertItemType(type: ItemType)
+
+    @Query(
+        """SELECT * FROM ItemEntry, OutfitEntry, item_outfit_relation
+              WHERE ItemEntry.itemId = :id
+                AND item_outfit_relation.itemId = ItemEntry.itemId
+                AND OutfitEntry.outfitId = item_outfit_relation.outfitId 
+              ORDER BY OutfitEntry.outfitId DESC"""
+    )
+    suspend fun getOutfitsByItemId(id: Int): List<OutfitEntry>
+
+    @Upsert(entity = ItemEntry::class)
+    suspend fun upsert(item: ItemEntry): Long
+
+    @Insert
+    suspend fun insertRelation(userAndItem: UserItemRelation)
+
+    @Transaction
+    suspend fun upsertItem(item: ItemEntry, userId: Int): Int {
+        val rowId = upsert(item)
+        val itemId = getItemsByRowId(rowId)
+        if (item.itemId == 0) {
+            insertRelation(UserItemRelation(userId, itemId))
+        }
+        return itemId
+    }
+}
+
+// Outfit queries
+@Dao
+interface OutfitDao {
+    @Query("SELECT * FROM OutfitEntry WHERE outfitId = :id")
+    suspend fun getOutfitById(id: Int): OutfitEntry
+
+    @Query("SELECT outfitId FROM OutfitEntry WHERE rowid = :rowId")
+    suspend fun getOutfitByRowId(rowId: Long): Int
+
+    @Query(
+        """SELECT * FROM OutfitEntry, ItemEntry, item_outfit_relation
+              WHERE OutfitEntry.outfitId = :id
+                AND item_outfit_relation.outfitId = OutfitEntry.outfitId
+                AND ItemEntry.itemId = item_outfit_relation.itemId 
+              ORDER BY ItemEntry.itemId DESC"""
+    )
+    suspend fun getItemsByOutfitId(id: Int): List<ItemEntry>
+
+    @Query("SELECT * FROM OutfitTag ORDER BY outfitTag ASC")
+    suspend fun getAllOutfitTags(): List<OutfitTag>
+
+    @Insert
+    suspend fun insertOutfitTag(tag: OutfitTag)
+
+    @Upsert(entity = OutfitEntry::class)
+    suspend fun upsert(outfit: OutfitEntry): Long
+
+    @Transaction
+    suspend fun upsertOutfit(outfit: OutfitEntry, userId: Int): Int {
+        val rowId = upsert(outfit)
+        val outfitId = getOutfitByRowId(rowId)
+        insertRelation(UserOutfitRelation(userId, outfitId))
+
+        return outfitId
+    }
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRelation(userAndOutfit: UserOutfitRelation)
+
+    @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
+    suspend fun getById(id: Int): ItemEntry
+
+    @Query("SELECT itemId FROM item_outfit_relation WHERE rowid = :rowId")
+    suspend fun getItemByRowId(rowId: Long): Int
+
+    @Upsert(entity = ItemEntry::class)
+    suspend fun upsert(item: ItemEntry): Long
+
+    @Insert
+    suspend fun insertRelation(itemAndOutfit: ItemOutfitRelation)
+
+    // TODO: move to delete dao??
+    @Delete
+    suspend fun deleteRelation(itemAndOutfit: ItemOutfitRelation)
+}
+
+// Delete queries
+@Dao
+interface DeleteDao {
+    @Query("DELETE FROM user WHERE userId = :userId")
+    suspend fun deleteUser(userId: Int)
+
+    @Query(
+        """SELECT ItemEntry.itemId FROM User, ItemEntry, user_item_relation
+              WHERE User.userId = :userId
+                AND user_item_relation.userId = User.userId
+                AND ItemEntry.itemId = user_item_relation.itemId"""
+    )
+    suspend fun getAllItemIdsByUserId(userId: Int): List<Int>
+
+    @Query(
+        """SELECT OutfitEntry.outfitId FROM User, OutfitEntry, user_outfit_relation
+              WHERE User.userId = :userId
+                AND user_outfit_relation.userId = User.userId
+                AND OutfitEntry.outfitId = user_outfit_relation.outfitId"""
+    )
+    suspend fun getAllOutfitIdsByUserId(userId: Int): List<Int>
+
+    @Query("DELETE FROM ItemEntry WHERE itemId IN (:itemsIds)")
+    suspend fun deleteItems(itemsIds: List<Int>)
+
+    @Query("DELETE FROM ItemTag WHERE itemTag = :tag")
+    suspend fun deleteItemTag(tag: String)
+
+    @Query("DELETE FROM ItemType WHERE itemType = :type")
+    suspend fun deleteItemType(type: String)
+
+    @Query("DELETE FROM OutfitEntry WHERE outfitId IN (:outfitsIds)")
+    suspend fun deleteOutfits(outfitsIds: List<Int>)
+
+    @Query("DELETE FROM OutfitTag WHERE outfitTag = :tag")
+    suspend fun deleteOutfitTag(tag: String)
+
+    @Transaction
+    suspend fun delete(userId: Int) {
+        deleteItems(getAllItemIdsByUserId(userId))
+        deleteOutfits(getAllOutfitIdsByUserId(userId))
+        deleteUser(userId)
+    }
+}
+
+// Room database for the app
+@Database(
+    entities = [
+        User::class,
+        ItemEntry::class,
+        OutfitEntry::class,
+        UserItemRelation::class,
+        UserOutfitRelation::class,
+        ItemOutfitRelation::class,
+        ItemTag::class,
+        ItemType::class,
+        OutfitTag::class
+    ],
+    version = 1
+)
+@TypeConverters(Converters::class)
+abstract class FitfolioDatabase : RoomDatabase() {
+    abstract fun userDao(): UserDao
+    abstract fun itemDao(): ItemDao
+    abstract fun outfitDao(): OutfitDao
+    abstract fun deleteDao(): DeleteDao
+
+    companion object {
+        @Volatile
+        private var INSTANCE: FitfolioDatabase? = null
+
+        fun getDatabase(context: Context): FitfolioDatabase {
+            return INSTANCE ?: synchronized(this) {
+                val instance = Room.databaseBuilder(
+                    context.applicationContext,
+                    FitfolioDatabase::class.java,
+                    "fitfolio_database"
+                ).build()
+                INSTANCE = instance
+                instance
+            }
+        }
+    }
+}

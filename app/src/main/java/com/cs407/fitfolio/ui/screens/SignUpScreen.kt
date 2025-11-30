@@ -32,13 +32,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.cs407.fitfolio.data.AppDatabase
+import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.User
 import com.cs407.fitfolio.ui.modals.EditableField
-import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
-import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 import com.cs407.fitfolio.viewModels.UserState
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.Firebase
@@ -66,7 +63,7 @@ fun createAccount(
 
 @Composable
 fun SignUpScreen (
-    onNavigateToOutfitsScreen: () -> Unit,
+    onNavigateToAppNav: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
     userViewModel: UserViewModel
 ) {
@@ -89,7 +86,7 @@ fun SignUpScreen (
             // sign up form - name, email, password, re-enter password
             SignUpForm(onNavigateToSignInScreen, {userState ->
                 userViewModel.setUser(userState)   // <- store user in ViewModel
-                onNavigateToOutfitsScreen()   })
+                onNavigateToAppNav()   })
         }
 
     }
@@ -98,19 +95,21 @@ fun SignUpScreen (
 @Composable
 fun SignUpScreenTopHeader() {
     Image(
-        painter = painterResource(id = R.drawable.app_logo),
-        contentDescription = "App logo",
+        // todo: replace with actual profile image
+        painter = painterResource(id = R.drawable.user),
+        contentDescription = "User profile image",
         contentScale = ContentScale.Fit,
         modifier = Modifier
-            .size(160.dp)
-            .clip(CircleShape),
+            .size(100.dp)
+            .clip(CircleShape)
+            .background(MaterialTheme.colorScheme.surfaceVariant),
         alignment = Alignment.Center
     )
 
     Spacer(modifier = Modifier.size(15.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 60.sp)
+        Text(text = "FitFolio", style = MaterialTheme.typography.titleLarge)
     }
 }
 
@@ -123,7 +122,7 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
     var password by remember { mutableStateOf("") }
     var error: String? by remember { mutableStateOf(null) }
     val context = LocalContext.current
-    val db = AppDatabase.getDatabase(context)
+    val db = FitfolioDatabase.getDatabase(context)
     // todo: replace with actual error handling
     var reenteredPassword by remember { mutableStateOf("") }
     val passwordsMatch = password == reenteredPassword
@@ -207,8 +206,6 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
             Text(text = "Passwords do not match", color = MaterialTheme.colorScheme.error)
         }
 
-        Spacer(modifier = Modifier.size(10.dp))
-
         // Sign up button
         Button(
             onClick = { createAccount(email, password,
@@ -229,29 +226,20 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
             )
             },
             enabled = allFieldsFilled && passwordsMatch,
-            content = {
-                Text(
-                    text = "Sign Up",
-                    fontFamily = Kudryashev_Regular,
-                    fontSize = 18.sp,
-                    modifier = Modifier.padding(5.dp)
-                )
-            },
+            content = { Text("Sign Up") },
         )
 
         // move to sign in page if account exists already
         Row {
             Text(
                 text = "Already have an account?",
-                fontFamily = Kudryashev_Regular,
-                fontSize = 15.sp
+                style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = "Sign in",
-                fontFamily = Kudryashev_Regular,
-                style = TextStyle(textDecoration = TextDecoration.Underline),
-                fontSize = 15.sp,
+                style = MaterialTheme.typography.bodyMedium.merge(
+                    TextStyle(textDecoration = TextDecoration.Underline)),
                 modifier = Modifier
                     .padding(bottom = 12.dp)
                     .clickable(onClick = { onNavigateToSignInScreen() })

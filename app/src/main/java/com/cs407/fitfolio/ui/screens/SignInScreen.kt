@@ -65,7 +65,7 @@ fun signIn(
 
 @Composable
 fun SignInScreen (
-    onNavigateToOutfitsScreen: () -> Unit,
+    onSignInSuccess: () -> Unit,
     onNavigateToSignUpScreen: () -> Unit,
 ) {
 
@@ -85,7 +85,7 @@ fun SignInScreen (
             SignInScreenTopHeader()
 
             // sign in form - name, email, password
-            SignInForm(onNavigateToSignUpScreen, onNavigateToOutfitsScreen)
+            SignInForm(onNavigateToSignUpScreen, onSignInSuccess)
         }
 
     }
@@ -161,7 +161,6 @@ fun SignInForm(
                     signIn(email, password) { success, exception, user ->
                         if (success && user != null) {
                             onSignInSuccess()
-                            // e.g., onSignInSuccess()
                         } else {
                             errorMessage = exception?.message ?: "Sign in failed"
                         }

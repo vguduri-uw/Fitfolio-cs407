@@ -1,173 +1,239 @@
 package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
+import com.cs407.fitfolio.data.ItemEntry
+import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.DeletionStates
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.map
-import java.util.UUID
-import java.io.Serializable
-
-// Data class representing a single item of clothing
-data class ItemEntry(
-    var itemName: String, // the name of the item
-    var itemType: String, // the type of the item
-    var itemDescription: String, // the description of the item
-    var itemTags: List<String>, // the tags corresponding to the item
-    var isFavorite: Boolean, // whether or not the item is in favorites
-    var isDeletionCandidate: Boolean, // whether or not the item is selected to be deleted
-    var itemPhoto: Int, // TODO: figure out what type photo will be... if it is a drawable, it is Int (but itll likely be in room)
-    var outfitList: List<OutfitEntry>, // the outfits that the item is featured in
-    val itemId : String, // the unique id of the item
-) : Serializable
+import androidx.lifecycle.viewModelScope
+import com.cs407.fitfolio.data.FitfolioDatabase
+import com.cs407.fitfolio.data.ItemOutfitRelation
+import com.cs407.fitfolio.data.ItemTag
+import com.cs407.fitfolio.data.ItemType
+import com.cs407.fitfolio.enums.DefaultItemTags
+import com.cs407.fitfolio.enums.DefaultItemTypes
+import kotlinx.coroutines.launch
 
 // Data class representing the entire closet of clothing
-// TODO: update all of these methods to deal with database
 data class ClosetState(
     val items: List<ItemEntry> = emptyList(), // all items in the closet
     val filteredItems : List<ItemEntry> = emptyList(), // the items currently rendered on the screen
-    // TODO: should itemTypes be an enum?? also, confirm default item types
-    val itemTypes: List<String> = listOf(
-        "T-Shirts", "Shirts", "Jeans", "Pants", "Shorts", "Skirts", "Dresses", "Outerwear", "Shoes"
-    ), // item types
-    val activeItemType: String = "All", // item type that is currently rendered on the screen
+    val itemTypes: List<String> = emptyList(), // item types
+    val activeItemType: String = DefaultItemTypes.ALL.typeName, // item type that is currently rendered on the screen
     val isFavoritesActive: Boolean = false, // whether or not the favorites filter is active
     val isSearchActive: Boolean = false, // whether or not a search query filter is active
     val searchQuery: String = "",
-    // TODO: do better here...
-    val tags: List<String> = listOf("Spring", "Summer", "Fall", "Winter", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Black", "Brown", "Casual",), // all tags for closet items
+    val tags: List<String> = emptyList(), // all tags for closet items
     val activeTags: List<String> = emptyList(), // the tags currently rendered on the screen
     val deletionCandidates: List<ItemEntry> = emptyList(), // the items that can be potentially deleted
     val isDeleteActive: String = DeletionStates.Inactive.name, // the status of the deletion process
-    val itemToShow: String = "" // itemId of the item to be shown
+    val itemToShow: Int = -1 // itemId of the item to be shown
 )
 
 // ViewModel representing the state of the closet
-class ClosetViewModel : ViewModel() {
+class ClosetViewModel(
+    private val db: FitfolioDatabase,
+    private val userId: Int
+) : ViewModel() {
     // Backing property (private) for state
     private val _closetState = MutableStateFlow(ClosetState())
 
     // Publicly exposed immutable StateFlow for the UI layer to observe changes safely
     val closetState = _closetState.asStateFlow()
 
+    // Initialize closet state items and filtered items with data from db
+    init {
+        viewModelScope.launch {
+            var itemTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            var tags = db.itemDao().getAllItemTags().map { it.itemTag }
+            if (itemTypes.isEmpty()) {
+                // Insert defaults item types into DB
+                DefaultItemTypes.entries.forEach { type ->
+                    db.itemDao().insertItemType(ItemType(itemType = type.typeName))
+                }
+
+                itemTypes = DefaultItemTypes.entries.map { it.typeName }
+            }
+            if (tags.isEmpty()) {
+                // Insert defaults tags into DB
+                DefaultItemTags.entries.forEach { tag ->
+                    db.itemDao().insertItemTag(ItemTag(itemTag = tag.tagName))
+                }
+
+                tags = DefaultItemTags.entries.map { it.tagName }
+            }
+
+
+            val items = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(
+                items = items,
+                filteredItems = items,
+                itemTypes = itemTypes,
+                tags = tags
+            )
+        }
+    }
+
     // ITEM FUNCTIONS //
 
     // Adds an item to the closet to be used in add screen
     fun addItem(
         name: String, type: String, description: String, tags: List<String>,
-        isFavorites: Boolean, photo: Int, outfitList: List<OutfitEntry>
+        isFavorites: Boolean, photoUri: String
     ) {
         val newItem = ItemEntry(
+            itemId = 0,
             itemName = name,
             itemType = type,
             itemDescription = description,
             itemTags = tags,
             isFavorite = isFavorites,
             isDeletionCandidate = false,
-            itemPhoto = photo,
-            itemId = UUID.randomUUID().toString(),
-            outfitList = outfitList // emptyList() // TODO: turn back to emptyList() after testing
+            itemPhotoUri = photoUri,
         )
 
-        val updatedItems = _closetState.value.items + newItem
-        _closetState.value = _closetState.value.copy(
-            items = updatedItems
-        )
+        viewModelScope.launch {
+            // Insert item into database
+            db.itemDao().upsertItem(newItem, userId)
+
+            val items = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = items)
+        }
     }
 
     // Deletes specified items from the closet
-    // TODO: implement Room database (then I don't think the outfitsViewModel needs to be passed in)
-    fun deleteItem(items: List<ItemEntry>, outfitsViewModel: OutfitsViewModel) {
-        // delete the selected items
-        for (item in items) {
-            val updatedItems = _closetState.value.items - item
-            _closetState.value = _closetState.value.copy(
-                items = updatedItems
-            )
+    fun deleteItem(items: List<ItemEntry>) {
+        viewModelScope.launch {
+            // Remove duplicate outfits associated with the items
+            val outfitIds = items.flatMap { item ->
+                db.itemDao().getOutfitsByItemId(item.itemId).map { it.outfitId }
+            }.toSet()
 
-            // delete outfits associated with the items
-            var outfitsList: List<OutfitEntry> = emptyList()
-            for (outfit in item.outfitList) {
-                outfitsList += outfit
-            }
-            outfitsViewModel.delete(outfitsList)
+            // Delete associated outfits
+            db.deleteDao().deleteOutfits(outfitIds.toList())
+
+            // Delete the items
+            db.deleteDao().deleteItems(items.map { it.itemId })
+
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
         }
     }
 
     // Setters for item properties to be used in the add screen and item modal
-    // TODO: gonna have to make a copy or something because the item for the closet state needs to be updated
-    // also this is prob the same stale issue for all of these
     fun editItemName(item: ItemEntry, name: String) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemName = name)
-            else it
-        }
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemName = name)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun editItemType(item: ItemEntry, type: String) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemType = type)
-            else it
-        }
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemType = type)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun editItemDescription(item: ItemEntry, description: String) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemDescription = description)
-            else it
-        }
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemDescription = description)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun editItemTags(item: ItemEntry, tag: String, isRemoving: Boolean) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) {
-                if (isRemoving) it.copy(itemTags = item.itemTags - tag)
-                else it.copy(itemTags = item.itemTags + tag)
-            } else it
-        }
+        viewModelScope.launch {
+            val updatedItem =
+                if (isRemoving) item.copy(itemTags = item.itemTags - tag)
+                else item.copy(itemTags = item.itemTags + tag)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            // Update database
+            db.itemDao().upsert(updatedItem)
+
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
     fun toggleFavoritesProperty(item: ItemEntry) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(isFavorite = !it.isFavorite)
-            else it
-        }
+        viewModelScope.launch {
+            val updatedItem = item.copy(isFavorite = !item.isFavorite)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
-    fun editItemPhoto(item: ItemEntry, photo: Int) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) it.copy(itemPhoto = photo)
-            else it
-        }
+    fun editItemPhoto(item: ItemEntry, photo: String) {
+        viewModelScope.launch {
+            // Update database
+            val updatedItem = item.copy(itemPhotoUri = photo)
+            db.itemDao().upsert(updatedItem)
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
     }
-    fun editOutfitList(item: ItemEntry, outfit: OutfitEntry, isRemoving: Boolean) {
-        val updatedItems = _closetState.value.items.map {
-            if (it.itemId == item.itemId) {
-                if (isRemoving) it.copy(outfitList = item.outfitList - outfit)
-                else it.copy(outfitList = item.outfitList + outfit)
-            } else it
-        }
+    suspend fun getOutfitsList(itemId: Int): List<OutfitEntry> {
+        return db.itemDao().getOutfitsByItemId(itemId)
+    }
 
-        _closetState.value = _closetState.value.copy(items = updatedItems)
+    // TODO: remove after testing
+    fun addItemWithOutfitsTest(
+        name: String,
+        type: String,
+        description: String,
+        tags: List<String>,
+        isFavorites: Boolean,
+        photoUri: String,
+        outfitList: List<OutfitEntry>
+    ) {
+        val newItem = ItemEntry(
+            itemId = 0,
+            itemName = name,
+            itemType = type,
+            itemDescription = description,
+            itemTags = tags,
+            isFavorite = isFavorites,
+            isDeletionCandidate = false,
+            itemPhotoUri = photoUri,
+        )
+
+        viewModelScope.launch {
+            // Insert item
+            val itemId = db.itemDao().upsertItem(newItem, userId)
+
+            // Insert relations between the item and each outfit
+            outfitList.forEach { outfit ->
+                db.outfitDao().insertRelation(
+                    ItemOutfitRelation(itemId, outfit.outfitId)
+                )
+            }
+
+            val items = db.userDao().getItemsByUserId(userId)
+            _closetState.value = _closetState.value.copy(items = items)
+        }
     }
 
     // CLOSET FUNCTIONS //
 
     // TODO: add CircularProgressIndicator? when calling this (in closet screen), do in coroutine
     fun applyFilters() {
-        var updatedFilteredItems = _closetState.value.items.filter { item ->
+        val updatedFilteredItems = _closetState.value.items.filter { item ->
             var passesAllFilters = true
 
             // Filter through type
-            if (_closetState.value.activeItemType != "All") {
+            if (_closetState.value.activeItemType != DefaultItemTypes.ALL.typeName) {
                 if (item.itemType != _closetState.value.activeItemType) passesAllFilters = false
             }
 
@@ -204,10 +270,21 @@ class ClosetViewModel : ViewModel() {
     }
 
     // Adds a new tag option the user can choose from
-    // TODO: if it already exists, then let them know
     fun addTag(newTag: String) {
-        if (newTag !in _closetState.value.tags) {
-            val updatedTags = _closetState.value.tags + newTag
+        viewModelScope.launch {
+            // Prevent empty tags
+            if (newTag.trim().isEmpty()) return@launch
+
+            // Prevent duplicates in the DB
+            val existingTags = db.itemDao().getAllItemTags().map { it.itemTag }
+            if (newTag.trim() !in existingTags) {
+                // Update database
+                db.itemDao().insertItemTag(ItemTag(itemTag = newTag.trim()))
+            } else {
+                return@launch
+            }
+
+            val updatedTags = db.itemDao().getAllItemTags().map { it.itemTag }
             _closetState.value = _closetState.value.copy(
                 tags = updatedTags
             )
@@ -216,40 +293,73 @@ class ClosetViewModel : ViewModel() {
 
     // Removes a tag from the list of selectable tags
     fun deleteTag(tag: String) {
-        val updatedTags = _closetState.value.tags - tag
-        _closetState.value = _closetState.value.copy(
-            tags = updatedTags
-        )
+        viewModelScope.launch {
+            // Remove the tag from the tag table
+            db.deleteDao().deleteItemTag(tag)
 
-        // Remove tag from any item containing it
-        val itemsWithTag = _closetState.value.items.filter { tag in it.itemTags }
-        for (itemWithTag in itemsWithTag) {
-            editItemTags(itemWithTag, tag, true)
+            // Remove the tag from any items containing it
+            val itemsWithTag = _closetState.value.items.filter { tag in it.itemTags }
+            for (item in itemsWithTag) {
+                val updatedItem = item.copy(itemTags = item.itemTags - tag)
+                db.itemDao().upsert(updatedItem)
+            }
+
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+            val updatedTags = db.itemDao().getAllItemTags().map { it.itemTag }
+            _closetState.value = _closetState.value.copy(
+                items = updatedItems,
+                filteredItems = updatedItems,
+                tags = updatedTags
+            )
         }
     }
 
-    // Retrieves an ItemEntry based on it's itemId
-    // TODO: make sure wherever we call this catches the exception and displays error accordingly
-    fun itemFlow(itemId: String): Flow<ItemEntry?> =
-        closetState.map { state -> state.items.find { it.itemId == itemId } }
-
     // Adds an item type to the itemTypes list (from the item modal)
     fun addItemType(itemType: String) {
-        if (itemType !in _closetState.value.itemTypes) {
-            val updatedItemTypes = _closetState.value.itemTypes + itemType
+        viewModelScope.launch {
+            // Prevent empty types
+            if (itemType.trim().isEmpty()) return@launch
+
+            // Prevent duplicates
+            val existingTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            if (itemType.trim() !in existingTypes) {
+                db.itemDao().insertItemType(ItemType(itemType = itemType.trim()))
+            } else {
+                return@launch
+            }
+
+            val updatedTypes = db.itemDao().getAllItemTypes().map { it.itemType }
             _closetState.value = _closetState.value.copy(
-                itemTypes = updatedItemTypes
+                itemTypes = updatedTypes
             )
         }
     }
 
     // Removes the specified item type from the itemTypes list (from the item modal)
-    // TODO: warn the user that deleting the type will delete all clothes of that type (in the modal)
     fun deleteItemType(itemType: String) {
-        val updatedItemTypes = _closetState.value.itemTypes - itemType
-        _closetState.value = _closetState.value.copy(
-            itemTypes = updatedItemTypes
-        )
+        viewModelScope.launch {
+            // Prevent deleting the default "All" type
+            if (itemType == DefaultItemTypes.ALL.typeName) return@launch
+
+            // Delete the type from DB
+            db.deleteDao().deleteItemType(itemType)
+
+            // Update items with this type to default "All" type
+            val itemsWithType = _closetState.value.items.filter { it.itemType == itemType }
+            for (item in itemsWithType) {
+                val updatedItem = item.copy(itemType = DefaultItemTypes.ALL.typeName)
+                db.itemDao().upsert(updatedItem)
+            }
+
+            val updatedItemTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            val updatedItems = db.userDao().getItemsByUserId(userId)
+
+            _closetState.value = _closetState.value.copy(
+                itemTypes = updatedItemTypes,
+                items = updatedItems,
+                filteredItems = updatedItems
+            )
+        }
     }
 
     // Updates the active item type
@@ -292,7 +402,7 @@ class ClosetViewModel : ViewModel() {
     }
 
     // Update the item to show in item modal
-    fun updateItemToShow(itemId: String) {
+    fun updateItemToShow(itemId: Int) {
         _closetState.value = _closetState.value.copy(
             itemToShow = itemId
         )
@@ -368,7 +478,7 @@ class ClosetViewModel : ViewModel() {
 
         _closetState.value = _closetState.value.copy(
             filteredItems = _closetState.value.items,
-            activeItemType = "All",
+            activeItemType = DefaultItemTypes.ALL.typeName,
             isFavoritesActive = false,
             activeTags = emptyList(),
             searchQuery = "",

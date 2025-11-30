@@ -36,9 +36,8 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
+import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -195,7 +194,7 @@ fun EditableField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(text = label, fontFamily = Kudryashev_Regular, fontSize = 15.sp) },
+            label = { Text(label) },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
         )
