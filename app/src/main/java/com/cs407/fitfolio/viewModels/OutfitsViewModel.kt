@@ -454,7 +454,6 @@ class OutfitsViewModel(
     // clears any applied filters and resets properties
     fun clearFilters() {
         _outfitsState.value = _outfitsState.value.copy(
-            isDeleteActive = DeletionStates.Inactive.name,
             isFavoritesActive = false,
             activeTags = emptyList(),
             searchQuery = "",
