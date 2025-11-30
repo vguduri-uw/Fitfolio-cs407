@@ -169,7 +169,7 @@ fun SignInForm(
                 enabled = allFieldsFilled,
                 content = {
                     Text(
-                        text = "Sign Up",
+                        text = "Sign In",
                         fontFamily = Kudryashev_Regular,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(5.dp)
