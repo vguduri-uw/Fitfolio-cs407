@@ -55,6 +55,9 @@ import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.OutfitEntry
@@ -114,8 +117,7 @@ fun OutfitModal(
                 outfit = outfit,
                 outfitsViewModel = outfitsViewModel,
                 onDismiss = onDismiss,
-                onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                isEditing = isEditing
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
             // outfit description
@@ -537,25 +539,19 @@ fun outfitHeaderBox (
 // provides actions to favorite, edit, delete, or open calendar for the outfit
 // remains pinned at the top while other content scrolls underneath
 @Composable
-fun outfitIconBox (
+fun outfitIconBox(
     outfit: OutfitEntry,
     outfitsViewModel: OutfitsViewModel,
     onDismiss: () -> Unit,
-    onNavigateToCalendarScreen: () -> Unit,
-    isEditing: Boolean
-) : Boolean {
-    // Observe the current UI state from the ViewModel
-    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
-
-    // track outfit editing state
-    var isEditing by remember { mutableStateOf(isEditing) }
-
-    // track outfit photo
+    onNavigateToCalendarScreen: () -> Unit
+) {
+    // stub for future photo editing
     var outfitPhotoUri by remember { mutableStateOf(outfit.outfitPhotoUri) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        // === Big image card ===
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
@@ -563,96 +559,122 @@ fun outfitIconBox (
                 .fillMaxWidth()
                 .height(300.dp)
         ) {
-            // todo: figure out logic on how to display updated photo
-            // outfit photo
+            // Outfit photo (placeholder for now)
             Image(
                 painter = painterResource(R.drawable.shirt),
-                contentDescription = "Item photo",
+                contentDescription = "Outfit photo",
                 modifier = Modifier
                     .size(180.dp)
                     .align(Alignment.Center)
             )
 
-            // calendar icon button
-            IconButton(
-                modifier = Modifier.align(Alignment.TopStart),
-                onClick = { // TODO: make it show the days in the calendar its featured??
-                    onDismiss()
-                    onNavigateToCalendarScreen()
-                }
+            // FAB in bottom-right to "edit" photo
+            FloatingActionButton(
+                onClick = {
+                    // TODO: implement outfit photo editing
+                },
+                containerColor = Color(0xFFE0E0E0).copy(alpha = 0.75f),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.schedule),
-                    contentDescription = "Calendar",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            // edit icon button
-            IconButton(
-                modifier = Modifier.align(Alignment.TopEnd),
-                onClick = { isEditing = !isEditing }
-            ) {
-                if (isEditing) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "Save edits",
-                        modifier = Modifier.size(28.dp)
-                    )
-
-                    // updates globally
-                    outfitsViewModel.editOutfitPhoto(outfit, outfitPhotoUri)
-                } else {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
+                ) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit outfit photo",
+                        contentDescription = "Edit outfit photo"
+                    )
+                }
+            }
+        }
+
+        // row of calendar, delete, and favorite buttons
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // calendar icon
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = {
+                        onDismiss()
+                        onNavigateToCalendarScreen()
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.schedule),
+                        contentDescription = "Calendar",
+                        tint = Color.Black,
                         modifier = Modifier.size(28.dp)
                     )
                 }
             }
 
-            // delete icon button
-            IconButton(
-                onClick = {
-                    onDismiss()
-                    outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
-                    outfitsViewModel.setDeletionCandidates(outfit)
-                },
+            // delete icon
+            Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Delete outfit",
-                    modifier = Modifier.size(28.dp)
-                )
+                IconButton(
+                    onClick = {
+                        onDismiss()
+                        outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
+                        outfitsViewModel.setDeletionCandidates(outfit)
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Delete outfit",
+                        tint = Color.Black,
+                        modifier = Modifier.size(28.dp)
+                    )
+                }
             }
 
-            // favorite icon button
-            IconButton(
-                onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
-                modifier = Modifier.align(Alignment.BottomEnd)
+            // favorite icon
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
             ) {
-                if (outfit.isFavorite) {
-                    Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = "Unfavorite outfit",
-                        modifier = Modifier.size(28.dp)
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Outlined.Favorite,
-                        contentDescription = "Favorite outfit",
-                        modifier = Modifier.size(28.dp)
-                    )
+                IconButton(
+                    onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) }
+                ) {
+                    if (outfit.isFavorite) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = "Unfavorite outfit",
+                            tint = Color.Red,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.FavoriteBorder,
+                            contentDescription = "Favorite outfit",
+                            tint = Color.Black,
+                            modifier = Modifier.size(28.dp)
+                        )
+                    }
                 }
             }
         }
     }
-        if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
-            DeleteOutfitDialog(outfitsViewModel)
-        }
-    return isEditing
 }
 
 // card for viewing and editing the outfit's description
