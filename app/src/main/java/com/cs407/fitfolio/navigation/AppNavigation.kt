@@ -1,7 +1,6 @@
 package com.cs407.fitfolio.navigation
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -64,26 +63,23 @@ fun AppNavigation(userViewModel: UserViewModel) {
             BottomNavigationBar(navController)
         },
         floatingActionButton = {
-            Box {
-                FloatingActionButton(
-                    onClick = { navController.navigate("wardrobe") },
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(80.dp)
-                        .offset(y = 50.dp)
+            FloatingActionButton(
+                onClick = { navController.navigate("wardrobe") },
+                shape = CircleShape,
+                modifier = Modifier
+                    .size(80.dp)
+                    .offset(y = 81.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.carousel),
-                            contentDescription = "Wardrobe",
-                            modifier = Modifier.size(35.dp),
-                        )
-                        Text(stringResource(R.string.carousel))
-                    }
+                    Icon(
+                        painter = painterResource(R.drawable.carousel),
+                        contentDescription = "Wardrobe",
+                        modifier = Modifier.size(35.dp),
+                    )
+                    Text(stringResource(R.string.carousel))
                 }
             }
         },
