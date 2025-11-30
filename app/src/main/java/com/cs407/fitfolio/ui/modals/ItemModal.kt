@@ -27,6 +27,8 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,7 +58,6 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.ItemEntry
-import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
@@ -86,7 +87,7 @@ fun ItemModal(
         containerColor = Color(0xFFE0E0E0),
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 64.dp)
+            .padding(top = 40.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -142,6 +143,7 @@ fun IconBox (
     var pendingDeletingItemType: String? by remember { mutableStateOf(null) }
     var showAddDialog by remember { mutableStateOf(false) }
     var itemWithNewType: ItemEntry? by remember { mutableStateOf(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     // Update selected item type whenever it changes
     LaunchedEffect(item.itemType) {
@@ -254,7 +256,7 @@ fun IconBox (
                         val sortedTypes = closetState.itemTypes
                             .filter { it != DefaultItemTypes.ALL.typeName } // exclude ALL item type
                             .sortedByDescending { it == selectedItemType } // show selected type first
-                       sortedTypes.forEach { option ->
+                        sortedTypes.forEach { option ->
                             DropdownMenuItem(
                                 onClick = {
                                     closetViewModel.editItemType(item, option)
@@ -344,86 +346,119 @@ fun IconBox (
                     .size(180.dp)
                     .align(Alignment.Center)
             )
-
-            // Calendar icon button
-            IconButton(
-                modifier = Modifier.align(Alignment.TopStart),
-                onClick = { // TODO: make it show the days in the calendar its featured??
-                    onDismiss()
-                    onNavigateToCalendarScreen()
-                }
+            // TODO: verify if we want item photo to be editable
+            FloatingActionButton(
+                onClick = { /*closetViewModel.editItemPhoto(item, null)*/ },
+                containerColor = Color(0xFFE0E0E0).copy(alpha = 0.75f),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .align(alignment = Alignment.BottomEnd)
+                    .padding(8.dp)
             ) {
-                Icon(
-                    painter = painterResource(R.drawable.schedule),
-                    contentDescription = "Calendar",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            // Edit icon button
-            if (isEditing) {
-                IconButton(
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    onClick = { onToggleEditing(false) }
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "Save edits",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
-            } else {
-                IconButton(
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    onClick = { onToggleEditing(true) }
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit item",
+                        contentDescription = "Replace item photo"
+                    )
+                }
+            }
+        }
+
+        // Row for calendar, delete, and favorite actions
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            // Calendar icon button
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = { // TODO: make it show the days in the calendar its featured??
+                        onDismiss()
+                        onNavigateToCalendarScreen()
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.schedule),
+                        contentDescription = "Calendar",
                         modifier = Modifier.size(28.dp)
                     )
                 }
             }
 
             // Delete icon button
-            IconButton(
-                onClick = {
-                    onDismiss()
-                    closetViewModel.setDeletionCandidates(item)
-                    closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
-                },
+            Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Delete item",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            // Favorite icon button
-            IconButton(
-                onClick = { closetViewModel.toggleFavoritesProperty(item) },
-                modifier = Modifier.align(Alignment.BottomEnd)
-            ) {
-                if (item.isFavorite) {
+                IconButton(
+                    onClick = {
+                        showDeleteDialog = true
+                    }
+                ) {
                     Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = "Unfavorite item",
-                        modifier = Modifier.size(28.dp),
-                        tint = Color.Red
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite item",
-                        modifier = Modifier.size(28.dp),
-                        tint = Color.Black
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Delete item",
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
+
+            // Favorite icon button
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = { closetViewModel.toggleFavoritesProperty(item) },
+                ) {
+                    if (item.isFavorite) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = "Unfavorite item",
+                            modifier = Modifier.size(28.dp),
+                            tint = Color.Red
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.FavoriteBorder,
+                            contentDescription = "Favorite item",
+                            modifier = Modifier.size(28.dp),
+                            tint = Color.Black
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteDialog(
+            title = "Delete item?",
+            message = "Deleting this item will delete all outfits it is featured in. This action cannot be undone.",
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                onDismiss()
+                closetViewModel.deleteItem(listOf(item))
+            }
+        )
     }
 }
 
@@ -554,7 +589,7 @@ fun ItemInformation(
                                     outfitId = outfit.outfitId,
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                                    imageRes = R.drawable.shirt, // swap to item.itemPhotoUri when ready
+                                    imageRes = R.drawable.shirt, // swap to outfit.outfitPhotoUri when ready
                                     closetViewModel = closetViewModel
                                 )
                             }
@@ -597,7 +632,7 @@ private fun OutfitsCard(
             .background(Color(0xFFF7F7F7))
             .padding(10.dp)
             .fillMaxSize()
-            .clickable{showOutfitModal = true}
+            .clickable { showOutfitModal = true }
     ) {
         Image(
             painter = painterResource(imageRes),

@@ -68,9 +68,6 @@ import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-
 
 @Composable
 fun MyClosetScreen(
@@ -528,29 +525,6 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-
-                    //item image
-                    if(item.itemPhotoUri.isNotEmpty()){
-                        AsyncImage(
-                            model = item.itemPhotoUri,
-                            contentDescription = item.itemName,
-                            modifier = Modifier
-                                .padding(top = 25.dp)
-                                .width(150.dp)
-                                .height(140.dp),
-                            contentScale = ContentScale.Crop
-                        )
-                    }else{
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(Color(0xFFE0E0E0)),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text("No photo")
-                        }
-                    }
-
                     Row(modifier = Modifier
                         .align(alignment = Alignment.TopEnd)
                         .padding(6.dp)
@@ -591,7 +565,8 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         }
                     }
 
-                    //Text("PHOTO OF ITEM HERE")
+                    // TODO: insert photo of item
+                    Text("PHOTO OF ITEM HERE")
                 }
             }
         }
