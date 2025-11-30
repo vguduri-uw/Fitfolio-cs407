@@ -230,9 +230,8 @@ fun IconBox (
                         // Add item type choice
                         DropdownMenuItem(
                             onClick = {
-
-//                                closetViewModel.editItemType(item, option)
-//                                selectedItemType = option
+                                itemWithNewType = item
+                                showAddDialog = true
                                 expanded = false
                             },
                             text = {
@@ -248,12 +247,6 @@ fun IconBox (
                                         modifier = Modifier
                                             .padding(start = 6.dp)
                                             .size(16.dp)
-                                            .clickable(
-                                                onClick = {
-                                                    itemWithNewType = item
-                                                    showAddDialog = true
-                                                }
-                                            )
                                     )
                                 }
                             }
