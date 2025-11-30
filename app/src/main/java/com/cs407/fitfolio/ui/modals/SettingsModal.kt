@@ -22,14 +22,18 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,24 +41,48 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.AppDatabase
+import com.cs407.fitfolio.data.User
+import com.cs407.fitfolio.data.UserDao
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsModal (
 //    userViewModel: UserViewModel,
     onDismiss: () -> Unit,
-    onSignOut: () -> Unit) {
+    onSignOut: () -> Unit,
+) {
     // User information
 //    val userState by userViewModel.userState.collectAsState()
     // TODO: implement the way to get this from storage (these are placeholders)
-    var name by remember { mutableStateOf("name") }
-    var email by remember { mutableStateOf("emailaddress@gmail.com") }
-    var password by remember { mutableStateOf("password") }
+    val currentUser = FirebaseAuth.getInstance().currentUser
 
-    // Track whether there is information to be saved
-    var saveable by remember { mutableStateOf(false) }
+    var originalName by remember { mutableStateOf("") }
+    var originalEmail by remember { mutableStateOf(currentUser?.email ?: "") }
+    var originalPassword by remember { mutableStateOf("") }
 
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf(FirebaseAuth.getInstance().currentUser?.email ?: "") }
+    var password by remember { mutableStateOf("••••••••") }
+    val scope = rememberCoroutineScope()
+    val context = LocalContext.current
+    val userUID = currentUser?.uid ?: ""
+    val userDao = AppDatabase.getDatabase(context).userDao()
+    // Load username from Room database
+    LaunchedEffect(userUID) {
+        if (userUID.isNotEmpty()) {
+            val user = userDao.getByUID(userUID)
+            user?.let {
+                name = it.username
+                originalName = it.username
+            }
+            originalEmail = currentUser?.email ?: ""
+            email = originalEmail
+        }
+    }
     // Track sheet state and open to full screen
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
@@ -81,36 +109,65 @@ fun SettingsModal (
 
             // Fields for editing user information
             // TODO: add edit button and only enable then??
-            EditableField(
-                label = "Name",
-                value = name,
-                onValueChange = { name = it; saveable = true},
-                isPassword = false,
-            )
-            EditableField(
-                label = "Email",
-                value = email,
-                onValueChange = { email = it; saveable = true },
-                isPassword = false
-            )
-            EditableField(
-                label = "Password",
-                value = password,
-                onValueChange = { password = it; saveable = true},
-                isPassword = true
-            )
+            EditableField("Name", name, { name = it}, isPassword = false)
+            EditableField("Email", email, { email = it}, isPassword = false)
+            EditableField("Password", password, { password = it}, isPassword = true)
+
+            val saveable by remember {
+                derivedStateOf {
+                    name != originalName || email != originalEmail || password.isNotEmpty()
+                }
+            }
+
+            //TODO: fix this
 
             // Save button
             Button(
                 onClick = {
-                    saveable = false
-                    // TODO: implement saving information to storage
-                    // TODO: implement updating information everywhere else in app
-                    // there should be an alert dialog that requires them to confirm
+                    if (currentUser != null) {
+                        scope.launch {
+                            try {
+                                // Update Firebase
+                                if (email != currentUser.email && email.isNotBlank()) {
+                                    currentUser.updateEmail(email).await()
+                                }
+                                if (password.isNotBlank()) {
+                                    currentUser.updatePassword(password).await()
+                                }
+
+                                // Update Room database
+                                val existingUser = userDao.getByUID(userUID)
+                                if (existingUser != null) {
+                                    userDao.insert(
+                                        User(
+                                            userId = existingUser.userId,
+                                            userUID = userUID,
+                                            username = name
+                                        )
+                                    )
+                                } else {
+                                    userDao.insert(User(userUID = userUID, username = name))
+                                }
+
+                                // Refresh UI with new values
+                                val updatedUser = userDao.getByUID(userUID)
+                                updatedUser?.let {
+                                    name = it.username
+                                    originalName = it.username
+                                }
+                                email = currentUser.email ?: email
+                                originalEmail = email
+                                password = "" // clear password
+                            } catch (e: Exception) {
+                                e.printStackTrace()
+                            }
+                        }
+                    }
                 },
-                enabled = saveable,
-                content = { Text("Save") },
-            )
+                enabled = saveable
+            ) {
+                Text("Save")
+            }
 
             // Sign out button
             Button( // TODO: implement sign out functionality

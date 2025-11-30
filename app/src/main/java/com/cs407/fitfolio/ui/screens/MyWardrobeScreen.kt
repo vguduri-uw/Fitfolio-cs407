@@ -26,8 +26,12 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -44,8 +48,12 @@ import com.cs407.fitfolio.ui.components.SimpleHeader
 import com.cs407.fitfolio.ui.components.WeatherDataChip
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
+import com.cs407.fitfolio.viewModels.ItemEntry
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
+import android.widget.Toast
+import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MyWardrobeScreen(
@@ -55,14 +63,21 @@ fun MyWardrobeScreen(
     onNavigateToClosetScreen: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
-    weatherViewModel: WeatherViewModel
+    weatherViewModel: WeatherViewModel,
+    outfitsViewModel: OutfitsViewModel
 ) {
+
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
     //for weather
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
+    var centeredHeadwear by remember { mutableStateOf<ItemEntry?>(null) }
+    var centeredTopwear by remember { mutableStateOf<ItemEntry?>(null) }
+    var centeredBottomwear by remember { mutableStateOf<ItemEntry?>(null) }
+    var centeredShoes by remember { mutableStateOf<ItemEntry?>(null) }
+    val context = LocalContext.current
 
     Box(modifier = Modifier.fillMaxSize()) {
-        //bacground sillouette
+        //background sillouette
         Image(
             painter = painterResource(R.drawable.silouette),
             contentDescription = "Silhouette background",
@@ -90,13 +105,13 @@ fun MyWardrobeScreen(
                 )
             }
             //Scroller for head pieces
-            ClothingScroll(closetState, closetViewModel)
+            ClothingScroll(closetState, category = "Headwear", types = listOf("Hats"), centeredHeadwear)
             //Scroller for tops/shirts
-            ClothingScroll(closetState, closetViewModel)
+            ClothingScroll(closetState, category = "Topwear", types = listOf("T-Shirts", "Shirts", "Dresses"), centeredTopwear)
             //Scroller for bottoms/pants
-            ClothingScroll(closetState, closetViewModel)
+            ClothingScroll(closetState, category = "Bottomwear", types = listOf("Jeans", "Pants", "Shorts", "Skirts"), centeredBottomwear)
             //Scroller for shoes
-            ClothingScroll(closetState, closetViewModel)
+            ClothingScroll(closetState, category = "Shoes", types = listOf("Shoes"), centeredShoes)
             Spacer(modifier = Modifier.size(10.dp))
 
             Row(
@@ -113,8 +128,41 @@ fun MyWardrobeScreen(
                         .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center
                 ) {
-                    //change this to go to the pull up page
-                    IconButton(onClick = { onNavigateToOutfitsScreen() }) {
+                    IconButton(onClick = {
+                        val itemsToAdd = listOfNotNull(centeredHeadwear, centeredTopwear, centeredBottomwear, centeredShoes)
+                        if (itemsToAdd.isEmpty()) return@IconButton
+
+                        // Convert items to their real DB IDs
+                        val newIds = itemsToAdd.mapNotNull { entry ->
+                            closetState.items.firstOrNull { it.itemName == entry.itemName }?.itemId
+                        }.sorted()
+                        //TODO: fix this
+                        // Check if an existing outfit has exactly the same items
+                        val existing = outfitsViewModel.outfitsState.value.outfits.any { outfit ->
+                            outfit.itemList.map { it.itemId }.sorted() == newIds
+                        }
+
+                        if (existing) {
+                            // Toast notification
+                            Toast.makeText(context, "This outfit already exists!", Toast.LENGTH_SHORT).show()
+                            return@IconButton
+                        }
+
+                        outfitsViewModel.addOutfit(
+                            name = "New Outfit",
+                            description = "Created from My Wardrobe",
+                            tags = emptyList(),
+                            isFavorite = false,
+                            photo = -1,
+                            itemList = itemsToAdd
+                        )
+
+                        val lastOutfit = outfitsViewModel.outfitsState.value.outfits.lastOrNull()
+                        lastOutfit?.let {
+                            outfitsViewModel.updateOutfitToShow(it.outfitId)
+                        }
+                        onNavigateToOutfitsScreen()
+                    }) {
                         Icon(
                             painter = painterResource(R.drawable.add),
                             contentDescription = "add outfit",
@@ -146,7 +194,12 @@ fun MyWardrobeScreen(
                         .background(Color(0xFFE0E0E0)),
                     contentAlignment = Alignment.Center
                 ) {
-                    IconButton(onClick = { closetViewModel.shuffleItems() }) {
+                    IconButton(onClick = {
+                        centeredHeadwear = closetState.items.filter { it.itemType in listOf("Hats") }.randomOrNull()
+                        centeredTopwear = closetState.items.filter { it.itemType in listOf("T-Shirts", "Shirts", "Dresses") }.randomOrNull()
+                        centeredBottomwear = closetState.items.filter { it.itemType in listOf("Jeans", "Pants", "Shorts", "Skirts") }.randomOrNull()
+                        centeredShoes = closetState.items.filter { it.itemType == "Shoes" }.randomOrNull()
+                    }) {
                         Icon(
                             painter = painterResource(R.drawable.shuffle),
                             contentDescription = "shuffle",
@@ -169,15 +222,30 @@ fun MyWardrobeScreen(
     }
 }
 @Composable
-fun ClothingScroll(closetState: ClosetState, closetViewModel: ClosetViewModel) {
-    val itemsCount = 30
-    val listState = rememberLazyListState(initialFirstVisibleItemIndex = itemsCount * 1000)
+fun ClothingScroll(
+    closetState: ClosetState,
+    category: String,
+    types: List<String>,
+    centeredItem: ItemEntry? = null
+) {
+    val items = closetState.items.filter{ it.itemType in types}
+    val listState = rememberLazyListState( initialFirstVisibleItemIndex = Int.MAX_VALUE / 2)
     val scope = rememberCoroutineScope()
     val itemSize = 150.dp
-    val screenWidth = LocalConfiguration.current.screenWidthDp.dp
-    val lazyRowWidth = screenWidth - 80.dp - 16.dp
-    val horizontalPadding = (lazyRowWidth - itemSize) / 2
+    LaunchedEffect(centeredItem) {
+        centeredItem?.let {
+            val index = items.indexOf(it)
+            if (index != -1) listState.animateScrollToItem(index)
+        }
+    }
 
+    if (items.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(150.dp),
+            contentAlignment = Alignment.Center
+        ) { Text("No $category items") }
+        return
+    }
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
@@ -200,23 +268,19 @@ fun ClothingScroll(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 
             LazyRow(
                 state = listState,
-                modifier = Modifier.weight(1f).height(itemSize),
+                modifier = Modifier
+                    .weight(1f)
+                    .height(itemSize),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 contentPadding = PaddingValues(horizontal = itemSize / 2),
                 flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
             ) {
-                items(Int.MAX_VALUE) { index ->
-                    val realIndex = index % itemsCount
-                    Box(
-                        modifier = Modifier
-                            .size(itemSize)
-                            .clip(MaterialTheme.shapes.medium)
-                            .background(Color(0xFFE0E0E0).copy(alpha = .2f)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Item $realIndex")
-                    }
+                val total = items.size
 
+                items(Int.MAX_VALUE) { index ->
+                    val item = items[index % total]
+
+                    ClothingItemCard(item)
                 }
             }
         // Right arrow
@@ -235,3 +299,55 @@ fun ClothingScroll(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         }
     }
 }
+
+@Composable
+fun ClothingItemCard(item: ItemEntry) {
+    Box(
+        modifier = Modifier
+            .size(150.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .background(Color(0xFFE0E0E0).copy(alpha = .2f)),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(item.itemName)
+//        Image(
+//            painter = painterResource(id = R.drawable.shirt),
+//            contentDescription = item.itemName,
+//            contentScale = ContentScale.Crop,
+//            modifier = Modifier.fillMaxSize()
+//        )
+    }
+}
+
+
+//@Composable
+//fun OutfitPreviewBoxStack(
+//    headwear: ItemEntry?,
+//    topwear: ItemEntry?,
+//    bottomwear: ItemEntry?,
+//    shoes: ItemEntry?
+//) {
+//    val items = listOfNotNull(headwear, topwear, bottomwear, shoes)
+//
+//    Box(
+//        modifier = Modifier
+//            .size(200.dp) // overall preview size
+//            .background(Color.LightGray.copy(alpha = 0.2f))
+//            .clip(MaterialTheme.shapes.medium),
+//        contentAlignment = Alignment.Center
+//    ) {
+//        items.forEachIndexed { index, item ->
+//            // You can optionally offset each layer slightly for effect
+//            val offset = (index * 4).dp
+//            Image(
+//                painter = painterResource(id = item.itemPhoto), // your drawable
+//                contentDescription = item.itemName,
+//                contentScale = ContentScale.Crop,
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(offset)
+//                    .clip(MaterialTheme.shapes.medium)
+//            )
+//        }
+//    }
+//}

@@ -23,6 +23,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -135,7 +136,12 @@ fun SignInForm(
             email.isNotEmpty() && password.isNotEmpty()
         }
     }
-
+    val currentUser = FirebaseAuth.getInstance().currentUser
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            onSignInSuccess() // navigate directly to outfits screen
+        }
+    }
     Box {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -167,7 +173,7 @@ fun SignInForm(
                     signIn(email, password) { success, exception, user ->
                         if (success && user != null) {
                             onSignInSuccess()
-                            // e.g., onSignInSuccess()
+
                         } else {
                             errorMessage = exception?.message ?: "Sign in failed"
                         }

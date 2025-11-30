@@ -17,6 +17,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -134,38 +135,32 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
             name.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty() && reenteredPassword.isNotEmpty()
         }
     }
-    val onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit =
-        { isSuccess, taskException, signedUser ->
-            if (isSuccess && signedUser != null)
-                scope.launch {
-                    var user = db.userDao().getByUID(signedUser.uid)
+    val currentUser = Firebase.auth.currentUser
+    LaunchedEffect(currentUser) {
+        if (currentUser != null) {
+            scope.launch {
+                var user = db.userDao().getByUID(currentUser.uid)
 
-                    if (user == null) {
-                        db.userDao().insert(
-                            User(
-                                userUID = signedUser.uid,
-                                username = name,
-                            )
-                        )
-                        user = db.userDao().getByUID(signedUser.uid)
-                    }
-
-                    signUpButtonClick(
-                        UserState(
-                            id = user!!.userId,
-                            name = name,
-                            uid = signedUser.uid
+                if (user == null) {
+                    db.userDao().insert(
+                        User(
+                            userUID = currentUser.uid,
+                            username = name, // optional, maybe fetch stored username
                         )
                     )
+                    user = db.userDao().getByUID(currentUser.uid)
                 }
-            else
-                error = taskException?.message
+
+                signUpButtonClick(
+                    UserState(
+                        id = user!!.userId,
+                        name = name,
+                        uid = currentUser.uid
+                    )
+                )
+            }
         }
-
-    val user = Firebase.auth.currentUser
-    if (user != null)
-        onComplete(true, null, user)
-
+    }
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp),

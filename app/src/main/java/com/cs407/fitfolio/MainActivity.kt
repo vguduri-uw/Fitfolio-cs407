@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.FabPosition
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
@@ -53,6 +54,7 @@ import com.cs407.fitfolio.ui.screens.SignInScreen
 import com.cs407.fitfolio.data.testData.AddTestOutfitData
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.viewModels.UserState
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -100,6 +102,8 @@ fun AppNavigation() {
     val weatherViewModel: WeatherViewModel = viewModel()
 
     val context = LocalContext.current
+    var isAuthChecked by remember { mutableStateOf(false) }
+
     //weather permissions for app
 
     val permissionLauncher = rememberLauncherForActivityResult(
@@ -107,7 +111,29 @@ fun AppNavigation() {
     ) { isGranted ->
         weatherViewModel.updateLocationPermission(isGranted)
     }
+    // Check Firebase auth on launch
+    LaunchedEffect(Unit) {
+        val currentUser = FirebaseAuth.getInstance().currentUser
+        if (currentUser != null) {
+            // You can also load extra user info from DB if needed
+            viewModel.setUser(
+                UserState(
+                    id = 1,
+                    name = currentUser.displayName ?: "User",
+                    uid = currentUser.uid
+                )
+            )
+        }
+        isAuthChecked = true
+    }
 
+    // Show nothing (or a splash screen) until we know auth state
+    if (!isAuthChecked) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Text("Loading...") // optional splash
+        }
+        return
+    }
     LaunchedEffect(Unit) {
         weatherViewModel.initializeLocationClient(context)
         val hasPermission = ContextCompat.checkSelfPermission(
@@ -122,17 +148,9 @@ fun AppNavigation() {
         }
     }
 
-    LaunchedEffect(userState) {
-        if (userState.id == 0 || userState.name.isEmpty()) {
-            navController.navigate("sign_in") {
-                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-            }
-        } else {
-            navController.navigate("outfits") {
-                popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-            }
-        }
-    }
+    // Now render NavHost after we know if user is signed in
+    val startDestination = if (userState.id != 0 && userState.name.isNotEmpty()) "outfits" else "sign_in"
+
     // Determine if bottom bar should be shown
     val currentRoute = navController.currentBackStackEntryAsState().value?.destination?.route
     val showBottomBar = currentRoute !in listOf("sign_in", "sign_up")
@@ -174,7 +192,7 @@ fun AppNavigation() {
         // NavHost sets up the navigation graph for the app for navigation outside of bottom bar
         NavHost(
             navController = navController, // Controller that handles navigation
-            startDestination = "sign_in", // First screen to display when app starts
+            startDestination = startDestination, // First screen to display when app starts
             modifier = Modifier.padding(innerPadding)
         ) {
             // Defines the "outfits" route and what UI to display there
@@ -214,7 +232,8 @@ fun AppNavigation() {
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
                     closetViewModel = closetViewModel,
-                    weatherViewModel = weatherViewModel
+                    weatherViewModel = weatherViewModel,
+                    outfitsViewModel = outfitsViewModel
                 )
             }
             // Defines the "add" route and what UI to display there
