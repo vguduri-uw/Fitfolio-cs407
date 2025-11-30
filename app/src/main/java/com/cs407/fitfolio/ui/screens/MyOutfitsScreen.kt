@@ -65,6 +65,7 @@ import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import android.widget.Toast
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.ui.platform.LocalContext
 
 @Composable
@@ -446,8 +447,11 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
 // grid of items currently shown in closet
 @Composable
 fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
-    // TODO: pull back in the if/elses and the iteration through filteredItems when ready
-    if (outfitsState.filteredOutfits.isEmpty()) {
+    if (outfitsState.isFiltering) {
+        CircularProgressIndicator(
+            modifier = Modifier.padding(32.dp)
+        )
+    } else if (outfitsState.filteredOutfits.isEmpty()) {
         Text(
             "No items found.",
             modifier = Modifier
