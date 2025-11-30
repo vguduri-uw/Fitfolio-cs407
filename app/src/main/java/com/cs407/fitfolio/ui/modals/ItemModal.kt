@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -56,6 +57,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.viewModels.ClosetViewModel
@@ -339,13 +341,23 @@ fun IconBox (
                 .height(300.dp)
         ) {
             // Item photo
-            Image(
-                painter = painterResource(R.drawable.shirt),
-                contentDescription = "Item photo",
-                modifier = Modifier
-                    .size(180.dp)
-                    .align(Alignment.Center)
-            )
+            if (item.itemPhotoUri.isNotEmpty()) {
+                AsyncImage(
+                    model = item.itemPhotoUri,
+                    contentDescription = item.itemName,
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            } else {
+                Image(
+                    painter = painterResource(R.drawable.hanger),
+                    contentDescription = "Item photo",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .align(Alignment.Center)
+                )
+            }
             // TODO: verify if we want item photo to be editable
             FloatingActionButton(
                 onClick = { /*closetViewModel.editItemPhoto(item, null)*/ },

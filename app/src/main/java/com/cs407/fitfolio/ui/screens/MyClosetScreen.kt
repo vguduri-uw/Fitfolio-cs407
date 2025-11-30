@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -52,6 +53,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -59,6 +61,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
@@ -525,48 +528,65 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Row(modifier = Modifier
-                        .align(alignment = Alignment.TopEnd)
-                        .padding(6.dp)
-                        .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            item.itemName,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(
                             modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .weight(1f)
-                        )
+                                .padding(6.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                item.itemName,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
 
-                        // Favorite item button (if not in delete state)
-                        if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
-                            IconButton(
-                                onClick = { closetViewModel.toggleFavoritesProperty(item) },
-                                modifier = Modifier.size(28.dp)
-                            ) {
+                            // Favorite item button (if not in delete state)
+                            if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
+                                IconButton(
+                                    onClick = { closetViewModel.toggleFavoritesProperty(item) },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                        contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites",
+                                        tint = if (item.isFavorite) Color.Red else Color.Black
+                                    )
+                                }
+                            }
+
+                            // Toggle deletion candidate icon (if in delete state)
+                            if (closetState.isDeleteActive == DeletionStates.Active.name) {
                                 Icon(
-                                    imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites",
-                                    tint = if (item.isFavorite) Color.Red else Color.Black
+                                    imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                                    contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
                                 )
+
                             }
                         }
 
-                        // Toggle deletion candidate icon (if in delete state)
-                        if (closetState.isDeleteActive == DeletionStates.Active.name) {
-                            Icon(
-                                imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                                contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
+                        // Item image
+                        if (item.itemPhotoUri.isNotEmpty()) {
+                            AsyncImage(
+                                model = item.itemPhotoUri,
+                                contentDescription = item.itemName,
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
-
+                        } else {
+                            Image(
+                                painter = painterResource(R.drawable.hanger),
+                                contentDescription = "Item photo",
+                                modifier = Modifier
+                                    .size(180.dp)
+                            )
                         }
                     }
-
-                    // TODO: insert photo of item
-                    Text("PHOTO OF ITEM HERE")
                 }
             }
         }
