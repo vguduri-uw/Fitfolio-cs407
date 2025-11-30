@@ -79,9 +79,6 @@ fun ItemModal(
         skipPartiallyExpanded = true
     )
 
-    // Tracks whether item is in editing mode
-    var isEditing by remember { mutableStateOf(false) }
-
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
@@ -102,8 +99,6 @@ fun ItemModal(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
                 onDismiss = onDismiss,
-                isEditing = isEditing,
-                onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
@@ -111,8 +106,6 @@ fun ItemModal(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
                 outfitsViewModel = outfitsViewModel,
-                isEditing = isEditing,
-                onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen,
                 modifier = Modifier
                     .weight(1f)
@@ -128,8 +121,6 @@ fun IconBox (
     itemId: Int,
     closetViewModel: ClosetViewModel,
     onDismiss: () -> Unit,
-    isEditing: Boolean,
-    onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit
 ) {
     // Observe the current UI state from the ViewModel
@@ -172,7 +163,7 @@ fun IconBox (
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    enabled = isEditingName || isEditing,
+                    enabled = isEditingName,
                     textStyle = TextStyle(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 24.sp,
@@ -193,17 +184,16 @@ fun IconBox (
                 // Edit icon
                 IconButton(
                     onClick = {
-                        if (isEditingName || isEditing) {
+                        if (isEditingName) {
                             closetViewModel.editItemName(item, name)
                             isEditingName = false
-                            onToggleEditing(false)
                         } else {
                             isEditingName = true
                         }
                     }
                 ) {
                     Icon(
-                        imageVector = if (isEditingName || isEditing) Icons.Filled.Check else Icons.Outlined.Edit,
+                        imageVector = if (isEditingName) Icons.Filled.Check else Icons.Outlined.Edit,
                         contentDescription = "Edit title",
                         modifier = Modifier.size(24.dp)
                     )
@@ -480,8 +470,6 @@ fun ItemInformation(
     itemId: Int,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
-    isEditing: Boolean,
-    onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
     modifier: Modifier
 ) {
@@ -514,64 +502,58 @@ fun ItemInformation(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 15.dp, end = 15.dp),
+                            .padding(start = 15.dp, end = 15.dp, top = 15.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = "Description",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         )
-                        if (isEditingDescription || isEditing) {
-                            IconButton(onClick = {
-                                // updates globally
-                                closetViewModel.editItemDescription(item, description)
-
-                                isEditingDescription = false
-                                onToggleEditing(false)
-                            } ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = "Save edits",
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
+                        if (isEditingDescription) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = "Save edits",
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clickable(
+                                        onClick = {
+                                            closetViewModel.editItemDescription(item, description)
+                                            isEditingDescription = false
+                                        }
+                                    )
+                            )
                         } else {
-                            IconButton(onClick = { isEditingDescription = true } ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Edit description",
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Edit description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clickable(
+                                        onClick = { isEditingDescription = true }
+                                    )
+                            )
                         }
                     }
-                    if (item.itemDescription.isNotEmpty()) {
-                        TextField(
-                            value = description,
-                            onValueChange = { description = it },
-                            enabled = isEditing || isEditingDescription,
-                            textStyle = TextStyle(
-                                fontSize = 15.sp,
-                                color = Color.Black
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent
-                            )
+                    TextField(
+                        value = description.ifEmpty { "No description found." },
+                        onValueChange = { description = it },
+                        enabled = isEditingDescription,
+                        textStyle = TextStyle(
+                            //fontSize = 15.sp,
+                            color = Color.Black
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
                         )
-                    } else {
-                        Text(
-                            text = "No description found.",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    )
                 }
             }
         }
