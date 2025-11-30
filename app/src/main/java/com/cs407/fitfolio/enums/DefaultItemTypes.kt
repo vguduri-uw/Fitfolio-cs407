@@ -2,6 +2,7 @@ package com.cs407.fitfolio.enums
 
 import com.cs407.fitfolio.R
 
+// Enum for item types that come with the app to be populated into the DB
 enum class DefaultItemTypes(val typeName: String, val iconRes: Int) {
     // Default item type
     ALL("All", iconRes = R.drawable.hanger),

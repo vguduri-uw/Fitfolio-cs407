@@ -53,6 +53,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
@@ -100,7 +101,7 @@ fun MyClosetScreen(
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            TopHeader(title = "My Closet") // TODO: make string resource
+            TopHeader(title = stringResource(R.string.closet_title))
 
             Spacer(modifier = Modifier.size(10.dp))
 
