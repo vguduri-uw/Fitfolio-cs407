@@ -92,18 +92,19 @@ class OutfitsViewModel(
         )
 
         viewModelScope.launch {
-            // insert outfit into database
-            db.outfitDao().upsertOutfit(newOutfit, userId)
+            // insert outfit, get its generated ID
+            val outfitId = db.outfitDao().upsertOutfit(newOutfit, userId)
 
-            // Insert relations between the outfit and each item in the item list
+            // insert relations with the real outfitId
             itemList.forEach { item ->
                 db.outfitDao().insertRelation(
-                    ItemOutfitRelation(newOutfit.outfitId, item.itemId)
+                    ItemOutfitRelation(outfitId, item.itemId)
                 )
             }
 
+            // refresh state
             val outfits = db.userDao().getOutfitsByUserId(userId)
-            _outfitsState.value = _outfitsState.value.copy(outfits = outfits)
+            _outfitsState.value = _outfitsState.value.copy(outfits = outfits, filteredOutfits = outfits)
         }
     }
 
@@ -141,17 +142,17 @@ class OutfitsViewModel(
     }
 
     // SETTERS FOR ITEM PROPERTIES (for use in wardrobe screen and outfit modal)
-    fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String){
+    // call this function to upsert the outfit's photo uri
+    fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String) {
         viewModelScope.launch {
-            // update database with the updated outfit
             val updatedOutfit = outfit.copy(outfitPhotoUri = photoUri)
-            db.outfitDao().upsert(updatedOutfit)
+            db.outfitDao().upsertOutfit(updatedOutfit, userId)
 
-            // update global outfits
-            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
-            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+            val outfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = outfits)
         }
     }
+
 
 
     fun editOutfitName(outfit: OutfitEntry, name: String) {

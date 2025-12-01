@@ -1,5 +1,7 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.widget.Toast
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,10 +21,10 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Delete
@@ -30,8 +33,11 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,28 +53,27 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.testData.AddTestItemData
+import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
-import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
-import android.widget.Toast
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
-import androidx.compose.ui.platform.LocalContext
 
 @Composable
 fun MyOutfitsScreen(
@@ -240,6 +245,99 @@ fun MyOutfitsScreen(
                     )
                 }
             }
+        }
+    }
+}
+
+// build up to 4 preview slots from the outfit's items
+// if there are fewer than 4 items, the remaining slots are null
+fun buildPreviewSlots(items: List<ItemEntry>): List<ItemEntry?> {
+
+    // the final list of the four item preview slots
+    val slots = mutableListOf<ItemEntry?>()
+
+    // add up to the first 4 items into the slot list (ignore everything after)
+    for (i in 0 until items.size) {
+        if (i < 4) {
+            slots.add(items[i])
+        } else {
+            break
+        }
+    }
+
+    // if we have fewer than 4 items, fill the remaining spots with null
+    while (slots.size < 4) {
+        slots.add(null)
+    }
+
+    return slots
+}
+
+@Composable
+private fun PreviewSquare(
+    item: ItemEntry?,
+    modifier: Modifier = Modifier,
+    iconSize: Dp,
+    squarePadding: Dp
+) {
+    Box(
+        modifier = modifier
+            .aspectRatio(1f)
+            .padding(squarePadding)
+            .clip(MaterialTheme.shapes.small)
+            .background(Color(0xFFF5F5F5)),
+        contentAlignment = Alignment.Center
+    ) {
+
+        when {
+            item == null -> {
+                // placeholder image for an empty slot
+                Image(
+                    painter = painterResource(R.drawable.hanger),
+                    contentDescription = "Empty slot",
+                    modifier = Modifier.size(iconSize)
+                )
+            }
+
+            item.itemPhotoUri.isNotBlank() -> {
+                // outfit image
+                Image(
+                    painter = rememberAsyncImagePainter(item.itemPhotoUri),
+                    contentDescription = item.itemName,
+                    modifier = Modifier.size(iconSize),
+                    contentScale = ContentScale.Crop
+                )
+            }
+
+            else -> {
+                // placeholder image if outfit photo can't be found
+                Image(
+                    painter = painterResource(R.drawable.hanger),
+                    contentDescription = "Placeholder for ${item.itemName}",
+                    modifier = Modifier.size(iconSize)
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun OutfitPreviewGrid(
+    items: List<ItemEntry>,
+    modifier: Modifier = Modifier,
+    iconSize: Dp = 32.dp,
+    squarePadding: Dp = 6.dp
+) {
+    val slots = remember(items) { buildPreviewSlots(items) }
+
+    Column(modifier = modifier) {
+        Row(modifier = Modifier.fillMaxWidth()) {
+            PreviewSquare(slots[0], Modifier.weight(1f), iconSize, squarePadding)
+            PreviewSquare(slots[1], Modifier.weight(1f), iconSize, squarePadding)
+        }
+        Row(modifier = Modifier.fillMaxWidth()) {
+            PreviewSquare(slots[2], Modifier.weight(1f), iconSize, squarePadding)
+            PreviewSquare(slots[3], Modifier.weight(1f), iconSize, squarePadding)
         }
     }
 }
@@ -518,27 +616,31 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         } else if (outfitsState.filteredOutfits.isEmpty()) {
             Text(
                 "No items found.",
-                modifier = Modifier
-                    .padding(16.dp)
+                modifier = Modifier.padding(16.dp)
             )
         } else {
             LazyVerticalStaggeredGrid(
                 columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier
-                    .fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth(),
                 verticalItemSpacing = 8.dp,
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 items(outfitsState.filteredOutfits) { outfit ->
+                    // load the items for this outfit from the ViewModel
+                    var items by remember { mutableStateOf<List<ItemEntry>>(emptyList()) }
+
+                    LaunchedEffect(outfit.outfitId) {
+                        items = outfitsViewModel.getItemsList(outfit.outfitId)
+                    }
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp)
+                            .height(230.dp)
                             .clip(MaterialTheme.shapes.medium)
                             .background(Color(0xFFE0E0E0))
                             .clickable(
-                                enabled =
-                                    outfitsState.isDeleteActive != DeletionStates.Confirmed.name,
+                                enabled = outfitsState.isDeleteActive != DeletionStates.Confirmed.name,
                                 onClick = {
                                     if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
                                         if (outfit.isDeletionCandidate) {
@@ -550,41 +652,77 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                                         outfitsViewModel.updateOutfitToShow(outfit.outfitId)
                                     }
                                 }
-                            ),
-                        contentAlignment = Alignment.Center
+                            )
                     ) {
-                        Row(
+                        // outfit name
+                        Text(
+                            text = outfit.outfitName,
+                            style = MaterialTheme.typography.bodyMedium,
+                            maxLines = 2,
                             modifier = Modifier
-                                .align(alignment = Alignment.TopEnd)
-                                .padding(6.dp),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            // Favorite item button (if not in delete state)
-                            if (outfitsState.isDeleteActive == DeletionStates.Inactive.name) {
-                                IconButton(
-                                    onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (outfit.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                        contentDescription = if (outfit.isFavorite) "Remove item from favorites" else "Add item to favorites",
-                                        tint = if (outfit.isFavorite) Color.Red else Color.Black
-                                    )
-                                }
-                            }
-                            // Toggle deletion candidate icon (if in delete state)
-                            if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
+                                .align(Alignment.TopStart)
+                                .padding(start = 12.dp, top = 8.dp, end = 45.dp)
+                        )
+
+                        // icon: heart or check
+                        if (outfitsState.isDeleteActive == DeletionStates.Inactive.name) {
+                            // favorite toggle
+                            IconButton(
+                                onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 8.dp, end = 10.dp)
+                                    .size(24.dp)
+                            ) {
                                 Icon(
-                                    imageVector = if (outfit.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                                    contentDescription = if (outfit.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
+                                    imageVector = if (outfit.isFavorite)
+                                        Icons.Filled.Favorite
+                                    else
+                                        Icons.Outlined.FavoriteBorder,
+                                    contentDescription = if (outfit.isFavorite)
+                                        "Remove item from favorites"
+                                    else
+                                        "Add item to favorites",
+                                    tint = if (outfit.isFavorite) Color.Red else Color.Black
                                 )
                             }
+                        } else if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
+                            // deletion candidate icon
+                            Icon(
+                                imageVector = if (outfit.isDeletionCandidate)
+                                    Icons.Filled.CheckCircle
+                                else
+                                    Icons.Outlined.CheckCircle,
+                                contentDescription = if (outfit.isDeletionCandidate)
+                                    "Remove item from deletion candidates"
+                                else
+                                    "Add item to deletion candidates",
+                                modifier = Modifier
+                                    .align(Alignment.TopEnd)
+                                    .padding(top = 6.dp, end = 6.dp)
+                                    .size(22.dp)
+                            )
                         }
-                        Text(outfit.outfitName)
+
+                        // 2×2 image grid
+                        OutfitPreviewGrid(
+                            items = items,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(
+                                    start = 10.dp,
+                                    end = 10.dp,
+                                    top = 55.dp
+                                )
+                                .align(Alignment.TopCenter)
+                                .clip(MaterialTheme.shapes.small),
+                            iconSize = 40.dp,
+                            squarePadding = 3.dp
+                        )
                     }
                 }
             }
+
             if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
                 DeleteOutfitDialog(outfitsViewModel)
             }
