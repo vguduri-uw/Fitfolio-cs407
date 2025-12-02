@@ -59,6 +59,7 @@ import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
+import java.time.LocalDate
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -137,6 +138,7 @@ fun IconBox (
     var selectedItemType by remember { mutableStateOf(item.itemType) }
     var isEditingName by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf(item.itemName) }
+    var showWearHistoryModal by remember { mutableStateOf(false) }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -263,18 +265,25 @@ fun IconBox (
                     .align(Alignment.Center)
             )
 
-            // Calendar icon button
+            //Veda: Calendar icon button
             IconButton(
                 modifier = Modifier.align(Alignment.TopStart),
-                onClick = { // TODO: make it show the days in the calendar its featured??
-                    onDismiss()
-                    onNavigateToCalendarScreen()
+                onClick = { // Veda
+                    showWearHistoryModal = true
                 }
             ) {
                 Icon(
                     painter = painterResource(R.drawable.schedule),
                     contentDescription = "Calendar",
                     modifier = Modifier.size(28.dp)
+                )
+            }
+
+            if (showWearHistoryModal) {
+                WearHistoryModal(
+                    itemId = itemId,
+                    closetViewModel = closetViewModel,
+                    onDismiss = { showWearHistoryModal = false }
                 )
             }
 
@@ -800,5 +809,102 @@ private fun ConfirmDialog(
                 Text("Cancel")
             }
         }
+    )
+}
+
+//Veda: pop up when calendar is selected
+@Composable
+private fun WearHistoryModal(
+    itemId: Int,
+    closetViewModel: ClosetViewModel,
+    onDismiss: () -> Unit
+) {
+    var wearHistory by remember { mutableStateOf<List<Pair<Long, String>>>(emptyList()) }
+    var modalColor by remember { mutableStateOf(Color(0xFFB0B0B0)) }
+
+    LaunchedEffect(itemId) {
+        wearHistory = closetViewModel.getWearDatesForItem(itemId)
+        val lastWorn = wearHistory.firstOrNull()?.first
+        modalColor = closetViewModel.getModalColorForItem(lastWorn)
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Wear History",
+                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+                )
+                Text(
+                    text = when (modalColor) {
+                        Color(0xFFE6FFE6) -> "< 3 months"
+                        Color(0xFFFFFFE6) -> "3-6 months"
+                        Color(0xFFFFFFCC) -> "6-12 months"
+                        else -> "> 1 year"
+                    },
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Black
+                )
+            }
+        },
+        text = {
+            if (wearHistory.isNotEmpty()) {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    items(wearHistory.size) { index ->
+                        val (dateMillis, outfitName) = wearHistory[index]
+                        val localDate = LocalDate.ofEpochDay(dateMillis / (24 * 60 * 60 * 1000))
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.small)
+                                .background(Color.White)
+                                .padding(12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = localDate.format(
+                                        java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy")
+                                    ),
+                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
+                                )
+                                Text(
+                                    text = "In outfit: $outfitName",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.Gray
+                                )
+                            }
+                        }
+                    }
+                }
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "This item hasn't been worn yet.",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Color.Gray
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("Close")
+            }
+        },
+        containerColor = modalColor
     )
 }

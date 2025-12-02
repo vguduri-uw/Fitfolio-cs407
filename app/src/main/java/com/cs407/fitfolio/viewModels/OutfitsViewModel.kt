@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import com.cs407.fitfolio.data.ScheduledOutfit
+import java.time.LocalDate
+import java.time.ZoneId
 
 // data class representing the entire collection of outfits
 data class OutfitsState(
@@ -450,4 +453,47 @@ class OutfitsViewModel(
             filteredOutfits = _outfitsState.value.outfits
         )
     }
+
+    //Veda: schedule an outfit for a specific date -> Veda here onwards
+    fun scheduleOutfit(outfitId: Int, dateMillis: Long) {
+        viewModelScope.launch {
+            val localDate = LocalDate.ofEpochDay(dateMillis / (24 * 60 * 60 * 1000))
+            val normalizedMillis = localDate.atStartOfDay(ZoneId.systemDefault())
+                .toInstant()
+                .toEpochMilli()
+            val scheduledOutfit = ScheduledOutfit(
+                outfitId = outfitId,
+                scheduledDate = normalizedMillis
+            )
+            db.outfitDao().scheduleOutfit(scheduledOutfit)
+        }
+    }
+
+    //Veda: get the outfit scheduled for a specific date
+    suspend fun getOutfitsForDate(dateMillis: Long): List<OutfitEntry> {
+        val localDate = LocalDate.ofEpochDay(dateMillis / (24 * 60 * 60 * 1000))
+        val normalizedMillis = localDate.atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+        return db.outfitDao().getOutfitsForDate(normalizedMillis)
+    }
+
+    //Veda: remove a outfit from a  date
+    suspend fun removeOutfitFromDate(dateMillis: Long, outfitId: Int) {
+        val localDate = LocalDate.ofEpochDay(dateMillis / (24 * 60 * 60 * 1000))
+        val normalizedMillis = localDate.atStartOfDay(ZoneId.systemDefault())
+            .toInstant()
+            .toEpochMilli()
+        db.outfitDao().removeOutfitFromDate(normalizedMillis, outfitId)
+    }
+
+    //Veda: get all dates that have scheduled outfits
+    suspend fun getAllScheduledDates(): List<Long> {
+        return db.outfitDao().getAllScheduledDates()
+    }
+
+    //Veda: get all dates where a specific outfit is scheduled
+//    suspend fun getDatesForOutfit(outfitId: Int): List<Long> {
+//        return db.outfitDao().getDatesForOutfit(outfitId)
+//    }
 }

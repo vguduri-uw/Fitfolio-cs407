@@ -60,6 +60,13 @@ import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import java.time.ZoneId
 
 // modal sheet that displays full outfit details and actions
 // shows outfit photo, description, items, and tags, with editing modes
@@ -536,6 +543,7 @@ fun outfitHeaderBox (
 // top section of the outfit modal showing the outfit name, image, and action icons
 // provides actions to favorite, edit, delete, or open calendar for the outfit
 // remains pinned at the top while other content scrolls underneath
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun outfitIconBox (
     outfit: OutfitEntry,
@@ -552,6 +560,10 @@ fun outfitIconBox (
 
     // track outfit photo
     var outfitPhotoUri by remember { mutableStateOf(outfit.outfitPhotoUri) }
+
+    // Date picker state
+    var showDatePicker by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -576,10 +588,7 @@ fun outfitIconBox (
             // calendar icon button
             IconButton(
                 modifier = Modifier.align(Alignment.TopStart),
-                onClick = { // TODO: make it show the days in the calendar its featured??
-                    onDismiss()
-                    onNavigateToCalendarScreen()
-                }
+                onClick = { showDatePicker = true } //Veda
             ) {
                 Icon(
                     painter = painterResource(R.drawable.schedule),
@@ -651,6 +660,41 @@ fun outfitIconBox (
     }
         if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
             DeleteOutfitDialog(outfitsViewModel)
+        }
+        //Veda: Date picker dialog
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = System.currentTimeMillis()
+            )
+
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val selectedMillis = datePickerState.selectedDateMillis
+                            if (selectedMillis != null) {
+                                scope.launch {
+                                    // Schedule the outfit for the selected date
+                                    outfitsViewModel.scheduleOutfit(outfit.outfitId, selectedMillis)
+                                    showDatePicker = false
+                                    onDismiss()
+                                    onNavigateToCalendarScreen()
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Schedule")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
         }
     return isEditing
 }
