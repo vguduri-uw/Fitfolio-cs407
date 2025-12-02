@@ -2,6 +2,7 @@ package com.cs407.fitfolio.ui.screens
 
 import android.content.ContentValues
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
 import android.widget.Toast
@@ -31,6 +32,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -46,7 +48,7 @@ import coil.compose.AsyncImage
 import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.modals.InformationModal
 import com.cs407.fitfolio.viewModels.ClosetViewModel
-
+import androidx.core.content.ContextCompat
 
 fun createImageUri(context: Context): Uri {
     val contentResolver = context.contentResolver
@@ -61,37 +63,38 @@ fun createImageUri(context: Context): Uri {
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
-//select category, a dropdown menu where user can choose a category for the new item
 @Composable
 fun CategoryDropdown(
-    selectedType: DefaultItemTypes,
-    onTypeSelected:(DefaultItemTypes) -> Unit
-){
+    selectedType: String,
+    allTypes: List<String>,
+    onTypeSelected: (String) -> Unit
+) {
     var expanded by remember { mutableStateOf(false) }
+
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = {expanded = !expanded}
+        onExpandedChange = { expanded = !expanded }
     ) {
         OutlinedTextField(
-            value = selectedType.typeName,
+            value = selectedType,
             onValueChange = {}, // read-only
-            label = {Text("Category")},
+            label = { Text("Category") },
             modifier = Modifier
                 .menuAnchor()
                 .fillMaxWidth()
         )
-        //dropdown menu
+
         ExposedDropdownMenu(
             expanded = expanded,
-            onDismissRequest = {expanded = false},
+            onDismissRequest = { expanded = false },
             modifier = Modifier.heightIn(max = 250.dp)
         ) {
-            DefaultItemTypes.values().forEach { type ->
+            allTypes.forEach { typeName ->
                 DropdownMenuItem(
-                    text = {Text(type.typeName)},
+                    text = { Text(typeName) },
                     onClick = {
-                        onTypeSelected(type)
-                        expanded= false
+                        onTypeSelected(typeName)
+                        expanded = false
                     }
                 )
             }
@@ -106,30 +109,49 @@ fun AddScreen(
     onNavigateToWardrobeScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,
-    closetViewModel: ClosetViewModel? //used for adding single clothes?
+    closetViewModel: ClosetViewModel // used for adding single clothes
 ) {
+    var showInfo by remember { mutableStateOf(false) } // informationModal
+    val context = LocalContext.current // context for toast message
 
+    val closetState by closetViewModel.closetState.collectAsState()
+    val availableTypes = closetState.itemTypes.filter { it != DefaultItemTypes.ALL.typeName }
 
-    var showInfo by remember { mutableStateOf(false) } //informationModal
-    val context = LocalContext.current //context for toast message
-    var selectedImageUri by remember {mutableStateOf<Uri?>(null)} //selected pic
-    var selectedType by remember {mutableStateOf(DefaultItemTypes.ALL)}
-    var isCategoryExpanded by remember {mutableStateOf(false) }
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // selected pic
+    var selectedType by remember {
+        mutableStateOf(
+            availableTypes.firstOrNull() ?: DefaultItemTypes.T_SHIRTS.typeName
+        )
+    }
 
-    //gallery launcher
+    // gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        if(uri != null){
+        if (uri != null) {
             selectedImageUri = uri
         }
     }
 
-    var cameraImageUri by remember { mutableStateOf<Uri?>(null) }//new taken pic
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) } // new taken pic
     val cameraLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { success ->
-        if(success){ selectedImageUri = cameraImageUri }
+        if (success) {
+            selectedImageUri = cameraImageUri
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createImageUri(context)
+            cameraImageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+        }
     }
 
     Column(
@@ -137,8 +159,7 @@ fun AddScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        //actual camera view with a suggested body outline,
-        // or the uploaded picture preview and editing
+        //show the selected/taken photo
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -147,9 +168,8 @@ fun AddScreen(
                 .background(Color(0xFFECECEC)),
             contentAlignment = Alignment.Center
         ) {
-            // info icon (camera instruction, other info...
             IconButton(
-                onClick = {showInfo = true},
+                onClick = { showInfo = true },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 8.dp)
@@ -160,20 +180,20 @@ fun AddScreen(
                     tint = Color.Black
                 )
             }
-            //show the half screen
-            if( showInfo ){
-                InformationModal (
-                    onDismiss = { showInfo = false},
+
+            if (showInfo) {
+                InformationModal(
+                    onDismiss = { showInfo = false },
                     screen = "Add"
                 )
             }
 
-            if(selectedImageUri == null){
+            if (selectedImageUri == null) {
                 Text("No image selected yet")
-            }else{
+            } else {
                 AsyncImage(
                     model = selectedImageUri,
-                    contentDescription = "select photo",
+                    contentDescription = "selected photo",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
@@ -182,7 +202,7 @@ fun AddScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        //upload & take picture
+        //two button: upload & take photo
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -195,9 +215,18 @@ fun AddScreen(
 
             Button(
                 onClick = {
-                    val uri = createImageUri(context)
-                    cameraImageUri = uri
-                    cameraLauncher.launch(uri)
+                    val permissionStatus = ContextCompat.checkSelfPermission(
+                        context,
+                        android.Manifest.permission.CAMERA
+                    )
+
+                    if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+                        val uri = createImageUri(context)
+                        cameraImageUri = uri
+                        cameraLauncher.launch(uri)
+                    } else {
+                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                    }
                 },
                 modifier = Modifier.weight(1f)
             ) { Text("Take Photo") }
@@ -205,26 +234,29 @@ fun AddScreen(
 
         Spacer(Modifier.height(12.dp))
 
+        //dropdown menu
         CategoryDropdown(
             selectedType = selectedType,
-            onTypeSelected = {selectedType = it}
+            allTypes = availableTypes,
+            onTypeSelected = { selectedType = it }
         )
 
+        Spacer(Modifier.height(12.dp))
 
-        // save the edited picture as a single clothes
+        // Save button
         Button(
             onClick = {
-                if(selectedImageUri == null){
-                    Toast.makeText(context, "Please upload or take a photo first.", Toast.LENGTH_SHORT).show()
-                    return@Button
-                }
-                if(closetViewModel == null){
-                    Toast.makeText(context, "ClosetViewModel is null", Toast.LENGTH_SHORT).show()
+                if (selectedImageUri == null) {
+                    Toast.makeText(
+                        context,
+                        "Please upload or take a photo first.",
+                        Toast.LENGTH_SHORT
+                    ).show()
                     return@Button
                 }
 
                 val imageUriString = selectedImageUri.toString()
-                val categoryString = selectedType.typeName
+                val categoryString = selectedType
 
                 closetViewModel.addItem(
                     name = "",
@@ -237,16 +269,12 @@ fun AddScreen(
 
                 Toast.makeText(context, "Saved to closet", Toast.LENGTH_SHORT).show()
                 onNavigateToClosetScreen()
-
             },
             modifier = Modifier.fillMaxWidth()
-        ) { Text("Save to Closet") }
+        ) {
+            Text("Save to Closet")
+        }
 
         Spacer(Modifier.height(12.dp))
-
-
     }
-
-
 }
-

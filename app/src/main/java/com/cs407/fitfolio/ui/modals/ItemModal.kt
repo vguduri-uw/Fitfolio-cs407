@@ -54,11 +54,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -254,14 +258,25 @@ fun IconBox (
                 .fillMaxWidth()
                 .height(300.dp)
         ) {
-            // Item photo
-            Image(
-                painter = painterResource(R.drawable.shirt),
-                contentDescription = "Item photo",
-                modifier = Modifier
-                    .size(180.dp)
-                    .align(Alignment.Center)
-            )
+            // Item photo, if uploaded picture is not found use placeholder picture
+            if(item.itemPhotoUri.isNotEmpty()){
+                AsyncImage(
+                    model = item.itemPhotoUri,
+                    contentDescription = "Item photo",
+                    modifier = Modifier
+                        .size(230.dp)
+                        .align(Alignment.Center),
+                    contentScale = ContentScale.Crop
+                )
+            }else{
+                Image(
+                    painter = painterResource(R.drawable.shirt),
+                    contentDescription = "Item photo placeholder",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .align(Alignment.Center)
+                )
+            }
 
             // Calendar icon button
             IconButton(

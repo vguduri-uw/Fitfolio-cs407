@@ -98,7 +98,9 @@ class ClosetViewModel(
             db.itemDao().upsertItem(newItem, userId)
 
             val items = db.userDao().getItemsByUserId(userId)
-            _closetState.value = _closetState.value.copy(items = items)
+            _closetState.value = _closetState.value.copy(
+                items = items,
+                filteredItems = items)
         }
     }
 
