@@ -43,6 +43,9 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
+import androidx.compose.ui.unit.sp
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 
 fun createAccount(
     email: String,
@@ -95,21 +98,23 @@ fun SignUpScreen (
 @Composable
 fun SignUpScreenTopHeader() {
     Image(
-        // todo: replace with actual profile image
-        painter = painterResource(id = R.drawable.user),
-        contentDescription = "User profile image",
+        painter = painterResource(id = R.drawable.app_logo),
+        contentDescription = "App logo",
         contentScale = ContentScale.Fit,
         modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
+            .size(160.dp)
+            .clip(CircleShape),
         alignment = Alignment.Center
     )
 
     Spacer(modifier = Modifier.size(15.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = "FitFolio", style = MaterialTheme.typography.titleLarge)
+        Text(
+            text = "FitFolio",
+            fontFamily = Kudryashev_Display_Sans_Regular,
+            fontSize = 60.sp
+        )
     }
 }
 
@@ -206,40 +211,63 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit, signUpButtonClick: (UserSt
             Text(text = "Passwords do not match", color = MaterialTheme.colorScheme.error)
         }
 
+        // show Firebase / other errors in consistent red text
+        ErrorText(error = error)
+
         // Sign up button
         Button(
-            onClick = { createAccount(email, password,
-                onSuccess = { user ->
-                    scope.launch {
-                        var dbUser = db.userDao().getByUID(user.uid)
-                        if (dbUser == null) {
-                            val newUser = User(userUID = user.uid, username = name)
-                            db.userDao().insert(newUser)
-                            dbUser = db.userDao().getByUID(user.uid)
+            onClick = {
+                createAccount(
+                    email,
+                    password,
+                    onSuccess = { user ->
+                        scope.launch {
+                            var dbUser = db.userDao().getByUID(user.uid)
+                            if (dbUser == null) {
+                                val newUser = User(userUID = user.uid, username = name)
+                                db.userDao().insert(newUser)
+                                dbUser = db.userDao().getByUID(user.uid)
+                            }
+                            signUpButtonClick(
+                                UserState(
+                                    id = dbUser!!.userId,
+                                    name = dbUser.username,
+                                    uid = user.uid
+                                )
+                            )
                         }
-                        signUpButtonClick(UserState(id = dbUser!!.userId, name = dbUser.username, uid = user.uid))
+                    },
+                    onError = { exception ->
+                        error = exception.message
                     }
-                },
-                onError = { exception ->
-                    error = exception.message
-                }
-            )
+                )
             },
             enabled = allFieldsFilled && passwordsMatch,
-            content = { Text("Sign Up") },
+            content = {
+                Text(
+                    text = "Sign Up",
+                    fontFamily = Kudryashev_Regular,
+                    fontSize = 18.sp,
+                    modifier = Modifier.padding(5.dp)
+                )
+            },
+            modifier = Modifier
+                .padding(top = 25.dp)
         )
 
         // move to sign in page if account exists already
         Row {
             Text(
                 text = "Already have an account?",
-                style = MaterialTheme.typography.bodyMedium
+                fontFamily = Kudryashev_Regular,
+                fontSize = 15.sp
             )
             Spacer(modifier = Modifier.size(4.dp))
             Text(
                 text = "Sign in",
-                style = MaterialTheme.typography.bodyMedium.merge(
-                    TextStyle(textDecoration = TextDecoration.Underline)),
+                fontFamily = Kudryashev_Regular,
+                fontSize = 15.sp,
+                style = TextStyle(textDecoration = TextDecoration.Underline),
                 modifier = Modifier
                     .padding(bottom = 12.dp)
                     .clickable(onClick = { onNavigateToSignInScreen() })

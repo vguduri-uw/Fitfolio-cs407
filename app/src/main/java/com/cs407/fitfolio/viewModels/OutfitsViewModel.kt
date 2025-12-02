@@ -7,6 +7,7 @@ import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.ItemOutfitRelation
 import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.DeletionStates
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -37,7 +38,8 @@ data class OutfitsState(
     val searchQuery: String = "",                               // current search input
     val deletionCandidates: List<OutfitEntry> = emptyList(),    // the item that is potentially deleted
     val isDeleteActive: String = DeletionStates.Inactive.name,  // the status of the deletion process
-    val outfitToShow: Int = -1                                  // outfit ID of the outfit to be shown
+    val outfitToShow: Int = -1,                                 // outfit ID of the outfit to be shown
+    val isFiltering: Boolean = false                            // whether the outfits screen is actively in a filtering call
 )
 
 class OutfitsViewModel(
@@ -90,18 +92,19 @@ class OutfitsViewModel(
         )
 
         viewModelScope.launch {
-            // insert outfit into database
-            db.outfitDao().upsertOutfit(newOutfit, userId)
+            // insert outfit, get its generated ID
+            val outfitId = db.outfitDao().upsertOutfit(newOutfit, userId)
 
-            // Insert relations between the outfit and each item in the item list
+            // insert relations with the real outfitId
             itemList.forEach { item ->
                 db.outfitDao().insertRelation(
-                    ItemOutfitRelation(newOutfit.outfitId, item.itemId)
+                    ItemOutfitRelation(outfitId, item.itemId)
                 )
             }
 
+            // refresh state
             val outfits = db.userDao().getOutfitsByUserId(userId)
-            _outfitsState.value = _outfitsState.value.copy(outfits = outfits)
+            _outfitsState.value = _outfitsState.value.copy(outfits = outfits, filteredOutfits = outfits)
         }
     }
 
@@ -139,17 +142,17 @@ class OutfitsViewModel(
     }
 
     // SETTERS FOR ITEM PROPERTIES (for use in wardrobe screen and outfit modal)
-    fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String){
+    // call this function to upsert the outfit's photo uri
+    fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String) {
         viewModelScope.launch {
-            // update database with the updated outfit
             val updatedOutfit = outfit.copy(outfitPhotoUri = photoUri)
-            db.outfitDao().upsert(updatedOutfit)
+            db.outfitDao().upsertOutfit(updatedOutfit, userId)
 
-            // update global outfits
-            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
-            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+            val outfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = outfits)
         }
     }
+
 
 
     fun editOutfitName(outfit: OutfitEntry, name: String) {
@@ -254,42 +257,51 @@ class OutfitsViewModel(
                                             OUTFITS FUNCTIONS
        ========================================================================================== */
     
-    // todo: add CircularProgressIndicator? when calling this (in closet screen), do in coroutine
     // apply all tag filters at once
     fun applyFilters() {
-        var updatedFilteredOutfits = _outfitsState.value.outfits.filter { outfit ->
-            var passesAllFilters = true
+        viewModelScope.launch(Dispatchers.Default) {
+            // Begin filtering
+            _outfitsState.value = _outfitsState.value.copy(isFiltering = true)
 
-            // Filter through favorites
-            if (_outfitsState.value.isFavoritesActive) {
-                if (!outfit.isFavorite) passesAllFilters = false
-            }
+            val updatedFilteredOutfits = _outfitsState.value.outfits.filter { outfit ->
+                var passesAllFilters = true
 
-            // Filter with search query
-            if (_outfitsState.value.isSearchActive) {
-                val query = _outfitsState.value.searchQuery.lowercase()
-                if (!(outfit.outfitName.lowercase().contains(query) ||
-                            outfit.outfitDescription.lowercase().contains(query))) {
-                    passesAllFilters = false
+                // Filter through favorites
+                if (_outfitsState.value.isFavoritesActive) {
+                    if (!outfit.isFavorite) passesAllFilters = false
                 }
-            }
 
-            // Filter through active tags
-            // TODO: decide if this should be inclusive (1 matching tag means its valid, how it currently is rn), or if it must match all tags
-            if (_outfitsState.value.activeTags.isNotEmpty()) {
-                val hasMatchingTag = outfit.outfitTags.any { it in _outfitsState.value.activeTags }
-                if (!hasMatchingTag) {
-                    passesAllFilters = false
+
+                // Filter with search query
+                if (_outfitsState.value.isSearchActive) {
+                    val query = _outfitsState.value.searchQuery.lowercase()
+                    if (!(outfit.outfitName.lowercase().contains(query) ||
+                                outfit.outfitDescription.lowercase().contains(query))
+                    ) {
+                        passesAllFilters = false
+                    }
                 }
+
+                // Filter through active tags
+                // TODO: decide if this should be inclusive (1 matching tag means its valid, how it currently is rn), or if it must match all tags
+                if (_outfitsState.value.activeTags.isNotEmpty()) {
+                    val hasMatchingTag = outfit.outfitTags.any { it in _outfitsState.value.activeTags }
+                    if (!hasMatchingTag) {
+                        passesAllFilters = false
+                    }
+                }
+
+                passesAllFilters
             }
 
-            passesAllFilters
+            // Update filteredItems
+            _outfitsState.value = _outfitsState.value.copy(
+                filteredOutfits = updatedFilteredOutfits
+            )
+
+            // Filtering is done
+            _outfitsState.value = _outfitsState.value.copy(isFiltering = false)
         }
-
-        // Update filteredItems
-        _outfitsState.value = _outfitsState.value.copy(
-            filteredOutfits = updatedFilteredOutfits
-        )
     }
 
     // adds a new tag/type option the user can choose from
@@ -443,7 +455,6 @@ class OutfitsViewModel(
     // clears any applied filters and resets properties
     fun clearFilters() {
         _outfitsState.value = _outfitsState.value.copy(
-            isDeleteActive = DeletionStates.Inactive.name,
             isFavoritesActive = false,
             activeTags = emptyList(),
             searchQuery = "",
