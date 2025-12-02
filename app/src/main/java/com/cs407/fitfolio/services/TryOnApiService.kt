@@ -7,29 +7,6 @@ import com.cs407.fitfolio.BuildConfig
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.Path
-import retrofit2.http.Query
-
-// ===============================================================================================
-//        USE CASE (background removal example, update this file as needed for your needs)
-// ===============================================================================================
-
-//val request = FashnRunRequest(
-//    model_name = "background-removal",
-//    inputs = listOf(imageUrl)
-//)
-//
-//val runResult = RetrofitInstance.fashnApi.runModel(request)
-//val predictionId = runResult.prediction_id
-//
-//var status: FashnStatusResponse
-//do {
-//    delay(1500)
-//    status = RetrofitInstance.fashnApi.getPredictionStatus(predictionId)
-//} while (status.status != "succeeded" && status.status != "failed")
-//
-//if (status.status == "succeeded") {
-//    val outputUrl = status.output.firstOrNull()
-//}
 
 // ===============================================================================================
 //                      DATA CLASSES (models used for requests and responses)
