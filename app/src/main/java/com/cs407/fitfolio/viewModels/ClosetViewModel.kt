@@ -85,6 +85,14 @@ class ClosetViewModel(
         name: String, type: String, description: String, tags: List<String>,
         isFavorites: Boolean, photoUri: String
     ) : Int {
+        val existingTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+        if (type !in existingTypes) {
+            db.itemDao().insertItemType(ItemType(itemType = type))  // insert new type
+            // refresh type list in state
+            val updatedTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            _closetState.value = _closetState.value.copy(itemTypes = updatedTypes)
+        }
+
         val newItem = ItemEntry(
             itemId = 0,
             itemName = name,

@@ -70,7 +70,7 @@ fun createImageUri(context: Context): Uri {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun CategoryDropdown(
+fun ItemTypeDropdown(
     selectedType: String,
     allTypes: List<String>,
     onTypeSelected: (String) -> Unit
@@ -82,12 +82,15 @@ fun CategoryDropdown(
         onExpandedChange = { expanded = !expanded }
     ) {
         OutlinedTextField(
+            placeholder = { Text("Choose or create an item type.") },
             value = selectedType,
-            onValueChange = {}, // read-only
-            label = { Text("Category") },
+            onValueChange = { newType ->
+                onTypeSelected(newType)
+            },
+            label = { Text("Item Type") },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth()
+                .fillMaxWidth(),
         )
 
         ExposedDropdownMenu(
@@ -121,15 +124,19 @@ fun AddScreen(
     val availableTypes = closetState.itemTypes.filter { it != DefaultItemTypes.ALL.typeName }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // selected pic
-    var selectedType by remember {
-        mutableStateOf(
-            availableTypes.firstOrNull() ?: DefaultItemTypes.T_SHIRTS.typeName
-        )
-    }
+    var selectedType by remember { mutableStateOf("") }
     var showItemModal by remember { mutableStateOf(false) }
     var createdItemId: Int by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
     val scope =  rememberCoroutineScope()
+
+    // reset screen after successful save to closet
+    fun reset() {
+        selectedImageUri = null
+        selectedType = ""
+        createdItemId = -1
+        saveError = false
+    }
 
     // gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -242,7 +249,7 @@ fun AddScreen(
         Spacer(Modifier.height(12.dp))
 
         //dropdown menu
-        CategoryDropdown(
+        ItemTypeDropdown(
             selectedType = selectedType,
             allTypes = availableTypes,
             onTypeSelected = { selectedType = it }
@@ -293,7 +300,10 @@ fun AddScreen(
                 closetViewModel = closetViewModel,
                 outfitsViewModel = outfitsViewModel,
                 itemId = createdItemId,
-                onDismiss = { showItemModal = false },
+                onDismiss = {
+                    showItemModal = false
+                    reset()
+                },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
         } else if (saveError) {
