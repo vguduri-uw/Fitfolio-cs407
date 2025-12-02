@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
@@ -21,9 +22,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material.icons.outlined.Clear
 import androidx.compose.material.icons.outlined.Delete
@@ -32,8 +33,11 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -49,15 +53,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.data.FitfolioDatabase
-import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.enums.DeletionStates
@@ -76,7 +81,6 @@ fun MyClosetScreen(
 ) {
     // Observe the current UI states from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
 
     // Re-filter when an item is added or deleted
     LaunchedEffect(closetState.items) {
@@ -97,7 +101,7 @@ fun MyClosetScreen(
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            TopHeader(title = "My Closet") // TODO: make string resource
+            TopHeader(title = stringResource(R.string.closet_title))
 
             Spacer(modifier = Modifier.size(10.dp))
 
@@ -144,6 +148,66 @@ fun MyClosetScreen(
             )
         }
 
+        if (closetState.isDeleteActive == DeletionStates.Active.name) {
+            // Exit delete mode
+            FloatingActionButton(
+                onClick = { closetViewModel.toggleDeleteState(DeletionStates.Inactive.name) },
+                containerColor = Color.LightGray.copy(alpha = 0.75f),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(24.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("Cancel")
+                    Icon(
+                        imageVector = Icons.Outlined.Clear,
+                        contentDescription = "Exit delete mode",
+                        tint = Color.Black
+                    )
+                }
+            }
+
+            // Confirm delete mode
+            FloatingActionButton(
+                onClick = {
+                    if (closetState.deletionCandidates.isEmpty()) {
+                        closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
+                    } else {
+                        closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
+                    }
+                },
+                containerColor = Color.Red.copy(alpha = 0.75f),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(24.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
+                ) {
+                    Text("Delete", color = Color.White)
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = "Confirm delete mode",
+                        tint = Color.White
+                    )
+                }
+            }
+        }
+
         // Show deletion dialog
         if (closetState.isDeleteActive == DeletionStates.Confirmed.name) {
             DeleteItemDialog(closetViewModel)
@@ -157,37 +221,12 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     // Scroll state for the item type row
     val scrollState = rememberScrollState()
 
-    // TODO: update icons
     Row(modifier = Modifier
         .horizontalScroll(scrollState)
         .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Box(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.small)
-                .background(color = if (closetState.activeItemType == DefaultItemTypes.ALL.typeName) Color(0xFFE0E0E0) else Color.Transparent),
-            contentAlignment = Alignment.Center
-        ) {
-            // Show all items icon button
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                modifier = Modifier
-                    .padding(8.dp)
-                    .clickable(onClick = {
-                        closetViewModel.updateActiveItemType(DefaultItemTypes.ALL.typeName)
-                    })
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.hanger),
-                    contentDescription = "All items",
-                    modifier = Modifier.size(36.dp)
-                )
-                Text(DefaultItemTypes.ALL.typeName)
-            }
-        }
-
         // Icon buttons for each item type to filter by
         closetState.itemTypes.forEach { itemType ->
             Box(
@@ -204,8 +243,9 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                             closetViewModel.updateActiveItemType(itemType)
                         })
                 ) {
+                    val icon = closetViewModel.getItemTypeIcon(itemType)
                     Icon(
-                        painter = painterResource(id = R.drawable.hanger),
+                        painter = painterResource(id = icon),
                         contentDescription = itemType,
                         modifier = Modifier.size(36.dp)
                     )
@@ -241,7 +281,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 Icon(
                     imageVector = if (closetState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                     contentDescription = if (closetState.isFavoritesActive) "Remove favorites filter" else "Filter by favorites",
-                    tint = Color.Black,
+                    tint = if (closetState.isFavoritesActive) Color.Red else Color.Black,
                     modifier = Modifier.size(20.dp),
                 )
             }
@@ -396,29 +436,27 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     }
                 }
                 DeletionStates.Active.name -> {
-                    // TODO: should this be the exit mode?? and we have a separate confirm button
-                    // ^^ currently, the clear filters takes it out of delete mode, prob should be separate so the filters don't disappear if we exit out of delete mode
-                    IconButton(onClick = {
-                        if (closetState.deletionCandidates.isEmpty()) {
-                            closetViewModel.toggleDeleteState(DeletionStates.Inactive.name)
-                        } else {
-                            closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
-                        }
-                    }) {
+                    IconButton(
+                        onClick = {},
+                        enabled = closetState.isDeleteActive == DeletionStates.Inactive.name
+                    ) {
                         Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = "Confirm delete state",
-                            tint = Color.Black,
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = "Inactive delete icon during active delete state",
+                            tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
                 DeletionStates.Confirmed.name -> {
-                    IconButton(onClick = {}) {
+                    IconButton(
+                        onClick = {},
+                        enabled = closetState.isDeleteActive == DeletionStates.Inactive.name
+                    ) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Placeholder during alert dialog composition",
-                            tint = Color.Black,
+                            tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -448,7 +486,11 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
-    if (closetState.filteredItems.isEmpty()) {
+    if (closetState.isFiltering) {
+        CircularProgressIndicator(
+            modifier = Modifier.padding(32.dp)
+        )
+    } else if (closetState.filteredItems.isEmpty()) {
         Text(
             "No items found.",
             modifier = Modifier
@@ -486,47 +528,65 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         ),
                     contentAlignment = Alignment.Center
                 ) {
-                    Row(modifier = Modifier
-                        .align(alignment = Alignment.TopEnd)
-                        .padding(6.dp)
-                        .fillMaxWidth(),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            item.itemName,
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
+                    Column(modifier = Modifier.fillMaxSize()) {
+                        Row(
                             modifier = Modifier
-                                .padding(horizontal = 4.dp)
-                                .weight(1f)
-                        )
+                                .padding(6.dp)
+                                .fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                item.itemName,
+                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .padding(horizontal = 4.dp)
+                                    .weight(1f)
+                            )
 
-                        // Favorite item button (if not in delete state)
-                        if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
-                            IconButton(
-                                onClick = { closetViewModel.toggleFavoritesProperty(item) },
-                                modifier = Modifier.size(28.dp)
-                            ) {
+                            // Favorite item button (if not in delete state)
+                            if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
+                                IconButton(
+                                    onClick = { closetViewModel.toggleFavoritesProperty(item) },
+                                    modifier = Modifier.size(28.dp)
+                                ) {
+                                    Icon(
+                                        imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                                        contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites",
+                                        tint = if (item.isFavorite) Color.Red else Color.Black
+                                    )
+                                }
+                            }
+
+                            // Toggle deletion candidate icon (if in delete state)
+                            if (closetState.isDeleteActive == DeletionStates.Active.name) {
                                 Icon(
-                                    imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                    contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites",
-                                    tint = if (item.isFavorite) Color.Red else Color.Black
+                                    imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                                    contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
                                 )
+
                             }
                         }
 
-                        // Toggle deletion candidate icon (if in delete state)
-                        if (closetState.isDeleteActive == DeletionStates.Active.name) {
-                            Icon(
-                                imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                                contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
+                        // Item image
+                        if (item.itemPhotoUri.isNotEmpty()) {
+                            AsyncImage(
+                                model = item.itemPhotoUri,
+                                contentDescription = item.itemName,
+                                modifier = Modifier
+                                    .fillMaxSize(),
+                                contentScale = ContentScale.Crop
                             )
-
+                        } else {
+                            Image(
+                                painter = painterResource(R.drawable.hanger),
+                                contentDescription = "Item photo",
+                                modifier = Modifier
+                                    .size(180.dp)
+                            )
                         }
                     }
-
-                    Text("PHOTO OF ITEM HERE")
                 }
             }
         }

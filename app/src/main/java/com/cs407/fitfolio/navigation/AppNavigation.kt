@@ -1,7 +1,6 @@
 package com.cs407.fitfolio.navigation
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -64,26 +63,23 @@ fun AppNavigation(userViewModel: UserViewModel) {
             BottomNavigationBar(navController)
         },
         floatingActionButton = {
-            Box {
-                FloatingActionButton(
-                    onClick = { navController.navigate("wardrobe") },
-                    shape = CircleShape,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(80.dp)
-                        .offset(y = 50.dp)
+            FloatingActionButton(
+                onClick = { navController.navigate("wardrobe") },
+                shape = CircleShape,
+                modifier = Modifier
+                    .size(80.dp)
+                    .offset(y = 81.dp)
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.carousel),
-                            contentDescription = "Wardrobe",
-                            modifier = Modifier.size(35.dp),
-                        )
-                        Text(stringResource(R.string.carousel))
-                    }
+                    Icon(
+                        painter = painterResource(R.drawable.carousel),
+                        contentDescription = "Wardrobe",
+                        modifier = Modifier.size(35.dp),
+                    )
+                    Text(stringResource(R.string.carousel))
                 }
             }
         },
@@ -131,12 +127,9 @@ fun AppNavigation(userViewModel: UserViewModel) {
             // Defines the "add" route and what UI to display there
             composable(route = "add") {
                 AddScreen(
-                    onNavigateToOutfitsScreen = { navController.navigate("outfits") },
-                    onNavigateToCalendarScreen = { navController.navigate("calendar") },
-                    onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
-                    onNavigateToClosetScreen = { navController.navigate("closet") },
-                    onNavigateToSignInScreen = {navController.navigate("sign_in")},
-                    closetViewModel = closetViewModel
+                    closetViewModel = closetViewModel,
+                    outfitsViewModel = outfitsViewModel,
+                    onNavigateToCalendarScreen = { navController.navigate("calendar") }
                 )
             }
             // Defines the "closet" route and what UI to display there

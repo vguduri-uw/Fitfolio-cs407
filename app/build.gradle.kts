@@ -5,6 +5,7 @@ val localProps = Properties().apply {
     load(rootProject.file("local.properties").inputStream())
 }
 val fashnApiKey: String = localProps.getProperty("FASHN_API_KEY") ?: ""
+val imgbbApiKey: String = localProps.getProperty("IMGBB_API_KEY") ?: ""
 
 plugins {
     alias(libs.plugins.android.application)
@@ -27,8 +28,9 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
-        // exposes api key as a BuildConfig field
+        // exposes api keys as a BuildConfig field
         buildConfigField("String", "FASHN_API_KEY", "\"$fashnApiKey\"")
+        buildConfigField("String", "IMGBB_API_KEY", "\"$imgbbApiKey\"")
     }
 
     buildTypes {
@@ -86,4 +88,5 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     implementation(platform("com.google.firebase:firebase-bom:34.4.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 }

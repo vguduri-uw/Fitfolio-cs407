@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.enums
 
+// Enum for item tags that come with the app to be populated into the DB
 enum class DefaultItemTags(val tagName: String) {
     // Seasons
     SPRING("Spring"),
