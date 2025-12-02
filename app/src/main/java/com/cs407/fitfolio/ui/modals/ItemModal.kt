@@ -488,6 +488,7 @@ fun ItemInformation(
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
                                     imageRes = R.drawable.shirt, // swap to item.itemPhotoUri when ready
+                                    photoUri = outfit.outfitPhotoUri, //item photo
                                     closetViewModel = closetViewModel
                                 )
                             }
@@ -519,6 +520,7 @@ private fun OutfitsCard(
     onNavigateToCalendarScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
     imageRes: Int,
+    photoUri: String,
 ) {
     var showOutfitModal by remember { mutableStateOf(false) }
 
@@ -532,11 +534,21 @@ private fun OutfitsCard(
             .fillMaxSize()
             .clickable{showOutfitModal = true}
     ) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = "$outfitName image",
-            modifier = Modifier.size(72.dp)
-        )
+        //check if there is available uploaded item picture
+        if (photoUri.isNotEmpty()) {
+            AsyncImage(
+                model = photoUri,
+                contentDescription = "$outfitName photo",
+                modifier = Modifier.size(72.dp),
+                contentScale = ContentScale.Crop
+            )
+        } else {
+            Image(
+                painter = painterResource(imageRes),
+                contentDescription = "$outfitName image",
+                modifier = Modifier.size(72.dp)
+            )
+        }
         Text(
             text = outfitName,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),

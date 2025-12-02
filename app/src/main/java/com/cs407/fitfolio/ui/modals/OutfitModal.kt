@@ -60,6 +60,9 @@ import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+
 
 // modal sheet that displays full outfit details and actions
 // shows outfit photo, description, items, and tags, with editing modes
@@ -236,6 +239,7 @@ private fun ItemCard(
     name: String,
     type: String,
     imageRes: Int,
+    photoUri:String,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
     itemId: Int,
@@ -254,11 +258,22 @@ private fun ItemCard(
             .fillMaxSize()
             .clickable{ showItemModal = true }
     ) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = "$name image",
-            modifier = Modifier.size(72.dp)
-        )
+        //uploaded item image or placeholder picture
+        if(photoUri.isNotEmpty()){
+            AsyncImage(
+                model = photoUri,
+                contentDescription = "$name photo",
+                modifier = Modifier.size(72.dp)
+            )
+        }else{
+
+            Image(
+               painter = painterResource(imageRes),
+               contentDescription = "$name image",
+               modifier = Modifier.size(72.dp)
+            )
+        }
+
         Text(
             text = name,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
@@ -842,6 +857,7 @@ private fun ItemsInOutfitCard(
                                 name = item.itemName,
                                 type = item.itemType,
                                 imageRes = R.drawable.shirt, // swap to item.itemPhoto when ready
+                                photoUri = item.itemPhotoUri, //Uploaded item photo
                                 closetViewModel = closetViewModel,
                                 outfitsViewModel = outfitsViewModel,
                                 itemId = item.itemId,
