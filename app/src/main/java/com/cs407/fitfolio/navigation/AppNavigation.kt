@@ -127,12 +127,9 @@ fun AppNavigation(userViewModel: UserViewModel) {
             // Defines the "add" route and what UI to display there
             composable(route = "add") {
                 AddScreen(
-                    onNavigateToOutfitsScreen = { navController.navigate("outfits") },
-                    onNavigateToCalendarScreen = { navController.navigate("calendar") },
-                    onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
-                    onNavigateToClosetScreen = { navController.navigate("closet") },
-                    onNavigateToSignInScreen = {navController.navigate("sign_in")},
-                    closetViewModel = closetViewModel
+                    closetViewModel = closetViewModel,
+                    outfitsViewModel = outfitsViewModel,
+                    onNavigateToCalendarScreen = { navController.navigate("calendar") }
                 )
             }
             // Defines the "closet" route and what UI to display there

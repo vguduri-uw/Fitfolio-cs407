@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
@@ -34,8 +35,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -49,6 +52,9 @@ import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.modals.InformationModal
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import androidx.core.content.ContextCompat
+import com.cs407.fitfolio.ui.modals.ItemModal
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import kotlinx.coroutines.launch
 
 fun createImageUri(context: Context): Uri {
     val contentResolver = context.contentResolver
@@ -104,12 +110,9 @@ fun CategoryDropdown(
 
 @Composable
 fun AddScreen(
-    onNavigateToOutfitsScreen: () -> Unit,
-    onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToWardrobeScreen: () -> Unit,
-    onNavigateToClosetScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
-    closetViewModel: ClosetViewModel // used for adding single clothes
+    closetViewModel: ClosetViewModel, // used for adding single clothes
+    outfitsViewModel: OutfitsViewModel,
+    onNavigateToCalendarScreen: () -> Unit
 ) {
     var showInfo by remember { mutableStateOf(false) } // informationModal
     val context = LocalContext.current // context for toast message
@@ -123,6 +126,10 @@ fun AddScreen(
             availableTypes.firstOrNull() ?: DefaultItemTypes.T_SHIRTS.typeName
         )
     }
+    var showItemModal by remember { mutableStateOf(false) }
+    var createdItemId: Int by remember { mutableIntStateOf(-1) }
+    var saveError by remember { mutableStateOf(false) }
+    val scope =  rememberCoroutineScope()
 
     // gallery launcher
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -150,7 +157,7 @@ fun AddScreen(
             cameraImageUri = uri
             cameraLauncher.launch(uri)
         } else {
-            Toast.makeText(context, "Camera permission denied", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Camera permission denied.", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -217,7 +224,7 @@ fun AddScreen(
                 onClick = {
                     val permissionStatus = ContextCompat.checkSelfPermission(
                         context,
-                        android.Manifest.permission.CAMERA
+                        Manifest.permission.CAMERA
                     )
 
                     if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
@@ -225,7 +232,7 @@ fun AddScreen(
                         cameraImageUri = uri
                         cameraLauncher.launch(uri)
                     } else {
-                        cameraPermissionLauncher.launch(android.Manifest.permission.CAMERA)
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
                     }
                 },
                 modifier = Modifier.weight(1f)
@@ -255,20 +262,24 @@ fun AddScreen(
                     return@Button
                 }
 
-                val imageUriString = selectedImageUri.toString()
-                val categoryString = selectedType
+                scope.launch {
+                    val itemId = closetViewModel.addItem(
+                        name = "",
+                        type = selectedType,
+                        description = "",
+                        tags = emptyList(),
+                        isFavorites = false,
+                        photoUri = selectedImageUri.toString()
+                    )
 
-                closetViewModel.addItem(
-                    name = "",
-                    type = categoryString,
-                    description = "",
-                    tags = emptyList(),
-                    isFavorites = false,
-                    photoUri = imageUriString
-                )
-
-                Toast.makeText(context, "Saved to closet", Toast.LENGTH_SHORT).show()
-                onNavigateToClosetScreen()
+                    if (itemId > 0) {
+                        createdItemId = itemId
+                        Toast.makeText(context, "Item saved to closet.", Toast.LENGTH_SHORT).show()
+                        showItemModal = true
+                    } else {
+                        saveError = true
+                    }
+                }
             },
             modifier = Modifier.fillMaxWidth()
         ) {
@@ -276,5 +287,18 @@ fun AddScreen(
         }
 
         Spacer(Modifier.height(12.dp))
+
+        if (showItemModal) {
+            ItemModal(
+                closetViewModel = closetViewModel,
+                outfitsViewModel = outfitsViewModel,
+                itemId = createdItemId,
+                onDismiss = { showItemModal = false },
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+            )
+        } else if (saveError) {
+            Toast.makeText(context, "Item could not be saved. Please try again.", Toast.LENGTH_SHORT).show()
+            saveError = false
+        }
     }
 }

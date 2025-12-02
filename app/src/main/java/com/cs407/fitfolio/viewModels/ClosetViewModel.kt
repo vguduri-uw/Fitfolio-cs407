@@ -81,10 +81,10 @@ class ClosetViewModel(
     // ITEM FUNCTIONS //
 
     // Adds an item to the closet to be used in add screen
-    fun addItem(
+    suspend fun addItem(
         name: String, type: String, description: String, tags: List<String>,
         isFavorites: Boolean, photoUri: String
-    ) {
+    ) : Int {
         val newItem = ItemEntry(
             itemId = 0,
             itemName = name,
@@ -96,15 +96,15 @@ class ClosetViewModel(
             itemPhotoUri = photoUri,
         )
 
-        viewModelScope.launch(Dispatchers.IO) {
-            // Insert item into database
-            db.itemDao().upsertItem(newItem, userId)
+        // Insert item into database
+        val itemId = db.itemDao().upsertItem(newItem, userId)
 
-            val items = db.userDao().getItemsByUserId(userId)
-            _closetState.value = _closetState.value.copy(
-                items = items,
-                filteredItems = items)
-        }
+        val items = db.userDao().getItemsByUserId(userId)
+        _closetState.value = _closetState.value.copy(
+            items = items,
+            filteredItems = items)
+
+        return itemId
     }
 
     // Deletes specified items from the closet
