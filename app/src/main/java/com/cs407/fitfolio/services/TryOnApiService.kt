@@ -6,6 +6,7 @@ import retrofit2.http.POST
 import com.cs407.fitfolio.BuildConfig
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 // ===============================================================================================
@@ -36,18 +37,19 @@ import retrofit2.http.Query
 
 // data being sent to the api
 data class FashnRunRequest(
-    val model_name: String,     // name of the model we are making the request to (e.g., background-remove)
-    val inputs: List<String>    // list of all the image urls we want to upload
+    val model_name: String,            // name of the model we are making the request to (e.g., background-remove)
+    val inputs: Map<String, String>    // list of all the image urls we want to upload
 )
 
 // response returned right after /run (only returns a prediction id for status polling)
 data class FashnRunResponse(
-    val prediction_id: String
+    val id: String,
+    val error: FashnApiError? = null
 )
 
 // response when checking status (where we collect the final output images)
 data class FashnStatusResponse(
-    val prediction_id: String,
+    val id: String,
     val status: String,
     val output: List<String?>,
     val error: FashnApiError? = null
@@ -69,9 +71,9 @@ interface TryOnApiService {
         @Body request: FashnRunRequest
     ): FashnRunResponse
 
-    @GET("v1/status")
+    @GET("v1/status/{prediction_id}")
     suspend fun getPredictionStatus(
-        @Query("prediction_id") predictionId: String
+        @Path("prediction_id") predictionId: String
     ): FashnStatusResponse
 }
 

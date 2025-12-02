@@ -14,8 +14,13 @@ import com.cs407.fitfolio.data.ItemTag
 import com.cs407.fitfolio.data.ItemType
 import com.cs407.fitfolio.enums.DefaultItemTags
 import com.cs407.fitfolio.enums.DefaultItemTypes
+import com.cs407.fitfolio.services.FashnRunRequest
+import com.cs407.fitfolio.services.FashnStatusResponse
+import com.cs407.fitfolio.services.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 // Data class representing the entire closet of clothing
 data class ClosetState(
@@ -195,6 +200,38 @@ class ClosetViewModel(
 
             val updatedItems = db.userDao().getItemsByUserId(userId)
             _closetState.value = _closetState.value.copy(items = updatedItems)
+        }
+    }
+
+    // Removes the background from a photo of an item
+    suspend fun removeBackground(imageUrl: String): String? = withContext(Dispatchers.IO) {
+        try {
+            val runRequest = FashnRunRequest(
+                model_name = "background-remove",
+                inputs = mapOf("image" to imageUrl)
+            )
+
+            val runResponse = RetrofitInstance.fashnApi.runModel(runRequest)
+            val predictionId = runResponse.id
+            println("removeBackground RUN PREDICTION ID = $predictionId")
+
+            var status: FashnStatusResponse
+            do {
+                delay(1500)
+                status = RetrofitInstance.fashnApi.getPredictionStatus(predictionId)
+            } while (status.status != "completed" && status.status != "failed")
+
+            if (status.status == "completed") {
+                val output = status.output.firstOrNull()
+                println("removeBackground SUCCESS OUTPUT = $output")
+                return@withContext output
+            } else {
+                println("removeBackground FAILED: ${status.error?.message}")
+                return@withContext null
+            }
+        } catch (e: Exception) {
+            println("removeBackground EXCEPTION: ${e.message}")
+            null
         }
     }
 

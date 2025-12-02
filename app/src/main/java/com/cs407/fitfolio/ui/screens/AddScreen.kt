@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.MediaStore
+import android.util.Base64
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -52,9 +54,16 @@ import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.modals.InformationModal
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import androidx.core.content.ContextCompat
+import com.cs407.fitfolio.BuildConfig
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
 
 fun createImageUri(context: Context): Uri {
     val contentResolver = context.contentResolver
@@ -84,9 +93,7 @@ fun ItemTypeDropdown(
         OutlinedTextField(
             placeholder = { Text("Choose or create an item type.") },
             value = selectedType,
-            onValueChange = { newType ->
-                onTypeSelected(newType)
-            },
+            onValueChange = { newType -> onTypeSelected(newType) },
             label = { Text("Item Type") },
             modifier = Modifier
                 .menuAnchor()
@@ -128,6 +135,7 @@ fun AddScreen(
     var showItemModal by remember { mutableStateOf(false) }
     var createdItemId: Int by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
+    var isUploading by remember { mutableStateOf(false) }
     val scope =  rememberCoroutineScope()
 
     // reset screen after successful save to closet
@@ -136,6 +144,7 @@ fun AddScreen(
         selectedType = ""
         createdItemId = -1
         saveError = false
+        showInfo = false
     }
 
     // gallery launcher
@@ -270,14 +279,33 @@ fun AddScreen(
                 }
 
                 scope.launch {
+                    // upload photo to imgbb
+                    isUploading = true
+                    val hostedUrl = uploadToImgbb(selectedImageUri!!, context)
+
+                    if (hostedUrl == null) {
+                        Toast.makeText(context, "Could not upload image. Please try again.", Toast.LENGTH_LONG).show()
+                        isUploading = false
+                        return@launch
+                    }
+
+                    // remove background from item photo
+                    var cleanedUrl = closetViewModel.removeBackground(hostedUrl)
+                    if (cleanedUrl == null) {
+                        cleanedUrl = hostedUrl
+                        Toast.makeText(context, "Could not remove background from image.", Toast.LENGTH_LONG).show()
+                    }
+
+                    // add item to closet
                     val itemId = closetViewModel.addItem(
                         name = "",
                         type = selectedType,
                         description = "",
                         tags = emptyList(),
                         isFavorites = false,
-                        photoUri = selectedImageUri.toString()
+                        photoUri = cleanedUrl
                     )
+                    isUploading = false
 
                     if (itemId > 0) {
                         createdItemId = itemId
@@ -288,12 +316,24 @@ fun AddScreen(
                     }
                 }
             },
+            enabled = !isUploading && selectedType.isNotEmpty(),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Save to Closet")
         }
 
         Spacer(Modifier.height(12.dp))
+
+        if (isUploading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        }
 
         if (showItemModal) {
             ItemModal(
@@ -309,6 +349,53 @@ fun AddScreen(
         } else if (saveError) {
             Toast.makeText(context, "Item could not be saved. Please try again.", Toast.LENGTH_SHORT).show()
             saveError = false
+        }
+    }
+}
+
+suspend fun uploadToImgbb(localUri: Uri, context: Context): String? {
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            val stream = context.contentResolver.openInputStream(localUri)
+                ?: return@withContext null
+
+            val bytes = stream.readBytes()
+            println("📌 uploadToImgbb: image size = ${bytes.size} bytes")
+
+            val encodedImage = Base64.encodeToString(bytes, Base64.DEFAULT)
+
+            val client = OkHttpClient()
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("key", BuildConfig.IMGBB_API_KEY)
+                .addFormDataPart("image", encodedImage)
+                .build()
+
+            val request = Request.Builder()
+                .url("https://api.imgbb.com/1/upload")
+                .post(requestBody)
+                .build()
+
+            val response = client.newCall(request).execute()
+            val bodyString = response.body?.string()
+
+            println("📌 uploadToImgbb RESPONSE = $bodyString")
+
+            val json = JSONObject(bodyString ?: return@withContext null)
+            val data = json.getJSONObject("data")
+
+            when {
+                data.has("image") && data.getJSONObject("image").has("url") ->
+                    data.getJSONObject("image").getString("url")
+                data.has("url") ->
+                    data.getString("url")
+                data.has("display_url") ->
+                    data.getString("display_url")
+                else -> null
+            }
+        }.getOrElse { e ->
+            e.printStackTrace()
+            null
         }
     }
 }
