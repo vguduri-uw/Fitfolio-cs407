@@ -1,6 +1,15 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.Manifest
+import android.content.ContentValues
+import android.content.Context
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.provider.MediaStore
+import android.util.Base64
 import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -10,51 +19,170 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
-import com.cs407.fitfolio.viewModels.ClosetViewModel
-import androidx.compose.runtime.setValue
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImage
+import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.modals.InformationModal
+import com.cs407.fitfolio.viewModels.ClosetViewModel
+import androidx.core.content.ContextCompat
+import com.cs407.fitfolio.BuildConfig
+import com.cs407.fitfolio.ui.modals.ItemModal
+import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import org.json.JSONObject
+
+fun createImageUri(context: Context): Uri {
+    val contentResolver = context.contentResolver
+    val contentValues = ContentValues().apply {
+        put(MediaStore.Images.Media.DISPLAY_NAME, "fitfolio_${System.currentTimeMillis()}.jpg")
+        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+    }
+    return contentResolver.insert(
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+        contentValues
+    )!!
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ItemTypeDropdown(
+    selectedType: String,
+    allTypes: List<String>,
+    onTypeSelected: (String) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded }
+    ) {
+        OutlinedTextField(
+            placeholder = { Text("Choose or create an item type.") },
+            value = selectedType,
+            onValueChange = { newType -> onTypeSelected(newType) },
+            label = { Text("Item Type") },
+            modifier = Modifier
+                .menuAnchor()
+                .fillMaxWidth(),
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.heightIn(max = 250.dp)
+        ) {
+            allTypes.forEach { typeName ->
+                DropdownMenuItem(
+                    text = { Text(typeName) },
+                    onClick = {
+                        onTypeSelected(typeName)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
 
 @Composable
 fun AddScreen(
-    onNavigateToOutfitsScreen: () -> Unit,
-    onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToWardrobeScreen: () -> Unit,
-    onNavigateToClosetScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
-    closetViewModel: ClosetViewModel? //used for adding single clothes?
+    closetViewModel: ClosetViewModel, // used for adding single clothes
+    outfitsViewModel: OutfitsViewModel,
+    onNavigateToCalendarScreen: () -> Unit
 ) {
+    var showInfo by remember { mutableStateOf(false) } // informationModal
+    val context = LocalContext.current // context for toast message
 
-    //informationModal
-    var showInfo by remember { mutableStateOf(false) }
-    //context for toast message
-    val context = LocalContext.current
+    val closetState by closetViewModel.closetState.collectAsState()
+    val availableTypes = closetState.itemTypes.filter { it != DefaultItemTypes.ALL.typeName }
+
+    var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // selected pic
+    var selectedType by remember { mutableStateOf("") }
+    var showItemModal by remember { mutableStateOf(false) }
+    var createdItemId: Int by remember { mutableIntStateOf(-1) }
+    var saveError by remember { mutableStateOf(false) }
+    var isUploading by remember { mutableStateOf(false) }
+    val scope =  rememberCoroutineScope()
+
+    // reset screen after successful save to closet
+    fun reset() {
+        selectedImageUri = null
+        selectedType = ""
+        createdItemId = -1
+        saveError = false
+        showInfo = false
+    }
+
+    // gallery launcher
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        if (uri != null) {
+            selectedImageUri = uri
+        }
+    }
+
+    var cameraImageUri by remember { mutableStateOf<Uri?>(null) } // new taken pic
+    val cameraLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.TakePicture()
+    ) { success ->
+        if (success) {
+            selectedImageUri = cameraImageUri
+        }
+    }
+
+    val cameraPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            val uri = createImageUri(context)
+            cameraImageUri = uri
+            cameraLauncher.launch(uri)
+        } else {
+            Toast.makeText(context, "Camera permission denied.", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp)
     ) {
-        //actual camera view with a suggested body outline,
-        // or the uploaded picture preview and editing
+        //show the selected/taken photo
         Box(
             modifier = Modifier
                 .weight(1f)
@@ -63,9 +191,8 @@ fun AddScreen(
                 .background(Color(0xFFECECEC)),
             contentAlignment = Alignment.Center
         ) {
-            // info icon (camera instruction, other info...
             IconButton(
-                onClick = {showInfo = true},
+                onClick = { showInfo = true },
                 modifier = Modifier
                     .align(Alignment.TopEnd)
                     .padding(top = 8.dp)
@@ -76,48 +203,199 @@ fun AddScreen(
                     tint = Color.Black
                 )
             }
-            //show the half screen
-            if( showInfo ){
-                InformationModal (
-                    onDismiss = { showInfo = false},
+
+            if (showInfo) {
+                InformationModal(
+                    onDismiss = { showInfo = false },
                     screen = "Add"
                 )
             }
-            Text("Camera Preview (placeholder)")
+
+            if (selectedImageUri == null) {
+                Text("No image selected yet")
+            } else {
+                AsyncImage(
+                    model = selectedImageUri,
+                    contentDescription = "selected photo",
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+            }
         }
 
         Spacer(Modifier.height(12.dp))
 
+        //two button: upload & take photo
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             OutlinedButton(
-                onClick = { /* access the device album to choose picture */ },
+                onClick = { galleryLauncher.launch("image/*") },
                 modifier = Modifier.weight(1f)
             ) { Text("Upload") }
 
             Button(
-                onClick = { /* allow user to take picture */ },
+                onClick = {
+                    val permissionStatus = ContextCompat.checkSelfPermission(
+                        context,
+                        Manifest.permission.CAMERA
+                    )
+
+                    if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+                        val uri = createImageUri(context)
+                        cameraImageUri = uri
+                        cameraLauncher.launch(uri)
+                    } else {
+                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                    }
+                },
                 modifier = Modifier.weight(1f)
             ) { Text("Take Photo") }
         }
 
         Spacer(Modifier.height(12.dp))
 
-        // save the edited picture as a single clothes?
-        Button(
-            onClick = {
-                Toast.makeText(context, "Saved to closet", Toast.LENGTH_SHORT).show()
-                onNavigateToClosetScreen},
-            modifier = Modifier.fillMaxWidth()
-        ) { Text("Save to Closet") }
+        //dropdown menu
+        ItemTypeDropdown(
+            selectedType = selectedType,
+            allTypes = availableTypes,
+            onTypeSelected = { selectedType = it }
+        )
 
         Spacer(Modifier.height(12.dp))
 
+        // Save button
+        Button(
+            onClick = {
+                if (selectedImageUri == null) {
+                    Toast.makeText(
+                        context,
+                        "Please upload or take a photo first.",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                    return@Button
+                }
 
+                scope.launch {
+                    // upload photo to imgbb
+                    isUploading = true
+                    val hostedUrl = uploadToImgbb(selectedImageUri!!, context)
+
+                    if (hostedUrl == null) {
+                        Toast.makeText(context, "Could not upload image. Please try again.", Toast.LENGTH_LONG).show()
+                        isUploading = false
+                        return@launch
+                    }
+
+                    // remove background from item photo
+                    var cleanedUrl = closetViewModel.removeBackground(hostedUrl)
+                    if (cleanedUrl == null) {
+                        cleanedUrl = hostedUrl
+                        Toast.makeText(context, "Could not remove background from image.", Toast.LENGTH_LONG).show()
+                    }
+
+                    // add item to closet
+                    val itemId = closetViewModel.addItem(
+                        name = "",
+                        type = selectedType,
+                        description = "",
+                        tags = emptyList(),
+                        isFavorites = false,
+                        photoUri = cleanedUrl
+                    )
+                    isUploading = false
+
+                    if (itemId > 0) {
+                        createdItemId = itemId
+                        Toast.makeText(context, "Item saved to closet.", Toast.LENGTH_SHORT).show()
+                        showItemModal = true
+                    } else {
+                        saveError = true
+                    }
+                }
+            },
+            enabled = !isUploading && selectedType.isNotEmpty(),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Save to Closet")
+        }
+
+        Spacer(Modifier.height(12.dp))
+
+        if (isUploading) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(Color.Black.copy(alpha = 0.4f)),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(color = Color.White)
+            }
+        }
+
+        if (showItemModal) {
+            ItemModal(
+                closetViewModel = closetViewModel,
+                outfitsViewModel = outfitsViewModel,
+                itemId = createdItemId,
+                onDismiss = {
+                    showItemModal = false
+                    reset()
+                },
+                onNavigateToCalendarScreen = onNavigateToCalendarScreen
+            )
+        } else if (saveError) {
+            Toast.makeText(context, "Item could not be saved. Please try again.", Toast.LENGTH_SHORT).show()
+            saveError = false
+        }
     }
+}
 
+suspend fun uploadToImgbb(localUri: Uri, context: Context): String? {
+    return withContext(Dispatchers.IO) {
+        runCatching {
+            val stream = context.contentResolver.openInputStream(localUri)
+                ?: return@withContext null
 
+            val bytes = stream.readBytes()
+            println("📌 uploadToImgbb: image size = ${bytes.size} bytes")
+
+            val encodedImage = Base64.encodeToString(bytes, Base64.DEFAULT)
+
+            val client = OkHttpClient()
+            val requestBody = MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart("key", BuildConfig.IMGBB_API_KEY)
+                .addFormDataPart("image", encodedImage)
+                .build()
+
+            val request = Request.Builder()
+                .url("https://api.imgbb.com/1/upload")
+                .post(requestBody)
+                .build()
+
+            val response = client.newCall(request).execute()
+            val bodyString = response.body?.string()
+
+            println("📌 uploadToImgbb RESPONSE = $bodyString")
+
+            val json = JSONObject(bodyString ?: return@withContext null)
+            val data = json.getJSONObject("data")
+
+            when {
+                data.has("image") && data.getJSONObject("image").has("url") ->
+                    data.getJSONObject("image").getString("url")
+                data.has("url") ->
+                    data.getString("url")
+                data.has("display_url") ->
+                    data.getString("display_url")
+                else -> null
+            }
+        }.getOrElse { e ->
+            e.printStackTrace()
+            null
+        }
+    }
 }

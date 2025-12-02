@@ -65,6 +65,10 @@ import com.cs407.fitfolio.ui.screens.OutfitPreviewGrid
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import coil.compose.rememberAsyncImagePainter
+import com.cs407.fitfolio.viewModels.OutfitsState
+import coil.compose.AsyncImage
+import androidx.compose.ui.layout.ContentScale
+
 
 // modal sheet that displays full outfit details and actions
 // shows outfit photo, description, items, and tags, with editing modes
@@ -234,6 +238,10 @@ private fun ConfirmDialog(
 @Composable
 private fun ItemCard(
     item: ItemEntry,
+    name: String,
+    type: String,
+    imageRes: Int,
+    photoUri:String,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit
@@ -859,6 +867,10 @@ private fun ItemsInOutfitCard(
                         ) {
                             ItemCard(
                                 item = item,
+                                name = item.itemName,
+                                type = item.itemType,
+                                imageRes = R.drawable.shirt, // swap to item.itemPhoto when ready
+                                photoUri = item.itemPhotoUri, //Uploaded item photo
                                 closetViewModel = closetViewModel,
                                 outfitsViewModel = outfitsViewModel,
                                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
