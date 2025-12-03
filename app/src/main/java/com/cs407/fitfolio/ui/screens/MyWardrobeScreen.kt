@@ -93,16 +93,6 @@ fun MyWardrobeScreen(
     )
 
     Box(modifier = Modifier.fillMaxSize()) {
-        //bacground sillouette
-        Image(
-            painter = painterResource(R.drawable.silouette),
-            contentDescription = "Silhouette background",
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(550.dp)
-                .alpha(0.12f),       // make semi-transparent
-            contentScale = ContentScale.Fit
-        )
         Column(
             modifier = Modifier
                 .fillMaxSize()
