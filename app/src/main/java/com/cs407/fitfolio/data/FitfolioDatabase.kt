@@ -514,13 +514,16 @@ interface DeleteDao {
         User::class,
         ItemEntry::class,
         OutfitEntry::class,
+        ScheduledOutfit::class,
         UserItemRelation::class,
         UserOutfitRelation::class,
         ItemOutfitRelation::class,
         ItemTag::class,
         ItemType::class,
         OutfitTag::class,
-        ScheduledOutfit::class
+        UserItemTypeRelation::class,
+        UserItemTagsRelation::class,
+        UserOutfitsTagsRelation::class
     ],
     version = 2
 )
@@ -541,8 +544,7 @@ abstract class FitfolioDatabase : RoomDatabase() {
                     context.applicationContext,
                     FitfolioDatabase::class.java,
                     "fitfolio_database"
-                )
-                    .build()
+                ).build()
                 INSTANCE = instance
                 instance
             }
