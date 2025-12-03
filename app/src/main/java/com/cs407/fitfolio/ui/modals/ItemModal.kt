@@ -99,6 +99,7 @@ fun ItemModal(
             IconBox(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
+                outfitsViewModel = outfitsViewModel,
                 onDismiss = onDismiss,
             )
 
@@ -120,6 +121,7 @@ fun ItemModal(
 fun IconBox (
     itemId: Int,
     closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel,
     onDismiss: () -> Unit,
 ) {
     // Observe the current UI state from the ViewModel
@@ -296,6 +298,7 @@ fun IconBox (
                 onDismiss = { pendingDeletingItemType = null; expanded = false },
                 onConfirm = {
                     closetViewModel.deleteItemType(option)
+                    outfitsViewModel.refresh()
                     pendingDeletingItemType = null
                     expanded = false
                     if (closetState.activeItemType == option) {

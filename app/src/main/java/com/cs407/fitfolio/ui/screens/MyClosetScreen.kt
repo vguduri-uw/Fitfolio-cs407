@@ -210,7 +210,7 @@ fun MyClosetScreen(
 
         // Show deletion dialog
         if (closetState.isDeleteActive == DeletionStates.Confirmed.name) {
-            DeleteItemDialog(closetViewModel)
+            DeleteItemDialog(closetViewModel, outfitsViewModel)
         }
     }
 }

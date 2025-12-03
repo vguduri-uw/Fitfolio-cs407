@@ -492,6 +492,15 @@ class OutfitsViewModel(
         )
     }
 
+    fun refresh() {
+        viewModelScope.launch(Dispatchers.IO) {
+            _outfitsState.value = _outfitsState.value.copy(
+                outfits = db.userDao().getOutfitsByUserId(userId)
+            )
+            applyFilters()
+        }
+    }
+
     //Veda: schedule an outfit for a specific date -> Veda here onwards
     fun scheduleOutfit(outfitId: Int, dateMillis: Long) {
         viewModelScope.launch {
