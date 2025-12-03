@@ -27,7 +27,8 @@ import androidx.room.Upsert
 data class User(
     @PrimaryKey(autoGenerate = true) val userId: Int = 0,
     val userUID: String,
-    val username: String
+    val username: String,
+    val email: String
 )
 
 // Item table
@@ -249,6 +250,9 @@ interface UserDao {
 
     @Insert(entity = User::class)
     suspend fun insert(user: User): Long
+
+    @Query("UPDATE user SET username = :username, email = :email WHERE userId = :id")
+    suspend fun updateUser(id: Int, username: String, email: String)
 
     @Query(
         """SELECT * FROM User, ItemEntry, user_item_relation

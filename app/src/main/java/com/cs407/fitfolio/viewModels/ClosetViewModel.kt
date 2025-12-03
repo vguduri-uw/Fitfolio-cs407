@@ -20,6 +20,7 @@ import com.cs407.fitfolio.services.FashnStatusResponse
 import com.cs407.fitfolio.services.RetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -50,6 +51,21 @@ class ClosetViewModel(
 
     // Publicly exposed immutable StateFlow for the UI layer to observe changes safely
     val closetState = _closetState.asStateFlow()
+
+    // Track selected items by category
+    private val _selectedItems = MutableStateFlow<Map<String, ItemEntry?>>(
+        mapOf(
+            "Headwear" to null,
+            "Topwear" to null,
+            "Bottomwear" to null,
+            "Shoes" to null
+        )
+    )
+    val selectedItems: StateFlow<Map<String, ItemEntry?>> = _selectedItems
+
+    fun selectItem(category: String, item: ItemEntry) {
+        _selectedItems.value = _selectedItems.value.toMutableMap().also { it[category] = item }
+    }
 
     // Initialize closet state items and filtered items with data from db
     init {

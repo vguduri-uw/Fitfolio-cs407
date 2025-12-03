@@ -15,7 +15,9 @@ import kotlinx.coroutines.launch
 data class UserState(
     val id: Int = 0,
     val name: String = "",
-    val uid: String = ""
+    val uid: String = "",
+    val email: String = "",
+    val isLoggedOut: Boolean = false
 )
 
 class UserViewModel : ViewModel() {
@@ -52,7 +54,8 @@ class UserViewModel : ViewModel() {
                     UserState(
                         id = localUser.userId,
                         name = localUser.username,
-                        uid = localUser.userUID
+                        uid = localUser.userUID,
+                        email = localUser.email
                     )
                 )
             } else {
@@ -60,14 +63,16 @@ class UserViewModel : ViewModel() {
                 val newId = db.userDao().insert(
                     User(
                         userUID = firebaseUser.uid,
-                        username = firebaseUser.displayName ?: ""
+                        username = firebaseUser.displayName ?: "",
+                        email = firebaseUser.email ?: ""
                     )
                 )
                 setUser(
                     UserState(
                         id = newId.toInt(),
                         name = firebaseUser.displayName ?: "",
-                        uid = firebaseUser.uid
+                        uid = firebaseUser.uid,
+                        email = firebaseUser.email ?: ""
                     )
                 )
             }
@@ -77,6 +82,6 @@ class UserViewModel : ViewModel() {
     // Logs the user out of the application
     fun logoutUser() {
         auth.signOut()
-        _userState.value = UserState()
+        _userState.value = UserState(isLoggedOut = true)
     }
 }
