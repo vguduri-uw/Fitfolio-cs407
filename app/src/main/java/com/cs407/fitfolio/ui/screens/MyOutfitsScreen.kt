@@ -563,9 +563,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         enabled = outfitsState.isDeleteActive == DeletionStates.Inactive.name
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Delete,
+                            imageVector = Icons.Outlined.Delete,
                             contentDescription = "Inactive delete icon during active delete state",
-                            tint = Color.Black,
+                            tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
                     }
