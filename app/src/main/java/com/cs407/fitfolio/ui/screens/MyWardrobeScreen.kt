@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -51,6 +52,8 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.data.FitfolioDatabase
@@ -58,6 +61,8 @@ import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.ItemOutfitRelation
 import com.cs407.fitfolio.data.OutfitDao
 import com.cs407.fitfolio.data.OutfitEntry
+import com.cs407.fitfolio.ui.modals.ItemModal
+import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
 
@@ -92,6 +97,10 @@ fun MyWardrobeScreen(
         "Shoes" to listOf("Shoes")
     )
 
+    var showOutfitModal by remember { mutableStateOf(false) }
+    var createdOutfitId by remember { mutableIntStateOf(-1) }
+    var saveError by remember { mutableStateOf(false) }
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -115,7 +124,15 @@ fun MyWardrobeScreen(
                     items = closetState.filteredItems.filter { it.itemType in types },
                     selectedItem = selectedItems[category],
                     onSelect = { item -> closetViewModel.selectItem(category, item) },
-                    category = category
+                    category = category,
+                    onCenteredItemChange = { centeredItem ->
+                        when (category) {
+                            "Headwear" -> centeredHeadwear = centeredItem
+                            "Topwear" -> centeredTopwear = centeredItem
+                            "Bottomwear" -> centeredBottomwear = centeredItem
+                            "Shoes" -> centeredShoes = centeredItem
+                        }
+                    }
                 )
             }
 
@@ -145,33 +162,26 @@ fun MyWardrobeScreen(
 
                         val userId = outfitsViewModel.userId // Make sure you have current user ID
 
-                        // 1. Create outfit entry
-                        val newOutfit = OutfitEntry(
-                            outfitName = "New Outfit",
-                            outfitDescription = "Created from My Wardrobe",
-                            outfitTags = emptyList(),
-                            isFavorite = false,
-                            isDeletionCandidate = false,
-                            outfitPhotoUri = "",
-                            outfitId = 0 // or a placeholder if you have an image
-                        )
-                        // 2. Insert outfit and get outfitId
-//                        scope.launch {
-//                            val outfitId = db.outfitDao().upsertOutfit(newOutfit, userId)
-//                            itemsToAdd.forEach { item ->
-//                                val exists = db.outfitDao().getRelation(outfitId, item.itemId)
-//                                if (exists == null) {
-//                                    db.outfitDao().insertRelation(ItemOutfitRelation(outfitId, item.itemId))
-//                                }
-//                            }
-//                        }
+                        // Add outfit
+                        scope.launch {
+                            val outfitId = outfitsViewModel.addOutfit(
+                                name = "New Outfit",
+                                description = "Created from My Wardrobe",
+                                tags = emptyList(),
+                                isFavorite = false,
+                                photoUri = "",
+                                itemList = itemsToAdd
+                            )
 
-                        // 4. Update the outfit to show in the UI
-                        val lastOutfit = outfitsViewModel.outfitsState.value.outfits.lastOrNull()
-                        lastOutfit?.let { outfitsViewModel.updateOutfitToShow(it.outfitId) }
-
-                        Toast.makeText(context, "Outfit added!", Toast.LENGTH_SHORT).show()
-                        onNavigateToOutfitsScreen()
+                            if (outfitId > 0) {
+                                createdOutfitId = outfitId
+                                Toast.makeText(context, "Outfit saved.", Toast.LENGTH_SHORT).show()
+                                showOutfitModal = true
+                                Log.d("WARDROBE", "head=$centeredHeadwear top=$centeredTopwear bottom=$centeredBottomwear shoes=$centeredShoes")
+                            } else {
+                                saveError = true
+                            }
+                        }
                     }) {
                         Icon(
                             painter = painterResource(R.drawable.add),
@@ -230,6 +240,21 @@ fun MyWardrobeScreen(
             }
         }
     }
+
+    if (showOutfitModal) {
+        OutfitModal(
+            closetViewModel = closetViewModel,
+            outfitsViewModel = outfitsViewModel,
+            outfitId = createdOutfitId,
+            onDismiss = {
+                showOutfitModal = false
+            },
+            onNavigateToCalendarScreen = onNavigateToCalendarScreen
+        )
+    } else if (saveError) {
+        Toast.makeText(context, "Outfit could not be saved. Please try again.", Toast.LENGTH_SHORT).show()
+        saveError = false
+    }
 }
 @Composable
 fun ClothingScroll(
@@ -237,7 +262,8 @@ fun ClothingScroll(
     selectedItem: ItemEntry?,
     onSelect: (ItemEntry) -> Unit,
     category: String,
-//    centeredItem: ItemEntry? = null
+    onCenteredItemChange: (ItemEntry?) -> Unit
+
 ) {
 //    val items = closetState.items.filter{ it.itemType in types}
     val listState = rememberLazyListState( initialFirstVisibleItemIndex = Int.MAX_VALUE / 2)
@@ -255,6 +281,30 @@ fun ClothingScroll(
             if (index != -1) listState.animateScrollToItem(index)
         }
     }
+
+    LaunchedEffect(listState) {
+        snapshotFlow { listState.layoutInfo }
+            .collect { layoutInfo ->
+                val visibleItems = layoutInfo.visibleItemsInfo
+                if (visibleItems.isEmpty()) return@collect
+
+                // Center of the LazyRow viewport
+                val center = layoutInfo.viewportStartOffset +
+                        layoutInfo.viewportEndOffset / 2
+
+                // Find item whose center is closest to viewport center
+                val centered = visibleItems.minByOrNull { item ->
+                    val itemCenter = item.offset + item.size / 2
+                    kotlin.math.abs(itemCenter - center)
+                }
+
+                centered?.let {
+                    val index = it.index % items.size
+                    onCenteredItemChange(items[index])
+                }
+            }
+    }
+
     if (items.isEmpty()) {
         Box(
             modifier = Modifier.fillMaxWidth().height(150.dp),
