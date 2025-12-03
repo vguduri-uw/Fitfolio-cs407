@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -29,8 +30,6 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -61,7 +60,6 @@ import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.DeletionStates
-import com.cs407.fitfolio.ui.screens.OutfitPreviewGrid
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import coil.compose.rememberAsyncImagePainter
@@ -73,9 +71,6 @@ import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import java.time.ZoneId
-import coil.compose.AsyncImage
-import androidx.compose.ui.layout.ContentScale
-
 
 // modal sheet that displays full outfit details and actions
 // shows outfit photo, description, items, and tags, with editing modes
@@ -126,7 +121,7 @@ fun OutfitModal(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             //
-            outfitHeaderBox(
+            OutfitHeaderBox(
                 outfit = outfit,
                 isEditing = isEditing,
                 outfitsViewModel = outfitsViewModel
@@ -134,7 +129,7 @@ fun OutfitModal(
 
             Spacer(modifier = Modifier.height(12.dp))
 
-            outfitIconBox(
+            OutfitIconBox(
                 outfit = outfit,
                 outfitsViewModel = outfitsViewModel,
                 onDismiss = onDismiss,
@@ -407,24 +402,26 @@ private fun TagsEditableCard(
                 )
 
                 if (editMode) {
-                    // add tag
-                    IconButton (
-                        onClick = { showAddDialog = true },
-                    ) {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add tag")
-                    }
-                    // save changes
-                    IconButton (
-                        onClick = {
-                            val current = outfit.outfitTags.toSet()
-                            val toAdd = selectedTags - current
-                            val toRemove = current - selectedTags
-                            toAdd.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = false) }
-                            toRemove.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = true) }
-                            editMode = false
-                        },
-                    ) {
-                        Icon(Icons.Filled.Check, contentDescription = "Save changes")
+                    Row {
+                        // add tag
+                        IconButton (
+                            onClick = { showAddDialog = true },
+                        ) {
+                            Icon(Icons.Outlined.Add, contentDescription = "Add tag")
+                        }
+                        // save changes
+                        IconButton (
+                            onClick = {
+                                val current = outfit.outfitTags.toSet()
+                                val toAdd = selectedTags - current
+                                val toRemove = current - selectedTags
+                                toAdd.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = false) }
+                                toRemove.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = true) }
+                                editMode = false
+                            },
+                        ) {
+                            Icon(Icons.Filled.Check, contentDescription = "Save changes")
+                        }
                     }
                 } else {
                     // edit mode
@@ -496,7 +493,7 @@ private fun TagsEditableCard(
 // edit mode unlocks renaming the outfit and saving the updated name to the ViewModel
 // displayed at the top of the outfit modal for quick identification and editing
 @Composable
-fun outfitHeaderBox(
+fun OutfitHeaderBox(
     outfit: OutfitEntry,
     isEditing: Boolean,
     outfitsViewModel: OutfitsViewModel
@@ -557,7 +554,7 @@ fun outfitHeaderBox(
 // remains pinned at the top while other content scrolls underneath
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun outfitIconBox(
+fun OutfitIconBox(
     outfit: OutfitEntry,
     outfitsViewModel: OutfitsViewModel,
     onDismiss: () -> Unit,
@@ -578,8 +575,9 @@ fun outfitIconBox(
     var showDatePicker by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-) {
     Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // main photo area
@@ -587,8 +585,8 @@ fun outfitIconBox(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color.White)
-                .fillMaxWidth()
-                .height(320.dp)
+                .height(400.dp)
+                .width(300.dp)
         ) {
             when {
                 // use the saved outfit photo if present

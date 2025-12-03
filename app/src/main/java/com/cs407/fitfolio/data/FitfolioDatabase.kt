@@ -58,7 +58,7 @@ data class OutfitEntry(
 // Item tags table
 @Entity
 data class ItemTag(
-    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    @PrimaryKey(autoGenerate = true) val tagId: Int = 0,
     val itemTag: String
 )
 
@@ -72,7 +72,7 @@ data class ItemType(
 // Outfits tags table
 @Entity
 data class OutfitTag(
-    @PrimaryKey(autoGenerate = true) val typeId: Int = 0,
+    @PrimaryKey(autoGenerate = true) val tagId: Int = 0,
     val outfitTag: String
 )
 
@@ -154,7 +154,7 @@ data class ItemOutfitRelation(
     val outfitId: Int
 )
 
-//Outfit <--> Calendar relation
+// Outfit <--> Calendar relation
 @Entity(
     tableName = "scheduled_outfit",
     foreignKeys = [
@@ -170,6 +170,75 @@ data class ScheduledOutfit(
     @PrimaryKey(autoGenerate = true) val scheduleId: Int = 0,
     val outfitId: Int,
     val scheduledDate: Long
+)
+
+// Item Type <--> User relation
+@Entity(
+    tableName = "user_item_type_relation",
+    primaryKeys = ["userId", "typeId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = User::class,
+            parentColumns = ["userId"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ItemType::class,
+            parentColumns = ["typeId"],
+            childColumns = ["typeId"],
+            onDelete = ForeignKey.CASCADE
+        )]
+)
+data class UserItemTypeRelation(
+    val userId: Int,
+    val typeId: Int
+)
+
+// Item Tags <--> User relation
+@Entity(
+    tableName = "user_item_tag_relation",
+    primaryKeys = ["userId", "tagId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = User::class,
+            parentColumns = ["userId"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = ItemTag::class,
+            parentColumns = ["tagId"],
+            childColumns = ["tagId"],
+            onDelete = ForeignKey.CASCADE
+        )]
+)
+data class UserItemTagsRelation(
+    val userId: Int,
+    val tagId: Int
+)
+
+// Outfit Tags <--> User relation
+@Entity(
+    tableName = "user_outfits_tag_relation",
+    primaryKeys = ["userId", "tagId"],
+    foreignKeys = [
+        ForeignKey(
+            entity = User::class,
+            parentColumns = ["userId"],
+            childColumns = ["userId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = OutfitTag::class,
+            parentColumns = ["tagId"],
+            childColumns = ["tagId"],
+            onDelete = ForeignKey.CASCADE
+        )]
+)
+data class UserOutfitsTagsRelation(
+    val userId: Int,
+    val tagId: Int
 )
 
 // User queries
@@ -198,6 +267,33 @@ interface UserDao {
               ORDER BY OutfitEntry.outfitId DESC"""
     )
     suspend fun getOutfitsByUserId(id: Int): List<OutfitEntry>
+
+    @Query(
+        """SELECT * FROM User, ItemType, user_item_type_relation
+              WHERE User.userId = :id
+                AND user_item_type_relation.userId = User.userId
+                AND ItemType.typeId = user_item_type_relation.typeId
+              ORDER BY ItemType.itemType ASC"""
+    )
+    suspend fun getItemsTypesByUserId(id: Int): List<ItemType>
+
+    @Query(
+        """SELECT * FROM User, ItemTag, user_item_tag_relation
+              WHERE User.userId = :id
+                AND user_item_tag_relation.userId = User.userId
+                AND ItemTag.tagId = user_item_tag_relation.tagId
+              ORDER BY ItemTag.itemTag ASC"""
+    )
+    suspend fun getItemsTagsByUserId(id: Int): List<ItemTag>
+
+    @Query(
+        """SELECT * FROM User, OutfitTag, user_outfits_tag_relation
+              WHERE User.userId = :id
+                AND user_outfits_tag_relation.userId = User.userId
+                AND OutfitTag.tagId = user_outfits_tag_relation.tagId
+              ORDER BY OutfitTag.outfitTag ASC"""
+    )
+    suspend fun getOutfitsTagsByUserId(id: Int): List<OutfitTag>
 }
 
 // Item queries
@@ -209,17 +305,6 @@ interface ItemDao {
     @Query("SELECT itemId FROM ItemEntry WHERE rowid = :rowId")
     suspend fun getItemsByRowId(rowId: Long): Int
 
-    @Query("SELECT * FROM ItemTag ORDER BY itemTag ASC")
-    suspend fun getAllItemTags(): List<ItemTag>
-
-    @Insert
-    suspend fun insertItemTag(tag: ItemTag)
-
-    @Query("SELECT * FROM ItemType ORDER BY itemType ASC")
-    suspend fun getAllItemTypes(): List<ItemType>
-    @Insert
-    suspend fun insertItemType(type: ItemType)
-
     @Query(
         """SELECT * FROM ItemEntry, OutfitEntry, item_outfit_relation
               WHERE ItemEntry.itemId = :id
@@ -228,6 +313,42 @@ interface ItemDao {
               ORDER BY OutfitEntry.outfitId DESC"""
     )
     suspend fun getOutfitsByItemId(id: Int): List<OutfitEntry>
+
+    @Query("SELECT typeId FROM ItemType WHERE rowid = :rowId")
+    suspend fun getTypeByRowId(rowId: Long): Int
+
+    @Upsert(entity = ItemType::class)
+    suspend fun upsert(type: ItemType): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRelation(userAndItemType: UserItemTypeRelation)
+
+    @Transaction
+    suspend fun upsertItemType(type: ItemType, userId: Int) {
+        val rowId = upsert(type)
+        val typeId = getTypeByRowId(rowId)
+        if (type.typeId == 0) {
+            insertRelation(UserItemTypeRelation(userId, typeId))
+        }
+    }
+
+    @Query("SELECT tagId FROM ItemTag WHERE rowid = :rowId")
+    suspend fun getTagByRowId(rowId: Long): Int
+
+    @Upsert(entity = ItemTag::class)
+    suspend fun upsert(tag: ItemTag): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRelation(userAndItemTag: UserItemTagsRelation)
+
+    @Transaction
+    suspend fun upsertItemTag(tag: ItemTag, userId: Int) {
+        val rowId = upsert(tag)
+        val tagId = getTagByRowId(rowId)
+        if (tag.tagId == 0) {
+            insertRelation(UserItemTagsRelation(userId, tagId))
+        }
+    }
 
     @Upsert(entity = ItemEntry::class)
     suspend fun upsert(item: ItemEntry): Long
@@ -255,6 +376,9 @@ interface OutfitDao {
     @Query("SELECT outfitId FROM OutfitEntry WHERE rowid = :rowId")
     suspend fun getOutfitByRowId(rowId: Long): Int
 
+    @Query("SELECT tagId FROM OutfitTag WHERE rowid = :rowId")
+    suspend fun getTagByRowId(rowId: Long): Int
+
     @Query(
         """SELECT * FROM OutfitEntry, ItemEntry, item_outfit_relation
               WHERE OutfitEntry.outfitId = :id
@@ -264,26 +388,37 @@ interface OutfitDao {
     )
     suspend fun getItemsByOutfitId(id: Int): List<ItemEntry>
 
-    @Query("SELECT * FROM OutfitTag ORDER BY outfitTag ASC")
-    suspend fun getAllOutfitTags(): List<OutfitTag>
+    @Upsert(entity = OutfitTag::class)
+    suspend fun upsert(tag: OutfitTag): Long
 
-    @Insert
-    suspend fun insertOutfitTag(tag: OutfitTag)
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRelation(userAndOutfitTag: UserOutfitsTagsRelation)
+
+    @Transaction
+    suspend fun upsertOutfitTag(tag: OutfitTag, userId: Int) {
+        val rowId = upsert(tag)
+        val tagId = getTagByRowId(rowId)
+        if (tag.tagId == 0) {
+            insertRelation(UserOutfitsTagsRelation(userId, tagId))
+        }
+    }
 
     @Upsert(entity = OutfitEntry::class)
     suspend fun upsert(outfit: OutfitEntry): Long
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertRelation(userAndOutfit: UserOutfitRelation)
 
     @Transaction
     suspend fun upsertOutfit(outfit: OutfitEntry, userId: Int): Int {
         val rowId = upsert(outfit)
         val outfitId = getOutfitByRowId(rowId)
-        insertRelation(UserOutfitRelation(userId, outfitId))
+        if (outfit.outfitId == 0) {
+            insertRelation(UserOutfitRelation(userId, outfitId))
+        }
 
         return outfitId
     }
-
-    @Insert(onConflict = OnConflictStrategy.IGNORE)
-    suspend fun insertRelation(userAndOutfit: UserOutfitRelation)
 
     @Query("SELECT * FROM ItemEntry WHERE itemId = :id")
     suspend fun getById(id: Int): ItemEntry
@@ -297,15 +432,9 @@ interface OutfitDao {
     @Insert
     suspend fun insertRelation(itemAndOutfit: ItemOutfitRelation)
 
-    // TODO: move to delete dao??
-    @Delete
-    suspend fun deleteRelation(itemAndOutfit: ItemOutfitRelation)
-
-    //Veda: for calendar scheduling for a specific date
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun scheduleOutfit(scheduledOutfit: ScheduledOutfit)
 
-    //Veda: get outfit scheduled for a specific date
     @Query("""
         SELECT OutfitEntry.* FROM OutfitEntry
         INNER JOIN scheduled_outfit ON OutfitEntry.outfitId = scheduled_outfit.outfitId
@@ -313,18 +442,9 @@ interface OutfitDao {
     """)
     suspend fun getOutfitsForDate(date: Long): List<OutfitEntry>
 
-    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date AND outfitId = :outfitId")
-    suspend fun removeOutfitFromDate(date: Long, outfitId: Int)
-
-    //Veda: all dates that have outfits
     @Query("SELECT scheduledDate FROM scheduled_outfit")
     suspend fun getAllScheduledDates(): List<Long>
 
-    //Veda: remove schedule for a specific date
-    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date")
-    suspend fun removeScheduleForDate(date: Long)
-
-    //Veda: get all dates where a  outfit is scheduled
     @Query("SELECT scheduledDate FROM scheduled_outfit WHERE outfitId = :outfitId")
     suspend fun getDatesForOutfit(outfitId: Int): List<Long>
 }
@@ -360,11 +480,20 @@ interface DeleteDao {
     @Query("DELETE FROM ItemType WHERE itemType = :type")
     suspend fun deleteItemType(type: String)
 
+    @Delete
+    suspend fun deleteRelation(itemAndOutfit: ItemOutfitRelation)
+
     @Query("DELETE FROM OutfitEntry WHERE outfitId IN (:outfitsIds)")
     suspend fun deleteOutfits(outfitsIds: List<Int>)
 
     @Query("DELETE FROM OutfitTag WHERE outfitTag = :tag")
     suspend fun deleteOutfitTag(tag: String)
+
+    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date AND outfitId = :outfitId")
+    suspend fun removeOutfitFromDate(date: Long, outfitId: Int)
+
+    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date")
+    suspend fun removeScheduleForDate(date: Long)
 
     @Transaction
     suspend fun delete(userId: Int) {
@@ -380,13 +509,16 @@ interface DeleteDao {
         User::class,
         ItemEntry::class,
         OutfitEntry::class,
+        ScheduledOutfit::class,
         UserItemRelation::class,
         UserOutfitRelation::class,
         ItemOutfitRelation::class,
         ItemTag::class,
         ItemType::class,
         OutfitTag::class,
-        ScheduledOutfit::class
+        UserItemTypeRelation::class,
+        UserItemTagsRelation::class,
+        UserOutfitsTagsRelation::class
     ],
     version = 2
 )
@@ -407,9 +539,7 @@ abstract class FitfolioDatabase : RoomDatabase() {
                     context.applicationContext,
                     FitfolioDatabase::class.java,
                     "fitfolio_database"
-                )
-                    .fallbackToDestructiveMigration()  // TODO: Add this for development
-                    .build()
+                ).build()
                 INSTANCE = instance
                 instance
             }
