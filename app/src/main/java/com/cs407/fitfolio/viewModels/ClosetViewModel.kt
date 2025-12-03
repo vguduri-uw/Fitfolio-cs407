@@ -54,12 +54,12 @@ class ClosetViewModel(
     // Initialize closet state items and filtered items with data from db
     init {
         viewModelScope.launch(Dispatchers.IO) {
-            var itemTypes = db.itemDao().getAllItemTypes().map { it.itemType }
-            var tags = db.itemDao().getAllItemTags().map { it.itemTag }
+            var itemTypes = db.userDao().getItemsTypesByUserId(userId).map { it.itemType }
+            var tags = db.userDao().getItemsTagsByUserId(userId).map { it.itemTag }
             if (itemTypes.isEmpty()) {
                 // Insert defaults item types into DB
                 DefaultItemTypes.entries.forEach { type ->
-                    db.itemDao().insertItemType(ItemType(itemType = type.typeName))
+                    db.itemDao().upsertItemType(ItemType(itemType = type.typeName), userId)
                 }
 
                 itemTypes = DefaultItemTypes.entries.map { it.typeName }
@@ -67,7 +67,7 @@ class ClosetViewModel(
             if (tags.isEmpty()) {
                 // Insert defaults tags into DB
                 DefaultItemTags.entries.forEach { tag ->
-                    db.itemDao().insertItemTag(ItemTag(itemTag = tag.tagName))
+                    db.itemDao().upsertItemTag(ItemTag(itemTag = tag.tagName), userId)
                 }
 
                 tags = DefaultItemTags.entries.map { it.tagName }
@@ -91,11 +91,11 @@ class ClosetViewModel(
         name: String, type: String, description: String, tags: List<String>,
         isFavorites: Boolean, photoUri: String
     ) : Int {
-        val existingTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+        val existingTypes = db.userDao().getItemsTypesByUserId(userId).map { it.itemType }
         if (type !in existingTypes) {
-            db.itemDao().insertItemType(ItemType(itemType = type))  // insert new type
+            db.itemDao().upsertItemType(ItemType(itemType = type), userId)  // insert new type
             // refresh type list in state
-            val updatedTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            val updatedTypes = db.userDao().getItemsTypesByUserId(userId).map { it.itemType }
             _closetState.value = _closetState.value.copy(itemTypes = updatedTypes)
         }
 
@@ -342,15 +342,15 @@ class ClosetViewModel(
             if (newTag.trim().isEmpty()) return@launch
 
             // Prevent duplicates in the DB
-            val existingTags = db.itemDao().getAllItemTags().map { it.itemTag }
+            val existingTags = db.userDao().getItemsTagsByUserId(userId).map { it.itemTag }
             if (newTag.trim() !in existingTags) {
                 // Update database
-                db.itemDao().insertItemTag(ItemTag(itemTag = newTag.trim()))
+                db.itemDao().upsertItemTag(ItemTag(itemTag = newTag.trim()), userId)
             } else {
                 return@launch
             }
 
-            val updatedTags = db.itemDao().getAllItemTags().map { it.itemTag }
+            val updatedTags = db.userDao().getItemsTagsByUserId(userId).map { it.itemTag }
             _closetState.value = _closetState.value.copy(
                 tags = updatedTags
             )
@@ -371,7 +371,7 @@ class ClosetViewModel(
             }
 
             val updatedItems = db.userDao().getItemsByUserId(userId)
-            val updatedTags = db.itemDao().getAllItemTags().map { it.itemTag }
+            val updatedTags = db.userDao().getItemsTagsByUserId(userId).map { it.itemTag }
             _closetState.value = _closetState.value.copy(
                 items = updatedItems,
                 filteredItems = updatedItems,
@@ -387,14 +387,14 @@ class ClosetViewModel(
             if (itemType.trim().isEmpty()) return@launch
 
             // Prevent duplicates
-            val existingTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            val existingTypes = db.userDao().getItemsTypesByUserId(userId).map { it.itemType }
             if (itemType.trim() !in existingTypes) {
-                db.itemDao().insertItemType(ItemType(itemType = itemType.trim()))
+                db.itemDao().upsertItemType(ItemType(itemType = itemType.trim()), userId)
             } else {
                 return@launch
             }
 
-            val updatedTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            val updatedTypes = db.userDao().getItemsTypesByUserId(userId).map { it.itemType }
             _closetState.value = _closetState.value.copy(
                 itemTypes = updatedTypes
             )
@@ -417,7 +417,7 @@ class ClosetViewModel(
                 db.itemDao().upsert(updatedItem)
             }
 
-            val updatedItemTypes = db.itemDao().getAllItemTypes().map { it.itemType }
+            val updatedItemTypes = db.userDao().getItemsTypesByUserId(userId).map { it.itemType }
             val updatedItems = db.userDao().getItemsByUserId(userId)
 
             _closetState.value = _closetState.value.copy(
