@@ -27,6 +27,8 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -54,12 +57,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cs407.fitfolio.R
-import com.cs407.fitfolio.enums.DeletionStates
+import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
 import java.time.LocalDate
+import com.cs407.fitfolio.enums.DefaultItemTypes
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -75,9 +80,6 @@ fun ItemModal(
         skipPartiallyExpanded = true
     )
 
-    // Tracks whether item is in editing mode
-    var isEditing by remember { mutableStateOf(false) }
-
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
@@ -85,7 +87,7 @@ fun ItemModal(
         containerColor = Color(0xFFE0E0E0),
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 64.dp)
+            .padding(top = 40.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -98,8 +100,6 @@ fun ItemModal(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
                 onDismiss = onDismiss,
-                isEditing = isEditing,
-                onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
@@ -107,8 +107,6 @@ fun ItemModal(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
                 outfitsViewModel = outfitsViewModel,
-                isEditing = isEditing,
-                onToggleEditing = { isEdit -> isEditing = isEdit },
                 onNavigateToCalendarScreen = onNavigateToCalendarScreen,
                 modifier = Modifier
                     .weight(1f)
@@ -124,8 +122,6 @@ fun IconBox (
     itemId: Int,
     closetViewModel: ClosetViewModel,
     onDismiss: () -> Unit,
-    isEditing: Boolean,
-    onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit
 ) {
     // Observe the current UI state from the ViewModel
@@ -139,6 +135,15 @@ fun IconBox (
     var isEditingName by remember { mutableStateOf(false) }
     var name by remember { mutableStateOf(item.itemName) }
     var showWearHistoryModal by remember { mutableStateOf(false) }
+    var pendingDeletingItemType: String? by remember { mutableStateOf(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
+    var itemWithNewType: ItemEntry? by remember { mutableStateOf(null) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    // Update selected item type whenever it changes
+    LaunchedEffect(item.itemType) {
+        selectedItemType = item.itemType
+    }
 
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -160,7 +165,7 @@ fun IconBox (
                 TextField(
                     value = name,
                     onValueChange = { name = it },
-                    enabled = isEditingName || isEditing,
+                    enabled = isEditingName,
                     textStyle = TextStyle(
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 24.sp,
@@ -181,17 +186,16 @@ fun IconBox (
                 // Edit icon
                 IconButton(
                     onClick = {
-                        if (isEditingName || isEditing) {
+                        if (isEditingName) {
                             closetViewModel.editItemName(item, name)
                             isEditingName = false
-                            onToggleEditing(false)
                         } else {
                             isEditingName = true
                         }
                     }
                 ) {
                     Icon(
-                        imageVector = if (isEditingName || isEditing) Icons.Filled.Check else Icons.Outlined.Edit,
+                        imageVector = if (isEditingName) Icons.Filled.Check else Icons.Outlined.Edit,
                         contentDescription = "Edit title",
                         modifier = Modifier.size(24.dp)
                     )
@@ -219,7 +223,34 @@ fun IconBox (
                         expanded = expanded,
                         onDismissRequest = { expanded = false }
                     ) {
-                        closetState.itemTypes.forEach { option ->
+                        // Add item type choice
+                        DropdownMenuItem(
+                            onClick = {
+                                itemWithNewType = item
+                                showAddDialog = true
+                                expanded = false
+                            },
+                            text = {
+                                Row {
+                                    Text(
+                                        "Add Item Type",
+                                        color = Color(0xFF2E7D32)
+                                    )
+                                    Icon(
+                                        imageVector = Icons.Outlined.Add,
+                                        contentDescription = "Add an item type",
+                                        tint = Color(0xFF2E7D32),
+                                        modifier = Modifier
+                                            .padding(start = 6.dp)
+                                            .size(16.dp)
+                                    )
+                                }
+                            }
+                        )
+                        val sortedTypes = closetState.itemTypes
+                            .filter { it != DefaultItemTypes.ALL.typeName } // exclude ALL item type
+                            .sortedByDescending { it == selectedItemType } // show selected type first
+                        sortedTypes.forEach { option ->
                             DropdownMenuItem(
                                 onClick = {
                                     closetViewModel.editItemType(item, option)
@@ -232,13 +263,24 @@ fun IconBox (
                                         if (option == selectedItemType) {
                                             Icon(
                                                 imageVector = Icons.Filled.Check,
-                                                contentDescription = "Item type",
+                                                contentDescription = "Selected item type",
                                                 tint = Color(0xFF2E7D32),
                                                 modifier = Modifier
                                                     .padding(start = 6.dp)
                                                     .size(16.dp)
                                             )
                                         }
+                                        // Delete item type
+                                        Icon(
+                                            imageVector = Icons.Outlined.Delete,
+                                            contentDescription = "Delete item type",
+                                            modifier = Modifier
+                                                .padding(start = 6.dp)
+                                                .size(16.dp)
+                                                .clickable(
+                                                    onClick = { pendingDeletingItemType = option }
+                                                )
+                                        )
                                     }
                                 }
                             )
@@ -246,6 +288,40 @@ fun IconBox (
                     }
                 }
             }
+        }
+
+        // Confirm deletion of item type
+        pendingDeletingItemType?.let { option ->
+            DeleteDialog(
+                title = "Delete item type?",
+                message = "This will remove \"$option\" from your item type list and resolve items of \"$option\" type to a default \"${DefaultItemTypes.ALL.typeName}\" type. This action cannot be undone.",
+                onDismiss = { pendingDeletingItemType = null; expanded = false },
+                onConfirm = {
+                    closetViewModel.deleteItemType(option)
+                    pendingDeletingItemType = null
+                    expanded = false
+                    if (closetState.activeItemType == option) {
+                        closetViewModel.updateActiveItemType(DefaultItemTypes.ALL.typeName)
+                    }
+                }
+            )
+        }
+
+        // Add item type dialog
+        if (showAddDialog) {
+            AddDialog(
+                title = "Add an item type",
+                label = "Item type name",
+                onDismiss = { showAddDialog = false; itemWithNewType = null; expanded = false },
+                onConfirm = { itemType ->
+                    closetViewModel.addItemType(itemType)
+                    itemWithNewType?.let { closetViewModel.editItemType(it, itemType) }
+                    selectedItemType = itemType
+                    showAddDialog = false
+                    itemWithNewType = null
+                    expanded = false
+                }
+            )
         }
 
         // Item photo and icon buttons
@@ -292,65 +368,136 @@ fun IconBox (
                 IconButton(
                     modifier = Modifier.align(Alignment.TopEnd),
                     onClick = { onToggleEditing(false) }
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Check,
-                        contentDescription = "Save edits",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+            if (item.itemPhotoUri.isNotEmpty()) {
+                AsyncImage(
+                    model = item.itemPhotoUri,
+                    contentDescription = item.itemName,
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
             } else {
-                IconButton(
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    onClick = { onToggleEditing(true) }
+                Image(
+                    painter = painterResource(R.drawable.hanger),
+                    contentDescription = "Item photo",
+                    modifier = Modifier
+                        .size(180.dp)
+                        .align(Alignment.Center)
+                )
+            }
+            // TODO: verify if we want item photo to be editable
+            FloatingActionButton(
+                onClick = { /*closetViewModel.editItemPhoto(item, null)*/ },
+                containerColor = Color(0xFFE0E0E0).copy(alpha = 0.75f),
+                elevation = FloatingActionButtonDefaults.elevation(
+                    defaultElevation = 0.dp,
+                    pressedElevation = 0.dp
+                ),
+                modifier = Modifier
+                    .align(alignment = Alignment.BottomEnd)
+                    .padding(8.dp)
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(8.dp)
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Edit item",
+                        contentDescription = "Replace item photo"
+                    )
+                }
+            }
+        }
+
+        // Row for calendar, delete, and favorite actions
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .fillMaxWidth()
+        ) {
+            // Calendar icon button
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = { // TODO: make it show the days in the calendar its featured??
+                        onDismiss()
+                        onNavigateToCalendarScreen()
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.schedule),
+                        contentDescription = "Calendar",
                         modifier = Modifier.size(28.dp)
                     )
                 }
             }
 
             // Delete icon button
-            IconButton(
-                onClick = {
-                    onDismiss()
-                    closetViewModel.setDeletionCandidates(item)
-                    closetViewModel.toggleDeleteState(DeletionStates.Confirmed.name)
-                },
+            Box(
                 modifier = Modifier
-                    .align(Alignment.BottomStart)
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.Delete,
-                    contentDescription = "Delete item",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            // Favorite icon button
-            IconButton(
-                onClick = { closetViewModel.toggleFavoritesProperty(item) },
-                modifier = Modifier.align(Alignment.BottomEnd)
-            ) {
-                if (item.isFavorite) {
+                IconButton(
+                    onClick = {
+                        showDeleteDialog = true
+                    }
+                ) {
                     Icon(
-                        imageVector = Icons.Filled.Favorite,
-                        contentDescription = "Unfavorite item",
-                        modifier = Modifier.size(28.dp),
-                        tint = Color.Red
-                    )
-                } else {
-                    Icon(
-                        imageVector = Icons.Outlined.FavoriteBorder,
-                        contentDescription = "Favorite item",
-                        modifier = Modifier.size(28.dp),
-                        tint = Color.Black
+                        imageVector = Icons.Outlined.Delete,
+                        contentDescription = "Delete item",
+                        modifier = Modifier.size(28.dp)
                     )
                 }
             }
+
+            // Favorite icon button
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color.White),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = { closetViewModel.toggleFavoritesProperty(item) },
+                ) {
+                    if (item.isFavorite) {
+                        Icon(
+                            imageVector = Icons.Filled.Favorite,
+                            contentDescription = "Unfavorite item",
+                            modifier = Modifier.size(28.dp),
+                            tint = Color.Red
+                        )
+                    } else {
+                        Icon(
+                            imageVector = Icons.Outlined.FavoriteBorder,
+                            contentDescription = "Favorite item",
+                            modifier = Modifier.size(28.dp),
+                            tint = Color.Black
+                        )
+                    }
+                }
+            }
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteDialog(
+            title = "Delete item?",
+            message = "Deleting this item will delete all outfits it is featured in. This action cannot be undone.",
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                onDismiss()
+                closetViewModel.deleteItem(listOf(item))
+            }
+        )
     }
 }
 
@@ -360,8 +507,6 @@ fun ItemInformation(
     itemId: Int,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
-    isEditing: Boolean,
-    onToggleEditing: (Boolean) -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
     modifier: Modifier
 ) {
@@ -394,64 +539,58 @@ fun ItemInformation(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(start = 15.dp, end = 15.dp),
+                            .padding(start = 15.dp, end = 15.dp, top = 15.dp),
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween
                     ) {
                         Text(
                             text = "Description",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
                         )
-                        if (isEditingDescription || isEditing) {
-                            IconButton(onClick = {
-                                // updates globally
-                                closetViewModel.editItemDescription(item, description)
-
-                                isEditingDescription = false
-                                onToggleEditing(false)
-                            } ) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = "Save edits",
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
+                        if (isEditingDescription) {
+                            Icon(
+                                imageVector = Icons.Filled.Check,
+                                contentDescription = "Save edits",
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clickable(
+                                        onClick = {
+                                            closetViewModel.editItemDescription(item, description)
+                                            isEditingDescription = false
+                                        }
+                                    )
+                            )
                         } else {
-                            IconButton(onClick = { isEditingDescription = true } ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = "Edit description",
-                                    modifier = Modifier.size(28.dp)
-                                )
-                            }
+                            Icon(
+                                imageVector = Icons.Outlined.Edit,
+                                contentDescription = "Edit description",
+                                modifier = Modifier
+                                    .size(28.dp)
+                                    .clickable(
+                                        onClick = { isEditingDescription = true }
+                                    )
+                            )
                         }
                     }
-                    if (item.itemDescription.isNotEmpty()) {
-                        TextField(
-                            value = description,
-                            onValueChange = { description = it },
-                            enabled = isEditing || isEditingDescription,
-                            textStyle = TextStyle(
-                                fontSize = 15.sp,
-                                color = Color.Black
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth(),
-                            colors = TextFieldDefaults.colors(
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent,
-                                disabledIndicatorColor = Color.Transparent,
-                                focusedContainerColor = Color.Transparent,
-                                unfocusedContainerColor = Color.Transparent,
-                                disabledContainerColor = Color.Transparent
-                            )
+                    TextField(
+                        value = description.ifEmpty { "No description found." },
+                        onValueChange = { description = it },
+                        enabled = isEditingDescription,
+                        textStyle = TextStyle(
+                            //fontSize = 15.sp,
+                            color = Color.Black
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth(),
+                        colors = TextFieldDefaults.colors(
+                            focusedIndicatorColor = Color.Transparent,
+                            unfocusedIndicatorColor = Color.Transparent,
+                            disabledIndicatorColor = Color.Transparent,
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
                         )
-                    } else {
-                        Text(
-                            text = "No description found.",
-                            style = MaterialTheme.typography.bodySmall
-                        )
-                    }
+                    )
                 }
             }
         }
@@ -481,7 +620,7 @@ fun ItemInformation(
                                     outfitId = outfit.outfitId,
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                                    imageRes = R.drawable.shirt, // swap to item.itemPhotoUri when ready
+                                    imageRes = R.drawable.shirt, // swap to outfit.outfitPhotoUri when ready
                                     closetViewModel = closetViewModel
                                 )
                             }
@@ -524,7 +663,7 @@ private fun OutfitsCard(
             .background(Color(0xFFF7F7F7))
             .padding(10.dp)
             .fillMaxSize()
-            .clickable{showOutfitModal = true}
+            .clickable { showOutfitModal = true }
     ) {
         Image(
             painter = painterResource(imageRes),
@@ -663,7 +802,9 @@ private fun TagsEditableCard(
 
         // add-tag dialog
         if (showAddDialog) {
-            AddTagDialog(
+            AddDialog(
+                title = "Add a tag",
+                label = "Tag name",
                 onDismiss = { showAddDialog = false },
                 onConfirm = { newTag ->
                     val t = newTag.trim()
@@ -678,10 +819,9 @@ private fun TagsEditableCard(
 
         // confirm global delete dialog
         pendingGlobalDelete?.let { tag ->
-            ConfirmDialog(
+            DeleteDialog(
                 title = "Delete tag everywhere?",
                 message = "Deleting \"$tag\" removes it from your tag list and from ALL items. This cannot be undone.",
-                confirmText = "Delete",
                 onDismiss = { pendingGlobalDelete = null },
                 onConfirm = {
                     closetViewModel.deleteTag(tag)
@@ -753,21 +893,23 @@ private fun TagChipSelectable(
     }
 }
 
-// Dialog for user to type a custom tag
+// Dialog for user to type a custom tag or custom item type
 @Composable
-private fun AddTagDialog(
+private fun AddDialog(
+    title: String,
+    label: String,
     onDismiss: () -> Unit,
     onConfirm: (String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add a tag") },
+        title = { Text(title) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text("Tag name") },
+                label = { Text(label) },
                 singleLine = true
             )
         },
@@ -786,12 +928,11 @@ private fun AddTagDialog(
 
 // Confirmation dialog for dangerous or irreversible actions
 // Displays a title, message, and confirm/cancel actions
-// Used for deleting a global tag from all items
+// Used for deleting a global tag or item type from all items
 @Composable
-private fun ConfirmDialog(
+private fun DeleteDialog(
     title: String,
     message: String,
-    confirmText: String,
     onDismiss: () -> Unit,
     onConfirm: () -> Unit
 ) {
@@ -801,7 +942,7 @@ private fun ConfirmDialog(
         text = { Text(message) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text(confirmText)
+                Text("Delete")
             }
         },
         dismissButton = {

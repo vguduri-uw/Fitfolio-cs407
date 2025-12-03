@@ -8,4 +8,5 @@
     <string name="active_deletion_state">Active</string>
     <string name="inactive_deletion_state">Inactive</string>
     <string name="confirmed_deletion_state">Confirmed</string>
+    <string name="closet_title">My Closet</string>
 </resources>
