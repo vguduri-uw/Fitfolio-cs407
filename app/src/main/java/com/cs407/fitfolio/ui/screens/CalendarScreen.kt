@@ -77,6 +77,8 @@ import androidx.compose.material3.AlertDialog
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
+import com.cs407.fitfolio.viewModels.UserViewModel
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun CalendarScreen(
@@ -87,7 +89,9 @@ fun CalendarScreen(
     onNavigateToSignInScreen: () -> Unit,
     weatherViewModel: WeatherViewModel,
     outfitsViewModel: OutfitsViewModel,
-    closetViewModel: ClosetViewModel
+    closetViewModel: ClosetViewModel,
+    userViewModel: UserViewModel,
+    onSignOut: () -> Unit
 ) {
     var currentMonth by remember { mutableStateOf(YearMonth.now()) }
     var searchQuery by remember { mutableStateOf("") }
@@ -320,7 +324,10 @@ fun CalendarScreen(
 
         // modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onNavigateToSignInScreen)
+            SettingsModal(
+                onDismiss = { showSettings = false },
+                userViewModel = userViewModel, onSignOut = onSignOut
+            )
         }
     }
 
@@ -458,7 +465,7 @@ fun OutfitDateModal(
                 ) {
                     Text(
                         text = date.format(
-                            java.time.format.DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")
+                            DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")
                         ),
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold
@@ -529,7 +536,7 @@ fun OutfitDateModal(
                 text = {
                     Text(
                         "Are you sure you want to remove \"${outfitToDelete!!.outfitName}\" from ${date.format(
-                            java.time.format.DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                            DateTimeFormatter.ofPattern("MMMM dd, yyyy")
                         )}? The outfit will remain in your Outfits collection."
                     )
                 },
@@ -693,7 +700,7 @@ fun SearchResultsView(
                             ) {
                                 Text(
                                     text = date.format(
-                                        java.time.format.DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")
+                                        DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")
                                     ),
                                     style = MaterialTheme.typography.titleSmall,
                                     fontWeight = FontWeight.SemiBold

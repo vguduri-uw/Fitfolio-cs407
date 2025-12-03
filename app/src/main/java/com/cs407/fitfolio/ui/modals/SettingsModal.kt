@@ -22,14 +22,18 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -37,15 +41,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsModal (
-//    userViewModel: UserViewModel,
+    userViewModel: UserViewModel,
     onDismiss: () -> Unit,
-    onSignOut: () -> Unit) {
+    onSignOut: () -> Unit
+    ) {
     // User information
 //    val userState by userViewModel.userState.collectAsState()
     // TODO: implement the way to get this from storage (these are placeholders)
@@ -63,6 +70,21 @@ fun SettingsModal (
     // Track whether sign-out dialog is showing
     var showSignOutDialog by remember { mutableStateOf(false) }
 
+    val context = LocalContext.current
+    val db = FitfolioDatabase.getDatabase(context)
+    val currentUserState by userViewModel.userState.collectAsState()
+    val scope = rememberCoroutineScope()
+
+
+    LaunchedEffect(currentUserState.id) {
+        if (currentUserState.id != 0) {
+            val localUser = db.userDao().getByUID(currentUserState.uid)
+            if (localUser != null) {
+                name = localUser.username
+                email = localUser.email ?: ""  // Assuming you added an email field in User entity
+            }
+        }
+    }
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
@@ -105,6 +127,14 @@ fun SettingsModal (
             Button(
                 onClick = {
                     saveable = false
+                    scope.launch {
+                        db.userDao().updateUser(
+                            id = currentUserState.id,
+                            username = name,
+                            email = email
+                        )
+                        userViewModel.setUser(currentUserState.copy(name = name, uid = currentUserState.uid))
+                    }
                     // TODO: implement saving information to storage
                     // TODO: implement updating information everywhere else in app
                     // there should be an alert dialog that requires them to confirm
@@ -148,8 +178,9 @@ fun SettingsModal (
                 Button(
                     onClick = {
                         FirebaseAuth.getInstance().signOut()
+                        userViewModel.logoutUser()
                         showSignOutDialog = false
-                        onSignOut() // navigate back to login screen
+                        onSignOut()
                     }
                 ) {
                     Text("Yes")
