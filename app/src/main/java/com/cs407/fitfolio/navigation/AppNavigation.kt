@@ -1,5 +1,9 @@
 package com.cs407.fitfolio.navigation
 
+import android.Manifest
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
@@ -12,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -56,6 +61,25 @@ fun AppNavigation(userViewModel: UserViewModel) {
         factory = OutfitsViewModelFactory(db, userState.id)
     )
     val weatherViewModel: WeatherViewModel = viewModel()
+
+    //Veda: location permission
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        Log.d("AppNavigation", "Permission result: $isGranted")
+        weatherViewModel.updateLocationPermission(isGranted)
+    }
+
+    //Veda: initialize and request permission
+    LaunchedEffect(Unit) {
+        Log.d("AppNavigation", "LaunchedEffect started")
+        weatherViewModel.initializeLocationClient(context)
+
+        kotlinx.coroutines.delay(500)
+
+        Log.d("AppNavigation", "Requesting location permission")
+        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
 
     Scaffold(
         // Creates bottom navigation bar with centered floating action button
