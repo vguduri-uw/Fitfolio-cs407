@@ -2,6 +2,7 @@ package com.cs407.fitfolio.viewModels
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.ItemOutfitRelation
@@ -128,14 +129,6 @@ class OutfitsViewModel(
         }
     }
 
-//    // Retrieves an ItemEntry based on it's itemId
-//    // Throws an exception if item with that id is not found
-//    // TODO: make sure wherever we call this catches the exception and displays error accordingly
-//    fun getOutfit(outfitId: Int): OutfitEntry {
-//        return _outfitsState.value.outfits.find { it.outfitId == outfitId }
-//            ?: throw NoSuchElementException("Outfit with id $outfitId not found")
-//    }
-
     // deletes all specified outfits
     fun deleteOutfits(outfits: List<OutfitEntry>) {
         viewModelScope.launch {
@@ -161,7 +154,7 @@ class OutfitsViewModel(
         }
     }
 
-    // SETTERS FOR ITEM PROPERTIES (for use in wardrobe screen and outfit modal)
+    // SETTERS FOR OUTFIT PROPERTIES (for use in wardrobe screen and outfit modal)
     // call this function to upsert the outfit's photo uri
     fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String) {
         viewModelScope.launch {
@@ -314,7 +307,7 @@ class OutfitsViewModel(
                 passesAllFilters
             }
 
-            // Update filteredItems
+            // Update filteredOutfits
             _outfitsState.value = _outfitsState.value.copy(
                 filteredOutfits = updatedFilteredOutfits
             )
@@ -326,31 +319,48 @@ class OutfitsViewModel(
 
     // adds a new tag/type option the user can choose from
     fun addTag(newTag: String) {
-        if (newTag !in _outfitsState.value.tags) {
-            val updatedTags = _outfitsState.value.tags + newTag
+        viewModelScope.launch(Dispatchers.IO) {
+            // prevent empty tags
+            if (newTag.trim().isEmpty()) return@launch
+
+            // prevent duplicates in the DB
+            val existingTags = db.userDao().getOutfitsTagsByUserId(userId).map { it.outfitTag }
+            if (newTag.trim() !in existingTags) {
+                // update database
+                db.outfitDao().upsertOutfitTag(OutfitTag(outfitTag = newTag.trim()), userId)
+            } else {
+                return@launch
+            }
+
+            val updatedTags = db.userDao().getOutfitsTagsByUserId(userId).map { it.outfitTag }
             _outfitsState.value = _outfitsState.value.copy(
                 tags = updatedTags
             )
-        } // todo: if tag already exists, notify user
+        }
     }
 
     // removes a tag/type from the list of selectable tags
     // todo: warn the user that deleting the tag will remove it from already-saved outfits
     fun deleteTag(tag: String) {
-        val updatedTags = _outfitsState.value.tags - tag
-        _outfitsState.value = _outfitsState.value.copy(
-            tags = updatedTags
-        )
+        viewModelScope.launch(Dispatchers.IO) {
+            // Remove the tag from the tag table
+            db.deleteDao().deleteOutfitTag(tag)
 
-        val outfitsWithTag = _outfitsState.value.outfits.filter { tag in it.outfitTags }
+            // Remove the tag from any outfits containing it
+            val outfitsWithTag = _outfitsState.value.outfits.filter { tag in it.outfitTags }
+            for (outfit in outfitsWithTag) {
+                val updatedOutfit = outfit.copy(outfitTags = outfit.outfitTags - tag)
+                db.outfitDao().upsert(updatedOutfit)
+            }
 
-        for (outfitWithTag in outfitsWithTag){
-            editOutfitTags(outfitWithTag, tag, true)
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            val updatedTags = db.userDao().getOutfitsTagsByUserId(userId).map { it.outfitTag }
+            _outfitsState.value = _outfitsState.value.copy(
+                outfits = updatedOutfits,
+                filteredOutfits = updatedOutfits,
+                tags = updatedTags
+            )
         }
-
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = _outfitsState.value.outfits
-        )
     }
 
     fun outfitFlow(outfitId: Int): Flow<OutfitEntry?> =
@@ -438,7 +448,7 @@ class OutfitsViewModel(
 
     // clears the deletion candidates
     fun clearDeletionCandidates() {
-        // update item isDeletionCandidate property
+        // update outfit isDeletionCandidate property
         for (outfit in _outfitsState.value.deletionCandidates) {
             toggleDeletionCandidate(outfit, false)
         }
