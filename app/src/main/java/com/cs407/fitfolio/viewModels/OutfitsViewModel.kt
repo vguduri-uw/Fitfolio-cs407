@@ -94,14 +94,14 @@ class OutfitsViewModel(
    ========================================================================================== */
 
     // adds an outfit to the list of outfits
-    fun addOutfit(
+    suspend fun addOutfit(
         name: String,
         description: String,
         tags: List<String>,
         isFavorite: Boolean,
         photoUri: String,
         itemList: List<ItemEntry>
-    ) {
+    ): Int {
         val newOutfit = OutfitEntry(
             outfitId = 0,
             outfitName = name,
@@ -112,21 +112,21 @@ class OutfitsViewModel(
             outfitPhotoUri = photoUri,
         )
 
-        viewModelScope.launch {
-            // insert outfit, get its generated ID
-            val outfitId = db.outfitDao().upsertOutfit(newOutfit, userId)
+        // insert outfit, get its generated ID
+        val outfitId = db.outfitDao().upsertOutfit(newOutfit, userId)
 
-            // insert relations with the real outfitId
-            itemList.forEach { item ->
-                db.outfitDao().insertRelation(
-                    ItemOutfitRelation(outfitId, item.itemId)
-                )
-            }
-
-            // refresh state
-            val outfits = db.userDao().getOutfitsByUserId(userId)
-            _outfitsState.value = _outfitsState.value.copy(outfits = outfits, filteredOutfits = outfits)
+        // insert relations with the real outfitId
+        itemList.forEach { item ->
+            db.outfitDao().insertRelation(
+                ItemOutfitRelation(item.itemId, outfitId)
+            )
         }
+
+        // refresh state
+        val outfits = db.userDao().getOutfitsByUserId(userId)
+        _outfitsState.value = _outfitsState.value.copy(outfits = outfits, filteredOutfits = outfits)
+
+        return outfitId
     }
 
     // deletes all specified outfits

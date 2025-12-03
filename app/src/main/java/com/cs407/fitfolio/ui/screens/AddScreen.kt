@@ -298,9 +298,9 @@ fun AddScreen(
 
                     // add item to closet
                     val itemId = closetViewModel.addItem(
-                        name = "",
+                        name = "New Item",
                         type = selectedType,
-                        description = "",
+                        description = "Created from Add Page",
                         tags = emptyList(),
                         isFavorites = false,
                         photoUri = cleanedUrl
