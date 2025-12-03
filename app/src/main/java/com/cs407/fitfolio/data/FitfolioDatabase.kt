@@ -154,7 +154,7 @@ data class ItemOutfitRelation(
     val outfitId: Int
 )
 
-//Outfit <--> Calendar relation
+// Outfit <--> Calendar relation
 @Entity(
     tableName = "scheduled_outfit",
     foreignKeys = [
@@ -399,8 +399,8 @@ interface OutfitDao {
         val rowId = upsert(tag)
         val tagId = getTagByRowId(rowId)
         if (tag.tagId == 0) {
-        insertRelation(UserOutfitsTagsRelation(userId, tagId))
-            }
+            insertRelation(UserOutfitsTagsRelation(userId, tagId))
+        }
     }
 
     @Upsert(entity = OutfitEntry::class)
@@ -432,11 +432,9 @@ interface OutfitDao {
     @Insert
     suspend fun insertRelation(itemAndOutfit: ItemOutfitRelation)
 
-    //Veda: for calendar scheduling for a specific date
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun scheduleOutfit(scheduledOutfit: ScheduledOutfit)
 
-    //Veda: get outfit scheduled for a specific date
     @Query("""
         SELECT OutfitEntry.* FROM OutfitEntry
         INNER JOIN scheduled_outfit ON OutfitEntry.outfitId = scheduled_outfit.outfitId
@@ -444,18 +442,9 @@ interface OutfitDao {
     """)
     suspend fun getOutfitsForDate(date: Long): List<OutfitEntry>
 
-    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date AND outfitId = :outfitId")
-    suspend fun removeOutfitFromDate(date: Long, outfitId: Int)
-
-    //Veda: all dates that have outfits
     @Query("SELECT scheduledDate FROM scheduled_outfit")
     suspend fun getAllScheduledDates(): List<Long>
 
-    //Veda: remove schedule for a specific date
-    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date")
-    suspend fun removeScheduleForDate(date: Long)
-
-    //Veda: get all dates where a  outfit is scheduled
     @Query("SELECT scheduledDate FROM scheduled_outfit WHERE outfitId = :outfitId")
     suspend fun getDatesForOutfit(outfitId: Int): List<Long>
 }
@@ -499,6 +488,12 @@ interface DeleteDao {
 
     @Query("DELETE FROM OutfitTag WHERE outfitTag = :tag")
     suspend fun deleteOutfitTag(tag: String)
+
+    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date AND outfitId = :outfitId")
+    suspend fun removeOutfitFromDate(date: Long, outfitId: Int)
+
+    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date")
+    suspend fun removeScheduleForDate(date: Long)
 
     @Transaction
     suspend fun delete(userId: Int) {

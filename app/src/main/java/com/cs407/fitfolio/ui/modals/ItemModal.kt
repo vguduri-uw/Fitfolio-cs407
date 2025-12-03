@@ -100,7 +100,6 @@ fun ItemModal(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
                 onDismiss = onDismiss,
-                onNavigateToCalendarScreen = onNavigateToCalendarScreen
             )
 
             ItemInformation(
@@ -122,7 +121,6 @@ fun IconBox (
     itemId: Int,
     closetViewModel: ClosetViewModel,
     onDismiss: () -> Unit,
-    onNavigateToCalendarScreen: () -> Unit
 ) {
     // Observe the current UI state from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
@@ -341,33 +339,6 @@ fun IconBox (
                     .align(Alignment.Center)
             )
 
-            //Veda: Calendar icon button
-            IconButton(
-                modifier = Modifier.align(Alignment.TopStart),
-                onClick = { // Veda
-                    showWearHistoryModal = true
-                }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.schedule),
-                    contentDescription = "Calendar",
-                    modifier = Modifier.size(28.dp)
-                )
-            }
-
-            if (showWearHistoryModal) {
-                WearHistoryModal(
-                    itemId = itemId,
-                    closetViewModel = closetViewModel,
-                    onDismiss = { showWearHistoryModal = false }
-                )
-            }
-
-            // Edit icon button
-            if (isEditing) {
-                IconButton(
-                    modifier = Modifier.align(Alignment.TopEnd),
-                    onClick = { onToggleEditing(false) }
             if (item.itemPhotoUri.isNotEmpty()) {
                 AsyncImage(
                     model = item.itemPhotoUri,
@@ -425,9 +396,9 @@ fun IconBox (
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
-                    onClick = { // TODO: make it show the days in the calendar its featured??
-                        onDismiss()
-                        onNavigateToCalendarScreen()
+                    modifier = Modifier.align(Alignment.TopStart),
+                    onClick = { // Veda
+                        showWearHistoryModal = true
                     }
                 ) {
                     Icon(
@@ -497,6 +468,14 @@ fun IconBox (
                 onDismiss()
                 closetViewModel.deleteItem(listOf(item))
             }
+        )
+    }
+
+    if (showWearHistoryModal) {
+        WearHistoryModal(
+            itemId = itemId,
+            closetViewModel = closetViewModel,
+            onDismiss = { showWearHistoryModal = false }
         )
     }
 }
