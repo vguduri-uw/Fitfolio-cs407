@@ -119,7 +119,7 @@ class OutfitsViewModel(
             // insert relations with the real outfitId
             itemList.forEach { item ->
                 db.outfitDao().insertRelation(
-                    ItemOutfitRelation(outfitId, item.itemId)
+                    ItemOutfitRelation(item.itemId, outfitId)
                 )
             }
 
