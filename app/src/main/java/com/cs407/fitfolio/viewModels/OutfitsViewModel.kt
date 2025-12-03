@@ -5,7 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.ItemOutfitRelation
+import com.cs407.fitfolio.data.ItemTag
 import com.cs407.fitfolio.data.OutfitEntry
+import com.cs407.fitfolio.data.OutfitTag
+import com.cs407.fitfolio.enums.DefaultItemTags
+import com.cs407.fitfolio.enums.DefaultOutfitTags
 import com.cs407.fitfolio.enums.DeletionStates
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
@@ -13,6 +17,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import kotlin.collections.map
 import com.cs407.fitfolio.data.ScheduledOutfit
 import java.time.LocalDate
 import java.time.ZoneId
@@ -55,13 +60,25 @@ class OutfitsViewModel(
     // publicly exposed immutable stateflow for the ui layer to observe changes safely
     val outfitsState = _outfitsState.asStateFlow()
 
-    // Initialize outfits state items and filtered items with data from db
+    // initialize outfits state items and filtered outfits with data from db
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
+            var tags = db.userDao().getOutfitsTagsByUserId(userId).map { it.outfitTag }
+
+            if (tags.isEmpty()) {
+                // insert defaults outfit tags into DB
+                DefaultOutfitTags.entries.forEach { tag ->
+                    db.outfitDao().upsertOutfitTag(OutfitTag(outfitTag = tag.tagName), userId)
+                }
+
+                tags = DefaultOutfitTags.entries.map { it.tagName }
+            }
+
             val outfits = db.userDao().getOutfitsByUserId(userId)
             _outfitsState.value = _outfitsState.value.copy(
                 outfits = outfits,
-                filteredOutfits = outfits
+                filteredOutfits = outfits,
+                tags = tags
             )
         }
     }
@@ -131,7 +148,7 @@ class OutfitsViewModel(
             // remove relation between outfit and items
             for (outfit in outfits) {
                 for (item in getItemsList(outfit.outfitId)) {
-                    db.outfitDao().deleteRelation(ItemOutfitRelation(item.itemId, outfit.outfitId))
+                    db.deleteDao().deleteRelation(ItemOutfitRelation(item.itemId, outfit.outfitId))
                 }
             }
 
@@ -190,7 +207,7 @@ class OutfitsViewModel(
         viewModelScope.launch {
             // remove relation between outfit and items
             for (itemId in itemIds) {
-                db.outfitDao().deleteRelation(ItemOutfitRelation(itemId, outfitId))
+                db.deleteDao().deleteRelation(ItemOutfitRelation(itemId, outfitId))
             }
 
             // update global outfits
