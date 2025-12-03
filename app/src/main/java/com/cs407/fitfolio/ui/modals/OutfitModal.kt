@@ -69,6 +69,7 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.rememberCoroutineScope
+import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import kotlinx.coroutines.launch
 import java.time.ZoneId
 
@@ -560,13 +561,9 @@ fun OutfitIconBox(
     onDismiss: () -> Unit,
     items: List<ItemEntry>,
     onNavigateToCalendarScreen: () -> Unit,
-    isEditing: Boolean
-) : Boolean {
+) {
     // Observe the current UI state from the ViewModel
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
-
-    // track outfit editing state
-    var isEditing by remember { mutableStateOf(isEditing) }
 
     // track outfit photo
     var outfitPhotoUri by remember { mutableStateOf(outfit.outfitPhotoUri) }
@@ -602,16 +599,6 @@ fun OutfitIconBox(
                     )
                 }
 
-            // calendar icon button
-            IconButton(
-                modifier = Modifier.align(Alignment.TopStart),
-                onClick = { showDatePicker = true } //Veda
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.schedule),
-                    contentDescription = "Calendar",
-                    modifier = Modifier.size(28.dp)
-                )
                 // if outfit photo can't be found, show a placeholder icon
                 else -> {
                     Box(
@@ -646,15 +633,12 @@ fun OutfitIconBox(
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
-                    onClick = {
-                        onDismiss()
-                        onNavigateToCalendarScreen()
-                    }
+                    modifier = Modifier.align(Alignment.TopStart),
+                    onClick = { showDatePicker = true } //Veda
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.schedule),
                         contentDescription = "Calendar",
-                        tint = Color.Black,
                         modifier = Modifier.size(28.dp)
                     )
                 }
@@ -711,7 +695,7 @@ fun OutfitIconBox(
                 }
             }
         }
-    }
+
         if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
             DeleteOutfitDialog(outfitsViewModel)
         }
@@ -750,7 +734,7 @@ fun OutfitIconBox(
                 DatePicker(state = datePickerState)
             }
         }
-    return isEditing
+    }
 }
 
 // card for viewing and editing the outfit's description

@@ -522,7 +522,7 @@ class OutfitsViewModel(
         val normalizedMillis = localDate.atStartOfDay(ZoneId.systemDefault())
             .toInstant()
             .toEpochMilli()
-        db.outfitDao().removeOutfitFromDate(normalizedMillis, outfitId)
+        db.deleteDao().removeOutfitFromDate(normalizedMillis, outfitId)
     }
 
     //Veda: get all dates that have scheduled outfits
