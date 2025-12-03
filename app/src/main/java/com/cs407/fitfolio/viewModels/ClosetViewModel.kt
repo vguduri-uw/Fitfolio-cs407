@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.viewModels
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.OutfitEntry
@@ -548,5 +549,36 @@ class ClosetViewModel(
             activeTags = emptyList(),
             searchQuery = "",
         )
+    }
+
+    // Veda: get all dates when this item was worn through outfits
+    suspend fun getWearDatesForItem(itemId: Int): List<Pair<Long, String>> {
+        val outfitsWithItem = db.itemDao().getOutfitsByItemId(itemId)
+        val wearDates = mutableListOf<Pair<Long, String>>()
+        for (outfit in outfitsWithItem) {
+            val dates = db.outfitDao().getDatesForOutfit(outfit.outfitId)
+            dates.forEach { date ->
+                wearDates.add(Pair(date, outfit.outfitName))
+            }
+        }
+        return wearDates.sortedByDescending { it.first }
+    }
+
+    // Veda: Get the most recent wear date for color coding
+//    suspend fun getMostRecentWearDate(itemId: Int): Long? {
+//        val wearDates = getWearDatesForItem(itemId)
+//        return wearDates.firstOrNull()?.first
+//    }
+
+    // Veda: Helper function to determine modal color based on recency
+    fun getModalColorForItem(lastWornMillis: Long?): Color {
+        if (lastWornMillis == null) return Color(0xFFB0B0B0) // Grey - never worn
+        val daysSinceWorn = (System.currentTimeMillis() - lastWornMillis) / (24 * 60 * 60 * 1000)
+        return when {
+            daysSinceWorn <= 90 -> Color(0xFFE6FFE6)  // Green - within 3 months
+            daysSinceWorn <= 180 -> Color(0xFFFFFFE6) // Yellow - 3-6 months
+            daysSinceWorn <= 365 -> Color(0xFFFFFFCC) // Red - 6-12 months
+            else -> Color(0xFFB0B0B0)                  // Grey - over 1 year
+        }
     }
 }

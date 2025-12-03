@@ -109,7 +109,9 @@ fun AppNavigation(userViewModel: UserViewModel) {
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
-                    weatherViewModel = weatherViewModel
+                    weatherViewModel = weatherViewModel,
+                    outfitsViewModel = outfitsViewModel,
+                    closetViewModel = closetViewModel
                 )
             }
             // Defines the "wardrobe" route and what UI to display there

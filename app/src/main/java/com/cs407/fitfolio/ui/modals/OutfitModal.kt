@@ -66,6 +66,13 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.viewModels.OutfitsState
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.rememberCoroutineScope
+import kotlinx.coroutines.launch
+import java.time.ZoneId
 import coil.compose.AsyncImage
 import androidx.compose.ui.layout.ContentScale
 
@@ -548,6 +555,7 @@ fun outfitHeaderBox(
 // top section of the outfit modal showing the outfit name, image, and action icons
 // provides actions to favorite, edit, delete, or open calendar for the outfit
 // remains pinned at the top while other content scrolls underneath
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun outfitIconBox(
     outfit: OutfitEntry,
@@ -555,6 +563,21 @@ fun outfitIconBox(
     onDismiss: () -> Unit,
     items: List<ItemEntry>,
     onNavigateToCalendarScreen: () -> Unit,
+    isEditing: Boolean
+) : Boolean {
+    // Observe the current UI state from the ViewModel
+    val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+
+    // track outfit editing state
+    var isEditing by remember { mutableStateOf(isEditing) }
+
+    // track outfit photo
+    var outfitPhotoUri by remember { mutableStateOf(outfit.outfitPhotoUri) }
+
+    // Date picker state
+    var showDatePicker by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+
 ) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp)
@@ -581,6 +604,16 @@ fun outfitIconBox(
                     )
                 }
 
+            // calendar icon button
+            IconButton(
+                modifier = Modifier.align(Alignment.TopStart),
+                onClick = { showDatePicker = true } //Veda
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.schedule),
+                    contentDescription = "Calendar",
+                    modifier = Modifier.size(28.dp)
+                )
                 // if outfit photo can't be found, show a placeholder icon
                 else -> {
                     Box(
@@ -681,6 +714,45 @@ fun outfitIconBox(
             }
         }
     }
+        if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
+            DeleteOutfitDialog(outfitsViewModel)
+        }
+        //Veda: Date picker dialog
+        if (showDatePicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = System.currentTimeMillis()
+            )
+
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            val selectedMillis = datePickerState.selectedDateMillis
+                            if (selectedMillis != null) {
+                                scope.launch {
+                                    // Schedule the outfit for the selected date
+                                    outfitsViewModel.scheduleOutfit(outfit.outfitId, selectedMillis)
+                                    showDatePicker = false
+                                    onDismiss()
+                                    onNavigateToCalendarScreen()
+                                }
+                            }
+                        }
+                    ) {
+                        Text("Schedule")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
+    return isEditing
 }
 
 // card for viewing and editing the outfit's description

@@ -154,6 +154,24 @@ data class ItemOutfitRelation(
     val outfitId: Int
 )
 
+//Outfit <--> Calendar relation
+@Entity(
+    tableName = "scheduled_outfit",
+    foreignKeys = [
+        ForeignKey(
+            entity = OutfitEntry::class,
+            parentColumns = ["outfitId"],
+            childColumns = ["outfitId"],
+            onDelete = ForeignKey.CASCADE
+        )
+    ],
+)
+data class ScheduledOutfit(
+    @PrimaryKey(autoGenerate = true) val scheduleId: Int = 0,
+    val outfitId: Int,
+    val scheduledDate: Long
+)
+
 // User queries
 @Dao
 interface UserDao {
@@ -282,6 +300,33 @@ interface OutfitDao {
     // TODO: move to delete dao??
     @Delete
     suspend fun deleteRelation(itemAndOutfit: ItemOutfitRelation)
+
+    //Veda: for calendar scheduling for a specific date
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun scheduleOutfit(scheduledOutfit: ScheduledOutfit)
+
+    //Veda: get outfit scheduled for a specific date
+    @Query("""
+        SELECT OutfitEntry.* FROM OutfitEntry
+        INNER JOIN scheduled_outfit ON OutfitEntry.outfitId = scheduled_outfit.outfitId
+        WHERE scheduled_outfit.scheduledDate = :date
+    """)
+    suspend fun getOutfitsForDate(date: Long): List<OutfitEntry>
+
+    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date AND outfitId = :outfitId")
+    suspend fun removeOutfitFromDate(date: Long, outfitId: Int)
+
+    //Veda: all dates that have outfits
+    @Query("SELECT scheduledDate FROM scheduled_outfit")
+    suspend fun getAllScheduledDates(): List<Long>
+
+    //Veda: remove schedule for a specific date
+    @Query("DELETE FROM scheduled_outfit WHERE scheduledDate = :date")
+    suspend fun removeScheduleForDate(date: Long)
+
+    //Veda: get all dates where a  outfit is scheduled
+    @Query("SELECT scheduledDate FROM scheduled_outfit WHERE outfitId = :outfitId")
+    suspend fun getDatesForOutfit(outfitId: Int): List<Long>
 }
 
 // Delete queries
@@ -340,9 +385,10 @@ interface DeleteDao {
         ItemOutfitRelation::class,
         ItemTag::class,
         ItemType::class,
-        OutfitTag::class
+        OutfitTag::class,
+        ScheduledOutfit::class
     ],
-    version = 1
+    version = 2
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
@@ -361,7 +407,9 @@ abstract class FitfolioDatabase : RoomDatabase() {
                     context.applicationContext,
                     FitfolioDatabase::class.java,
                     "fitfolio_database"
-                ).build()
+                )
+                    .fallbackToDestructiveMigration()  // TODO: Add this for development
+                    .build()
                 INSTANCE = instance
                 instance
             }
