@@ -492,6 +492,15 @@ class OutfitsViewModel(
         )
     }
 
+    // refreshes the outfits state after an item is deleted
+    fun refresh() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+            applyFilters()
+        }
+    }
+
     //Veda: schedule an outfit for a specific date -> Veda here onwards
     fun scheduleOutfit(outfitId: Int, dateMillis: Long) {
         viewModelScope.launch {
@@ -522,7 +531,7 @@ class OutfitsViewModel(
         val normalizedMillis = localDate.atStartOfDay(ZoneId.systemDefault())
             .toInstant()
             .toEpochMilli()
-        db.outfitDao().removeOutfitFromDate(normalizedMillis, outfitId)
+        db.deleteDao().removeOutfitFromDate(normalizedMillis, outfitId)
     }
 
     //Veda: get all dates that have scheduled outfits

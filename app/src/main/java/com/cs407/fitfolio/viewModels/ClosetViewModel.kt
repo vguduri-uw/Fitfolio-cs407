@@ -122,22 +122,36 @@ class ClosetViewModel(
     }
 
     // Deletes specified items from the closet
-    fun deleteItem(items: List<ItemEntry>) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // Remove duplicate outfits associated with the items
-            val outfitIds = items.flatMap { item ->
-                db.itemDao().getOutfitsByItemId(item.itemId).map { it.outfitId }
-            }.toSet()
+    suspend fun deleteItem(items: List<ItemEntry>) {
+        // Remove duplicate outfits associated with the items
+        val outfitsToDelete = items.flatMap { item ->
+            db.itemDao().getOutfitsByItemId(item.itemId)
+        }.map { it.outfitId }.toSet()
 
-            // Delete associated outfits
-            db.deleteDao().deleteOutfits(outfitIds.toList())
-
-            // Delete the items
-            db.deleteDao().deleteItems(items.map { it.itemId })
-
-            val updatedItems = db.userDao().getItemsByUserId(userId)
-            _closetState.value = _closetState.value.copy(items = updatedItems)
+        // Remove item-outfit relations
+        items.forEach { item ->
+            val relatedOutfits = db.itemDao().getOutfitsByItemId(item.itemId)
+            relatedOutfits.forEach { outfit ->
+                db.deleteDao().deleteRelation(
+                    ItemOutfitRelation(
+                        itemId = item.itemId,
+                        outfitId = outfit.outfitId
+                    )
+                )
+            }
         }
+
+        // Delete associated outfits
+        if (outfitsToDelete.isNotEmpty()) {
+            db.deleteDao().deleteOutfits(outfitsToDelete.toList())
+        }
+
+        // Delete the items
+        db.deleteDao().deleteItems(items.map { it.itemId })
+
+        val updatedItems = db.userDao().getItemsByUserId(userId)
+        _closetState.value = _closetState.value.copy(items = updatedItems)
+
     }
 
     // Setters for item properties to be used in the item modal

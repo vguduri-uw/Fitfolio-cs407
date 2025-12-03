@@ -44,6 +44,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,6 +66,7 @@ import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
 import java.time.LocalDate
 import com.cs407.fitfolio.enums.DefaultItemTypes
+import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
@@ -99,6 +101,7 @@ fun ItemModal(
             IconBox(
                 itemId = itemId,
                 closetViewModel = closetViewModel,
+                outfitsViewModel = outfitsViewModel,
                 onDismiss = onDismiss,
             )
 
@@ -120,6 +123,7 @@ fun ItemModal(
 fun IconBox (
     itemId: Int,
     closetViewModel: ClosetViewModel,
+    outfitsViewModel: OutfitsViewModel,
     onDismiss: () -> Unit,
 ) {
     // Observe the current UI state from the ViewModel
@@ -137,6 +141,7 @@ fun IconBox (
     var showAddDialog by remember { mutableStateOf(false) }
     var itemWithNewType: ItemEntry? by remember { mutableStateOf(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     // Update selected item type whenever it changes
     LaunchedEffect(item.itemType) {
@@ -301,6 +306,7 @@ fun IconBox (
                     if (closetState.activeItemType == option) {
                         closetViewModel.updateActiveItemType(DefaultItemTypes.ALL.typeName)
                     }
+
                 }
             )
         }
@@ -465,8 +471,11 @@ fun IconBox (
             message = "Deleting this item will delete all outfits it is featured in. This action cannot be undone.",
             onDismiss = { showDeleteDialog = false },
             onConfirm = {
-                onDismiss()
-                closetViewModel.deleteItem(listOf(item))
+                scope.launch {
+                    closetViewModel.deleteItem(listOf(item))
+                    outfitsViewModel.refresh()
+                    onDismiss()
+                }
             }
         )
     }
