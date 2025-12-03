@@ -71,13 +71,15 @@ import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.viewModels.UserViewModel
 
 @Composable
 fun MyClosetScreen(
     onNavigateToCalendarScreen: () -> Unit,
-    onSignOut: () -> Unit,
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
+    userViewModel: UserViewModel,
+    onSignOut: () -> Unit
 ) {
     // Observe the current UI states from the ViewModel
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
@@ -134,7 +136,9 @@ fun MyClosetScreen(
 
         // Show settings
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onSignOut)
+            SettingsModal(
+                onDismiss = { showSettings = false }, userViewModel = userViewModel,
+                onSignOut = onSignOut)
         }
 
         // Show item modal

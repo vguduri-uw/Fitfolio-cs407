@@ -73,6 +73,7 @@ import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
+import com.cs407.fitfolio.viewModels.UserViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 
 @Composable
@@ -81,7 +82,8 @@ fun MyOutfitsScreen(
     onSignOut: () -> Unit,
     outfitsViewModel: OutfitsViewModel,
     weatherViewModel: WeatherViewModel,
-    closetViewModel: ClosetViewModel // TODO: remove after testing
+    closetViewModel: ClosetViewModel, // TODO: remove after testing
+    userViewModel: UserViewModel
 ) {
     // observes current ui state from the outfits view model
     val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
@@ -153,7 +155,7 @@ fun MyOutfitsScreen(
 
         // pull up settings modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, onSignOut = onSignOut)
+            SettingsModal(onDismiss = { showSettings = false }, userViewModel = userViewModel, onSignOut = onSignOut)
         }
 
         // show outfit modal
