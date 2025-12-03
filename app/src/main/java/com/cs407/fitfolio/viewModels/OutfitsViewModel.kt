@@ -133,10 +133,7 @@ class OutfitsViewModel(
     fun deleteOutfits(outfits: List<OutfitEntry>) {
         viewModelScope.launch {
             // create list of ids for outfits to be deleted
-            val outfitIds = emptySet<Int>()
-            for (outfit in outfits) {
-                outfitIds + outfit.outfitId
-            }
+            val outfitIds = outfits.map { it.outfitId }.toSet()
 
             // remove relation between outfit and items
             for (outfit in outfits) {
@@ -169,19 +166,29 @@ class OutfitsViewModel(
 
 
     fun editOutfitName(outfit: OutfitEntry, name: String) {
-        outfit.outfitName = name
+        viewModelScope.launch(Dispatchers.IO) {
+            // Update database
+            val updatedOutfit = outfit.copy(outfitName = name)
+            db.outfitDao().upsert(updatedOutfit)
 
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = _outfitsState.value.outfits
-        )
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(
+                outfits = updatedOutfits
+            )
+        }
     }
 
     fun editOutfitDescription(outfit: OutfitEntry, description: String) {
-        outfit.outfitDescription = description
+        viewModelScope.launch(Dispatchers.IO) {
+            // Update database
+            val updatedOutfit = outfit.copy(outfitDescription = description)
+            db.outfitDao().upsert(updatedOutfit)
 
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = _outfitsState.value.outfits
-        )
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(
+                outfits = updatedOutfits
+            )
+        }
     }
 
     fun editOutfitTags(outfit: OutfitEntry, tag: String, isRemoving: Boolean) {

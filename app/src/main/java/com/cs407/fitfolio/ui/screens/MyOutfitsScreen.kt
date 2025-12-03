@@ -90,14 +90,14 @@ fun MyOutfitsScreen(
     //for weather
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
 
-    // TODO: remove after testing
-    LaunchedEffect(Unit) {
-        val dbOutfits = outfitsViewModel.getOutfits()
-
-        if (dbOutfits.isEmpty()) {
-            AddTestItemData(closetViewModel, outfitsViewModel)
-        }
-    }
+//    // TODO: remove after testing
+//    LaunchedEffect(Unit) {
+//        val dbOutfits = outfitsViewModel.getOutfits()
+//
+//        if (dbOutfits.isEmpty()) {
+//            AddTestItemData(closetViewModel, outfitsViewModel)
+//        }
+//    }
 
     // re-filter when an item is added or deleted
     LaunchedEffect(outfitsState.outfits) {
@@ -617,7 +617,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             )
         } else if (outfitsState.filteredOutfits.isEmpty()) {
             Text(
-                "No items found.",
+                "No outfits found.",
                 modifier = Modifier.padding(16.dp)
             )
         } else {

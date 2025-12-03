@@ -524,7 +524,7 @@ interface DeleteDao {
         UserItemTagsRelation::class,
         UserOutfitsTagsRelation::class
     ],
-    version = 2
+    version = 3
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
@@ -543,7 +543,9 @@ abstract class FitfolioDatabase : RoomDatabase() {
                     context.applicationContext,
                     FitfolioDatabase::class.java,
                     "fitfolio_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

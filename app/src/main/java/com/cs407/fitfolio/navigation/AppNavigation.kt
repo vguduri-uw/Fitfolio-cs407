@@ -77,6 +77,10 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
 
         kotlinx.coroutines.delay(500)
 
+        if (weatherViewModel.uiState.value.locationPermissionGranted) {
+            weatherViewModel.fetchWeatherForCurrentLocation()
+        }
+
         Log.d("AppNavigation", "Requesting location permission")
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
