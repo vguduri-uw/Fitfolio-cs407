@@ -492,11 +492,11 @@ class OutfitsViewModel(
         )
     }
 
+    // refreshes the outfits state after an item is deleted
     fun refresh() {
         viewModelScope.launch(Dispatchers.IO) {
-            _outfitsState.value = _outfitsState.value.copy(
-                outfits = db.userDao().getOutfitsByUserId(userId)
-            )
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
             applyFilters()
         }
     }
