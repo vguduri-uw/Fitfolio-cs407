@@ -402,24 +402,26 @@ private fun TagsEditableCard(
                 )
 
                 if (editMode) {
-                    // add tag
-                    IconButton (
-                        onClick = { showAddDialog = true },
-                    ) {
-                        Icon(Icons.Outlined.Add, contentDescription = "Add tag")
-                    }
-                    // save changes
-                    IconButton (
-                        onClick = {
-                            val current = outfit.outfitTags.toSet()
-                            val toAdd = selectedTags - current
-                            val toRemove = current - selectedTags
-                            toAdd.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = false) }
-                            toRemove.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = true) }
-                            editMode = false
-                        },
-                    ) {
-                        Icon(Icons.Filled.Check, contentDescription = "Save changes")
+                    Row {
+                        // add tag
+                        IconButton (
+                            onClick = { showAddDialog = true },
+                        ) {
+                            Icon(Icons.Outlined.Add, contentDescription = "Add tag")
+                        }
+                        // save changes
+                        IconButton (
+                            onClick = {
+                                val current = outfit.outfitTags.toSet()
+                                val toAdd = selectedTags - current
+                                val toRemove = current - selectedTags
+                                toAdd.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = false) }
+                                toRemove.forEach { t -> outfitsViewModel.editOutfitTags(outfit, t, isRemoving = true) }
+                                editMode = false
+                            },
+                        ) {
+                            Icon(Icons.Filled.Check, contentDescription = "Save changes")
+                        }
                     }
                 } else {
                     // edit mode
