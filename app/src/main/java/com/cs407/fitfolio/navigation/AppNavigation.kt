@@ -126,10 +126,11 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
-                    onNavigateToSignInScreen = {navController.navigate("sign_in")},
+                    onNavigateToSignInScreen = { navController.navigate("sign_in") },
                     closetViewModel = closetViewModel,
                     weatherViewModel = weatherViewModel,
-
+                    userViewModel = userViewModel,
+                    outfitsViewModel = outfitsViewModel
                 )
             }
             // Defines the "add" route and what UI to display there
