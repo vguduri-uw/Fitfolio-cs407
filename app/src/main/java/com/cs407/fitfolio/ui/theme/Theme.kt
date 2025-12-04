@@ -15,20 +15,20 @@ import androidx.compose.ui.platform.LocalContext
 // our color schemes
 private val DarkColorScheme = darkColorScheme(
     primary = RustBrown,
-    onPrimary = PeachPuff,
+    onPrimary = FloralWhite,
     secondary = GoldenApricot,
-    onSecondary = PeachPuff,
+    onSecondary = FloralWhite,
     tertiary = ChocolateBrown,
-    onTertiary = PeachPuff
+    onTertiary = FloralWhite
 )
 
 private val LightColorScheme = lightColorScheme(
     primary = ChocolateBrown,
-    onPrimary = PeachPuff,
+    onPrimary = FloralWhite,
     secondary = GoldenApricot,
-    onSecondary = PeachPuff,
+    onSecondary = FloralWhite,
     tertiary = RustBrown,
-    onTertiary = PeachPuff,
+    onTertiary = FloralWhite,
     background = TrueWhite,
     onBackground = TrueBlack,
     surface = FloralWhite,

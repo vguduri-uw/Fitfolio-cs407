@@ -17,56 +17,74 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.theme.PeachPuff
+import com.cs407.fitfolio.ui.theme.RustBrown
+import com.cs407.fitfolio.ui.theme.TrueBlack
 
 // UI and navigation for the bottom navigation bar
 @Composable
 fun BottomNavigationBar(navController: NavController) {
-    BottomAppBar {
+    BottomAppBar(
+        containerColor = PeachPuff,
+        contentColor = RustBrown
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = { navController.navigate("outfits") }) {
                         Icon(
                             painter = painterResource(id = R.drawable.shirt_nav),
                             contentDescription = "Outfits",
-                            modifier = Modifier.size(26.dp)
+                            tint = RustBrown,
+                            modifier = Modifier.size(35.dp)
                         )
                     }
-                    Text(stringResource(R.string.outfits))
+                    Text(stringResource(R.string.outfits), fontSize = 15.sp)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = { navController.navigate("calendar") }) {
                         Icon(
                             painter = painterResource(R.drawable.schedule),
                             contentDescription = "Calendar",
-                            modifier = Modifier.size(26.dp)
+                            tint = RustBrown,
+                            modifier = Modifier.size(35.dp)
                         )
                     }
-                    Text(stringResource(R.string.calendar))
+                    Text(stringResource(R.string.calendar), fontSize = 15.sp)
                 }
             }
             Spacer(modifier = Modifier.size(56.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = { navController.navigate("add") }) {
-                        Icon(Icons.Outlined.AddCircle, contentDescription = "Add")
+                        Icon(
+                            Icons.Outlined.AddCircle,
+                            contentDescription = "Add",
+                            tint = RustBrown,
+                            modifier = Modifier.size(35.dp)
+                        )
                     }
-                    Text(stringResource(R.string.add))
+                    Text(stringResource(R.string.add), fontSize = 15.sp)
                 }
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = { navController.navigate("closet") }) {
                         Icon(
                             painter = painterResource(R.drawable.closet),
                             contentDescription = "Closet",
+                            tint = RustBrown,
+                            modifier = Modifier.size(35 .dp)
                         )
                     }
-                    Text(stringResource(R.string.closet))
+                    Text(stringResource(R.string.closet), fontSize = 15.sp)
                 }
             }
         }
