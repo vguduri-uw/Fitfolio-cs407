@@ -192,15 +192,17 @@ class OutfitsViewModel(
     }
 
     fun editOutfitTags(outfit: OutfitEntry, tag: String, isRemoving: Boolean) {
-        if (isRemoving) {
-            outfit.outfitTags -= tag
-        } else {
-            outfit.outfitTags += tag
-        }
+        viewModelScope.launch(Dispatchers.IO) {
+            val updatedOutfit =
+                if (isRemoving) outfit.copy(outfitTags = outfit.outfitTags - tag)
+                else outfit.copy(outfitTags = outfit.outfitTags + tag)
 
-        _outfitsState.value = _outfitsState.value.copy(
-            outfits = _outfitsState.value.outfits
-        )
+            // Update database
+            db.outfitDao().upsert(updatedOutfit)
+
+            val updatedOutfits = db.userDao().getOutfitsByUserId(userId)
+            _outfitsState.value = _outfitsState.value.copy(outfits = updatedOutfits)
+        }
     }
 
     fun removeItemsFromItemsList(itemIds: List<Int>, outfitId: Int) {
