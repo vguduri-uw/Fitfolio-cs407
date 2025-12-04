@@ -2,8 +2,10 @@ package com.cs407.fitfolio.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -23,8 +25,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.modals.InformationModal
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.RustBrown
 
 @Composable
 fun TopHeader (title: String) {
@@ -43,13 +48,22 @@ fun TopHeader (title: String) {
 
     Spacer(modifier = Modifier.size(8.dp))
 
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(text = title, style = MaterialTheme.typography.titleLarge)
-        IconButton(onClick = { showInformation = true }) { // todo: add info onClick lambda
-            Icon(Icons.Outlined.Info,
-                contentDescription = "Information",
-                modifier = Modifier.size(24.dp)
-            )
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .fillMaxWidth()
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Spacer(modifier = Modifier.size(41.dp))
+
+            Text(text = title, fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp)
+
+            IconButton(onClick = { showInformation = true }) { // todo: add info onClick lambda
+                Icon(Icons.Outlined.Info,
+                    contentDescription = "Information",
+                    modifier = Modifier.size(24.dp)
+                )
+            }
         }
     }
 

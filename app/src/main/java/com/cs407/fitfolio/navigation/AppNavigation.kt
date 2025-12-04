@@ -40,6 +40,8 @@ import com.cs407.fitfolio.ui.screens.MyWardrobeScreen
 import com.cs407.fitfolio.ui.theme.ChocolateBrown
 import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.GoldenApricot
+import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 import com.cs407.fitfolio.ui.theme.RustBrown
 import com.cs407.fitfolio.ui.theme.TrueBlack
 import com.cs407.fitfolio.viewModels.ClosetViewModel
@@ -101,7 +103,7 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                 onClick = { navController.navigate("wardrobe") },
                 shape = CircleShape,
                 containerColor = GoldenApricot,
-                contentColor = RustBrown,
+                contentColor = TrueBlack,
                 modifier = Modifier
                     .size(80.dp)
                     .offset(y = 81.dp)
@@ -115,7 +117,7 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                         contentDescription = "Wardrobe",
                         modifier = Modifier.size(40.dp),
                     )
-                    Text(stringResource(R.string.carousel))
+                    Text(stringResource(R.string.carousel), fontFamily = Google_Sans_Flex)
                 }
             }
         },

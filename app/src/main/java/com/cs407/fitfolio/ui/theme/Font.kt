@@ -15,3 +15,7 @@ val Kudryashev_Bold_Regular = FontFamily(
 val Kudryashev_Regular = FontFamily(
     Font(R.font.kudryashev_regular, weight = FontWeight.Normal)
 )
+
+val Google_Sans_Flex = FontFamily(
+    Font(R.font.google_sans_flex)
+)

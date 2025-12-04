@@ -59,17 +59,19 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.ItemEntry
-import com.cs407.fitfolio.data.testData.AddTestItemData
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.PeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
@@ -383,7 +385,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(PeachFuzz),
             contentAlignment = Alignment.Center,
         ) {
             IconButton(
@@ -404,7 +406,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(PeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.shuffleOutfits() }) {
@@ -421,7 +423,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(PeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.toggleSearchState(true) }) {
@@ -463,7 +465,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
+                .background(PeachFuzz)
                 .padding(horizontal = 10.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -474,7 +476,8 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             ) {
                 Text(
                     text = "Tags",
-                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = Google_Sans_Flex,
+                    fontSize = 15.sp,
                     color = Color.Black,
                 )
 
@@ -537,7 +540,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(PeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             when (outfitsState.isDeleteActive) {
@@ -593,7 +596,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(PeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.clearFilters() }) {

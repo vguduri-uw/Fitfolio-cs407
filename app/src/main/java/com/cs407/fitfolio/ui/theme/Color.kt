@@ -10,7 +10,7 @@ import androidx.compose.ui.graphics.Color
 val ChocolateBrown = Color(0xFFA84C00)
 val RustBrown = Color(0xFF8F3900)
 val GoldenApricot = Color(0xFFE89A3D)
-val PeachPuff = Color(0xFFFFD9C2)
+val PeachFuzz = Color(0xFFFFD9C2)
 
 // cool
 val TrueBlack = Color(0xFF000000)
