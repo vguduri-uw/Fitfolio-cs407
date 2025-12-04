@@ -337,14 +337,6 @@ fun IconBox (
                 .height(300.dp)
         ) {
             // Item photo
-            Image(
-                painter = painterResource(R.drawable.shirt),
-                contentDescription = "Item photo",
-                modifier = Modifier
-                    .size(180.dp)
-                    .align(Alignment.Center)
-            )
-
             if (item.itemPhotoUri.isNotEmpty()) {
                 AsyncImage(
                     model = item.itemPhotoUri,
@@ -561,7 +553,7 @@ fun ItemInformation(
                         }
                     }
                     TextField(
-                        value = description.ifEmpty { "No description found." },
+                        value = description,
                         onValueChange = { description = it },
                         enabled = isEditingDescription,
                         textStyle = TextStyle(

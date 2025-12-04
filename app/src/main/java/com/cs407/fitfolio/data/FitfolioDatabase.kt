@@ -27,7 +27,8 @@ import androidx.room.Upsert
 data class User(
     @PrimaryKey(autoGenerate = true) val userId: Int = 0,
     val userUID: String,
-    val username: String
+    val username: String,
+    val email: String
 )
 
 // Item table
@@ -249,6 +250,9 @@ interface UserDao {
 
     @Insert(entity = User::class)
     suspend fun insert(user: User): Long
+
+    @Query("UPDATE user SET username = :username, email = :email WHERE userId = :id")
+    suspend fun updateUser(id: Int, username: String, email: String)
 
     @Query(
         """SELECT * FROM User, ItemEntry, user_item_relation
@@ -520,7 +524,7 @@ interface DeleteDao {
         UserItemTagsRelation::class,
         UserOutfitsTagsRelation::class
     ],
-    version = 2
+    version = 3
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
@@ -539,7 +543,9 @@ abstract class FitfolioDatabase : RoomDatabase() {
                     context.applicationContext,
                     FitfolioDatabase::class.java,
                     "fitfolio_database"
-                ).build()
+                )
+                .fallbackToDestructiveMigration()
+                .build()
                 INSTANCE = instance
                 instance
             }

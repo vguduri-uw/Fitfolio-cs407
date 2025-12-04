@@ -1,5 +1,9 @@
 package com.cs407.fitfolio.navigation
 
+import android.Manifest
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.offset
@@ -12,6 +16,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,7 +46,7 @@ import com.cs407.fitfolio.viewModels.WeatherViewModel
 // Composable function responsible for the main app navigation
 // Separation of navigation allows for outfit and item VMs to only be created when a user is logged in
 @Composable
-fun AppNavigation(userViewModel: UserViewModel) {
+fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
     val userState by userViewModel.userState.collectAsState()
     val navController = rememberNavController()
 
@@ -56,6 +61,29 @@ fun AppNavigation(userViewModel: UserViewModel) {
         factory = OutfitsViewModelFactory(db, userState.id)
     )
     val weatherViewModel: WeatherViewModel = viewModel()
+
+    //Veda: location permission
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        Log.d("AppNavigation", "Permission result: $isGranted")
+        weatherViewModel.updateLocationPermission(isGranted)
+    }
+
+    //Veda: initialize and request permission
+    LaunchedEffect(Unit) {
+        Log.d("AppNavigation", "LaunchedEffect started")
+        weatherViewModel.initializeLocationClient(context)
+
+        kotlinx.coroutines.delay(500)
+
+        if (weatherViewModel.uiState.value.locationPermissionGranted) {
+            weatherViewModel.fetchWeatherForCurrentLocation()
+        }
+
+        Log.d("AppNavigation", "Requesting location permission")
+        locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+    }
 
     Scaffold(
         // Creates bottom navigation bar with centered floating action button
@@ -97,9 +125,10 @@ fun AppNavigation(userViewModel: UserViewModel) {
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     outfitsViewModel = outfitsViewModel,
                     weatherViewModel = weatherViewModel,
-                    onSignOut = { userViewModel.logoutUser() },
-                    closetViewModel = closetViewModel
-                )
+                    onSignOut = onSignOut,
+                    closetViewModel = closetViewModel,
+                    userViewModel = userViewModel,
+                    )
             }
             // Defines the "calendar" route and what UI to display there
             composable("calendar") {
@@ -111,8 +140,11 @@ fun AppNavigation(userViewModel: UserViewModel) {
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
                     weatherViewModel = weatherViewModel,
                     outfitsViewModel = outfitsViewModel,
-                    closetViewModel = closetViewModel
-                )
+                    closetViewModel = closetViewModel,
+                    userViewModel = userViewModel,
+                    onSignOut = onSignOut,
+
+                    )
             }
             // Defines the "wardrobe" route and what UI to display there
             composable(route = "wardrobe") {
@@ -121,9 +153,11 @@ fun AppNavigation(userViewModel: UserViewModel) {
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
-                    onNavigateToSignInScreen = {navController.navigate("sign_in")},
+                    onNavigateToSignInScreen = { navController.navigate("sign_in") },
                     closetViewModel = closetViewModel,
-                    weatherViewModel = weatherViewModel
+                    weatherViewModel = weatherViewModel,
+                    userViewModel = userViewModel,
+                    outfitsViewModel = outfitsViewModel
                 )
             }
             // Defines the "add" route and what UI to display there
@@ -131,17 +165,21 @@ fun AppNavigation(userViewModel: UserViewModel) {
                 AddScreen(
                     closetViewModel = closetViewModel,
                     outfitsViewModel = outfitsViewModel,
-                    onNavigateToCalendarScreen = { navController.navigate("calendar") }
+                    onNavigateToCalendarScreen = { navController.navigate("calendar") },
+
                 )
             }
             // Defines the "closet" route and what UI to display there
             composable(route = "closet") {
                 MyClosetScreen(
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
-                    onSignOut = { userViewModel.logoutUser() },
                     closetViewModel = closetViewModel,
                     outfitsViewModel = outfitsViewModel,
-                )
+                    userViewModel = userViewModel,
+                    onSignOut = onSignOut,
+
+
+                    )
             }
         }
     }
