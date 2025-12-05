@@ -28,7 +28,8 @@ data class User(
     @PrimaryKey(autoGenerate = true) val userId: Int = 0,
     val userUID: String,
     val username: String,
-    val email: String
+    val email: String,
+    val avatarUri: String = ""
 )
 
 // Item table
@@ -253,6 +254,9 @@ interface UserDao {
 
     @Query("UPDATE user SET username = :username, email = :email WHERE userId = :id")
     suspend fun updateUser(id: Int, username: String, email: String)
+
+    @Query("UPDATE user SET avatarUri = :avatarUri WHERE userId = :id")
+    suspend fun updateAvatar(id: Int, avatarUri: String)
 
     @Query(
         """SELECT * FROM User, ItemEntry, user_item_relation
@@ -524,7 +528,7 @@ interface DeleteDao {
         UserItemTagsRelation::class,
         UserOutfitsTagsRelation::class
     ],
-    version = 3
+    version = 4
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
