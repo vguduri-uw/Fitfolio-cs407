@@ -80,6 +80,8 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation("androidx.room:room-ktx:2.8.3")
     implementation("io.coil-kt:coil-compose:2.4.0")
+    implementation(libs.androidx.material3)
+    implementation("androidx.compose.material:material-icons-extended")
     ksp("androidx.room:room-compiler:2.8.3")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
