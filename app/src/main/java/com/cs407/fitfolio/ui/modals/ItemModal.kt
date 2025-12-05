@@ -66,6 +66,7 @@ import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
 import java.time.LocalDate
 import com.cs407.fitfolio.enums.DefaultItemTypes
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import kotlinx.coroutines.launch
 
 @Composable
@@ -607,7 +608,9 @@ fun ItemInformation(
                         }
                     } else {
                         Text(
-                            text = "No outfits found."
+                            text = "No outfits found.",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.SemiBold
                         )
                     }
                 }
