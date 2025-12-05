@@ -25,7 +25,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -41,6 +43,7 @@ import com.cs407.fitfolio.ui.theme.ChocolateBrown
 import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.GoldenApricot
 import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 import com.cs407.fitfolio.ui.theme.RustBrown
 import com.cs407.fitfolio.ui.theme.TrueBlack
@@ -117,8 +120,13 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                         contentDescription = "Wardrobe",
                         modifier = Modifier.size(40.dp),
                     )
-                    Text(stringResource(R.string.carousel), fontFamily = Google_Sans_Flex)
-                }
+                    Text(
+                        text = stringResource(R.string.carousel),
+                        fontSize = 15.sp,
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.offset(y = -5.dp)
+                    )}
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
