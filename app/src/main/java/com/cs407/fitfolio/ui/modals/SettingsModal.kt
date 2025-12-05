@@ -252,9 +252,9 @@ fun SettingsModal (
             text = {
                 Text(
                     "For best results, take or upload a full-body photo from head to toe, " +
-                            "standing straight, wearing a form-fitting black tank top and black shorts if possible. \n" +
+                            "standing straight, wearing a form-fitting black tank top and black shorts if possible. \n\n" +
                             "Make sure you’re in a well lit space and the background is as simple as possible.",
-                    fontFamily = Google_Sans_Flex, fontSize = 13.sp)
+                    fontFamily = Google_Sans_Flex, fontSize = 15.sp)
             },
             confirmButton = {
                 Button(
