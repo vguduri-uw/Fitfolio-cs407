@@ -20,6 +20,7 @@ val TrueWhite = Color(0xFFFFFFFF)
 val FloralWhite = Color(0xFFFFFCF0)
 val DarkCyan = Color(0xFF4F8A8B)
 val AirForceBlue = Color(0xFF6A87A2)
+val LightAirForceBlue = Color(0xFFA1B3C4)
 
 /* ==========================================================================================
                                        Default Android Colors
