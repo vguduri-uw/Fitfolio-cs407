@@ -56,6 +56,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
@@ -71,6 +72,8 @@ import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
 import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.ui.theme.PeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
@@ -385,7 +388,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(PeachFuzz),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center,
         ) {
             IconButton(
@@ -406,7 +409,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(PeachFuzz),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.shuffleOutfits() }) {
@@ -423,7 +426,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(PeachFuzz),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.toggleSearchState(true) }) {
@@ -465,7 +468,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(PeachFuzz)
+                .background(LightPeachFuzz)
                 .padding(horizontal = 10.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -540,7 +543,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(PeachFuzz),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             when (outfitsState.isDeleteActive) {
@@ -596,7 +599,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(PeachFuzz),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.clearFilters() }) {
@@ -620,7 +623,10 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             )
         } else if (outfitsState.filteredOutfits.isEmpty()) {
             Text(
-                "No outfits found.",
+                text = "No outfits found.",
+                fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 15.sp,
                 modifier = Modifier.padding(16.dp)
             )
         } else {
