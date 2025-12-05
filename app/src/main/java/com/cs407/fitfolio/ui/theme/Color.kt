@@ -12,6 +12,8 @@ val RustBrown = Color(0xFF8F3900)
 val GoldenApricot = Color(0xFFE89A3D)
 val PeachFuzz = Color(0xFFFFD9C2)
 
+val LightPeachFuzz = Color(0xFFECDED5)
+
 // cool
 val TrueBlack = Color(0xFF000000)
 val TrueWhite = Color(0xFFFFFFFF)
