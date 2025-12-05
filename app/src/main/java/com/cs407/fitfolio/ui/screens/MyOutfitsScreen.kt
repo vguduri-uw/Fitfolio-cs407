@@ -626,7 +626,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 text = "No outfits found.",
                 fontFamily = Kudryashev_Display_Sans_Regular,
                 fontWeight = FontWeight.SemiBold,
-                fontSize = 15.sp,
+                fontSize = 20.sp,
                 modifier = Modifier.padding(16.dp)
             )
         } else {
