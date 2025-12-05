@@ -2,7 +2,6 @@ package com.cs407.fitfolio.ui.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -35,7 +34,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -68,15 +66,34 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.res.painterResource
 import com.cs407.fitfolio.R
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.CenterAlignedTopAppBar
+import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.graphics.Paint
+import androidx.compose.ui.graphics.painter.Painter
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.sp
+import com.cs407.fitfolio.ui.theme.AirForceBlue
+import com.cs407.fitfolio.ui.theme.GoldenApricot
+import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
+import com.cs407.fitfolio.ui.theme.LightAirForceBlue
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
+import com.cs407.fitfolio.ui.theme.RustBrown
+import com.cs407.fitfolio.ui.theme.TrueBlack
+import com.cs407.fitfolio.ui.theme.TrueWhite
 import com.cs407.fitfolio.viewModels.UserViewModel
 import java.time.format.DateTimeFormatter
 
@@ -149,14 +166,13 @@ fun CalendarScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(8.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier
                 .align(alignment = Alignment.TopCenter)
-                .fillMaxWidth()
-                .padding(start = 12.dp, end = 12.dp, top = 16.dp)
+                .fillMaxHeight()
+                .padding(top = 20.dp, start = 20.dp, end = 20.dp)
         ) {
             // Title
             Row(
@@ -168,14 +184,22 @@ fun CalendarScreen(
             ) {
                 var showInformation by remember { mutableStateOf(false) }
 
-                Spacer(modifier = Modifier.size(8.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start,
+                    modifier = Modifier.weight(.60f)
+                ) {
+                    Text(
+                        text = "My Calendar",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 30.sp
+                    )
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "My Calendar", style = MaterialTheme.typography.titleLarge)
                     IconButton(onClick = { showInformation = true }) { // todo: add info onClick lambda
-                        Icon(Icons.Outlined.Info,
+                        Icon(painter = painterResource(R.drawable.info),
                             contentDescription = "Information",
-                            modifier = Modifier.size(24.dp)
+                            modifier = Modifier
+                                .size(20.dp)
                         )
                     }
                 }
@@ -195,11 +219,17 @@ fun CalendarScreen(
                     performSearch(it)
                 },
                 modifier = Modifier.fillMaxWidth(),
-                placeholder = { Text("Search for Outfits by Date", fontSize = 18.sp) },
+                placeholder = {
+                    Text(
+                        text = "Search for Outfits by Date",
+                        fontFamily = Kudryashev_Display_Sans_Regular,fontSize = 18.sp,
+                        fontWeight = FontWeight.SemiBold
+                    )},
                 leadingIcon = {
                     Icon(
-                        imageVector = Icons.Default.Search,
-                        contentDescription = "Search"
+                        painter = painterResource(R.drawable.loupe),
+                        contentDescription = "Search",
+                        modifier = Modifier.size(20.dp)
                     )
                 },
                 trailingIcon = {
@@ -241,12 +271,18 @@ fun CalendarScreen(
 
                 Spacer(modifier = Modifier.size(18.dp))
 
-                // Calendar
+            // Calendar
             Card(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .shadow(
+                        elevation = 3.dp,
+                        shape = RoundedCornerShape(16.dp),
+                        clip = false
+                    ),
                 shape = RoundedCornerShape(16.dp),
                 colors = CardDefaults.cardColors(
-                    containerColor = customGrey
+                    containerColor = LightPeachFuzz
                 )
             ) {
                 Column(
@@ -261,16 +297,23 @@ fun CalendarScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         IconButton(onClick = { currentMonth = currentMonth.minusMonths(1) }) {
-                            Icon(Icons.Default.ArrowBack, contentDescription = "Previous Month")
-                        }
+                            Icon(
+                                painter = painterResource(R.drawable.left_arrow),
+                                contentDescription = "Previous Month",
+                                modifier = Modifier.size(25.dp))                        }
 
                         Text(
                             text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${currentMonth.year}",
-                            style = MaterialTheme.typography.titleLarge
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 25.sp,
                         )
 
                         IconButton(onClick = { currentMonth = currentMonth.plusMonths(1) }) {
-                            Icon(Icons.Default.ArrowForward, contentDescription = "Next Month")
+                            Icon(
+                                painter = painterResource(R.drawable.right_arrow),
+                                contentDescription = "Next Month",
+                                modifier = Modifier.size(25.dp))
                         }
                     }
 
@@ -286,9 +329,10 @@ fun CalendarScreen(
                                 text = day,
                                 modifier = Modifier.weight(1f),
                                 textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.labelMedium,
+                                fontFamily = Kudryashev_Display_Sans_Regular,
+                                fontSize = 15.sp,
                                 fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary
+                                color = TrueBlack
                             )
                         }
                     }
@@ -316,9 +360,11 @@ fun CalendarScreen(
                 .padding(top = 8.dp)
         ) {
             Icon(
-                imageVector = Icons.Outlined.Settings,
+                painter = painterResource(R.drawable.cog),
                 contentDescription = "Settings",
-                modifier = Modifier.size(36.dp)
+                modifier = Modifier
+                    .size(50.dp)
+                    .padding(end = 15.dp)
             )
         }
 
@@ -388,8 +434,8 @@ fun CalendarGrid(
                     .clip(RoundedCornerShape(8.dp))
                     .background(
                         when {
-                            hasOutfit -> Color(0xFFE6FFE6) //green for scheduled days
-                            isToday -> MaterialTheme.colorScheme.primaryContainer
+                            hasOutfit -> LightAirForceBlue // blue-grey for scheduled days
+                            isToday -> GoldenApricot
                             else -> Color.White
                         }
                     )
@@ -399,9 +445,12 @@ fun CalendarGrid(
                 Text(
                     text = day.toString(),
                     style = MaterialTheme.typography.bodySmall,
-                    fontWeight = if (isToday) FontWeight.Bold else FontWeight.Normal,
-                    color = if (isToday) MaterialTheme.colorScheme.onPrimaryContainer
-                    else Color.Black,
+                    fontFamily = Kudryashev_Regular,
+                    fontWeight = if (isToday) FontWeight.ExtraBold else FontWeight.Normal,
+                    color =
+                        if (isToday) RustBrown
+                        else if (hasOutfit) TrueWhite
+                        else Color.Black,
                     modifier = Modifier.align(Alignment.BottomEnd)
                 )
             }
@@ -423,7 +472,7 @@ fun OutfitDateModal(
     var outfitToDelete by remember { mutableStateOf<OutfitEntry?>(null) }
     val scope = rememberCoroutineScope()
 
-    //load outfits for the date
+    // Load outfits for the date
     LaunchedEffect(date) {
         scope.launch {
             val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
@@ -460,110 +509,166 @@ fun OutfitDateModal(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+                    // Title
                     Text(
                         text = date.format(
                             DateTimeFormatter.ofPattern("EEEE, MMMM dd, yyyy")
                         ),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 30.sp,
+                        fontWeight = FontWeight.Bold,
+                        lineHeight = 35.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.fillMaxWidth()
                     )
 
-                    if (scheduledOutfits.isNotEmpty()) {
-                        Text(
-                            text = "Scheduled Outfits:",
-                            style = MaterialTheme.typography.titleMedium
-                        )
+                    Spacer(modifier = Modifier.height(12.dp))
 
-                        //Carousel
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        ) {
-                            LazyRow(
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                contentPadding = PaddingValues(horizontal = 8.dp),
-                                modifier = Modifier.fillMaxSize()
+                    // Main content
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (scheduledOutfits.isNotEmpty()) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier.fillMaxWidth()
                             ) {
-                                items(scheduledOutfits) { outfit ->
-                                    OutfitPreviewCard(
-                                        outfit = outfit,
-                                        onClick = { selectedOutfitId = outfit.outfitId },
-                                        onRemove = { outfitToDelete = outfit }
+                                Text(
+                                    text = "Scheduled Outfits",
+                                    fontFamily = Kudryashev_Display_Sans_Regular,
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center
+                                )
+
+                                Spacer(modifier = Modifier.size(20.dp))
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                ) {
+                                    LazyRow(
+                                        horizontalArrangement =
+                                            if (scheduledOutfits.size > 1) Arrangement.spacedBy(8.dp)
+                                            else Arrangement.Center,
+                                        contentPadding = PaddingValues(horizontal = 8.dp),
+                                        modifier = Modifier.fillMaxSize()
+                                    ) {
+                                        items(scheduledOutfits) { outfit ->
+                                            OutfitPreviewCard(
+                                                outfit = outfit,
+                                                onClick = { selectedOutfitId = outfit.outfitId },
+                                                onRemove = { outfitToDelete = outfit }
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(16.dp),
+                                modifier = Modifier.fillMaxWidth()
+                            ) {
+                                Text(
+                                    text = "No outfits scheduled for this day.",
+                                    fontFamily = Kudryashev_Display_Sans_Regular,
+                                    fontSize = 20.sp,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = Color.Gray,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+
+                                Button(
+                                    onClick = {
+                                        onDismiss()
+                                        onNavigateToOutfits()
+                                    }
+                                ) {
+                                    Icon(
+                                        painter = painterResource(R.drawable.add2),
+                                        contentDescription = "Add outfit",
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Spacer(modifier = Modifier.width(8.dp))
+                                    Text(
+                                        text = "Schedule an Outfit",
+                                        fontFamily = Kudryashev_Display_Sans_Regular,
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 15.sp
                                     )
                                 }
                             }
                         }
-                    } else {
-                        Text(
-                            text = "No outfits scheduled for this day",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = Color.Gray
-                        )
-
-                        TextButton(
-                            onClick = {
-                                onDismiss()
-                                onNavigateToOutfits() //TODO idk i could remove this
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Add,
-                                contentDescription = "Add outfit",
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("Schedule an Outfit")
-                        }
                     }
 
+                    Spacer(Modifier.size(30.dp))
+
                     // Close button
-                    TextButton(onClick = onDismiss) {
-                        Text("Close")
+                    Button(
+                        onClick = onDismiss,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                    ) {
+                        Text(
+                            text = "Close",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.SemiBold,
+                            fontSize = 15.sp
+                        )
                     }
                 }
             }
         }
 
-        //delete dialog
+        // Delete dialog
         if (outfitToDelete != null) {
             AlertDialog(
                 onDismissRequest = { outfitToDelete = null },
                 title = { Text("Remove from Schedule?") },
                 text = {
                     Text(
-                        "Are you sure you want to remove \"${outfitToDelete!!.outfitName}\" from ${date.format(
-                            DateTimeFormatter.ofPattern("MMMM dd, yyyy")
-                        )}? The outfit will remain in your Outfits collection."
+                        "Are you sure you want to remove \"${outfitToDelete!!.outfitName}\" from ${
+                            date.format(
+                                DateTimeFormatter.ofPattern("MMMM dd, yyyy")
+                            )
+                        }? The outfit will remain in your Outfits collection."
                     )
                 },
                 confirmButton = {
-                    TextButton(
+                    Button(
                         onClick = {
                             scope.launch {
                                 val timestamp = date.atStartOfDay(ZoneId.systemDefault())
                                     .toInstant().toEpochMilli()
-                                outfitsViewModel.removeOutfitFromDate(timestamp, outfitToDelete!!.outfitId)
+                                outfitsViewModel.removeOutfitFromDate(
+                                    timestamp,
+                                    outfitToDelete!!.outfitId
+                                )
                                 scheduledOutfits = outfitsViewModel.getOutfitsForDate(timestamp)
                                 outfitToDelete = null
                             }
                         }
                     ) {
-                        Text("Remove")
+                        Text("Remove", fontFamily = Google_Sans_Flex)
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = { outfitToDelete = null }) {
-                        Text("Cancel")
+                    Button(onClick = { outfitToDelete = null }) {
+                        Text("Cancel", fontFamily = Google_Sans_Flex)
                     }
                 }
             )
         }
     }
 }
+
 
 //cards in the carousel in the day modal
 @Composable
@@ -574,18 +679,18 @@ private fun OutfitPreviewCard(
 ) {
     Card(
         modifier = Modifier
-            .width(240.dp)
-            .fillMaxHeight()
+            .width(200.dp)
+            .height(500.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
-            containerColor = Color(0xFFF7F7F7)
+            containerColor = LightPeachFuzz
         )
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(12.dp),
+                .padding(top = 12.dp, start = 12.dp, end = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
@@ -607,7 +712,7 @@ private fun OutfitPreviewCard(
                 } else {
                     // Fallback icon if no photo TODO remove?
                     Icon(
-                        painter = painterResource(R.drawable.shirt),
+                        painter = painterResource(R.drawable.hanger),
                         contentDescription = "Default outfit icon",
                         modifier = Modifier.size(120.dp),
                         tint = Color.Gray
@@ -620,9 +725,9 @@ private fun OutfitPreviewCard(
             //name
             Text(
                 text = outfit.outfitName,
-                style = MaterialTheme.typography.bodySmall,
-                fontWeight = FontWeight.Medium,
+                fontFamily = Kudryashev_Display_Sans_Regular,
                 textAlign = TextAlign.Center,
+                fontSize = 20.sp,
                 maxLines = 1,
                 modifier = Modifier.fillMaxWidth()
             )
