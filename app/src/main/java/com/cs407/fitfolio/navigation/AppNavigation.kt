@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -36,6 +37,13 @@ import com.cs407.fitfolio.ui.screens.CalendarScreen
 import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
 import com.cs407.fitfolio.ui.screens.MyWardrobeScreen
+import com.cs407.fitfolio.ui.theme.ChocolateBrown
+import com.cs407.fitfolio.ui.theme.FloralWhite
+import com.cs407.fitfolio.ui.theme.GoldenApricot
+import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
+import com.cs407.fitfolio.ui.theme.RustBrown
+import com.cs407.fitfolio.ui.theme.TrueBlack
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.ClosetViewModelFactory
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
@@ -77,6 +85,10 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
 
         kotlinx.coroutines.delay(500)
 
+        if (weatherViewModel.uiState.value.locationPermissionGranted) {
+            weatherViewModel.fetchWeatherForCurrentLocation()
+        }
+
         Log.d("AppNavigation", "Requesting location permission")
         locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
@@ -90,6 +102,8 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
             FloatingActionButton(
                 onClick = { navController.navigate("wardrobe") },
                 shape = CircleShape,
+                containerColor = GoldenApricot,
+                contentColor = TrueBlack,
                 modifier = Modifier
                     .size(80.dp)
                     .offset(y = 81.dp)
@@ -101,9 +115,9 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     Icon(
                         painter = painterResource(R.drawable.carousel),
                         contentDescription = "Wardrobe",
-                        modifier = Modifier.size(35.dp),
+                        modifier = Modifier.size(40.dp),
                     )
-                    Text(stringResource(R.string.carousel))
+                    Text(stringResource(R.string.carousel), fontFamily = Google_Sans_Flex)
                 }
             }
         },

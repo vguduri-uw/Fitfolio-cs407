@@ -63,7 +63,9 @@ fun AuthNavigation() {
                     UserState(
                         id = local.userId,
                         name = local.username,
-                        uid = local.userUID
+                        uid = local.userUID,
+                        email = local.email ?: "",
+                        avatarUri = local.avatarUri
                     )
                 )
             }

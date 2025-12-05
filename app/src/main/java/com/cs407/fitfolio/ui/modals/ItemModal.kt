@@ -553,7 +553,7 @@ fun ItemInformation(
                         }
                     }
                     TextField(
-                        value = description.ifEmpty { "No description found." },
+                        value = description,
                         onValueChange = { description = it },
                         enabled = isEditingDescription,
                         textStyle = TextStyle(

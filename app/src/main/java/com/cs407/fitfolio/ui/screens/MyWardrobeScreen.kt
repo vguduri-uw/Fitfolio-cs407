@@ -91,7 +91,7 @@ fun MyWardrobeScreen(
     val selectedItems by closetViewModel.selectedItems.collectAsStateWithLifecycle()
     val db = FitfolioDatabase.getDatabase(context)
     val categories = listOf(
-        "Headwear" to listOf("Hats"),
+        "Headwear" to listOf("Hats", "Headbands"),
         "Topwear" to listOf("T-Shirts", "Shirts", "Dresses"),
         "Bottomwear" to listOf("Jeans", "Pants", "Shorts", "Skirts"),
         "Shoes" to listOf("Shoes")
@@ -120,8 +120,28 @@ fun MyWardrobeScreen(
                 )
             }
             categories.forEach { (category, types) ->
+                val filteredItems = closetState.filteredItems.filter { it.itemType in types }
+
+                val itemsWithOptional =
+                    if (category == "Headwear") {
+                        listOf(
+                            ItemEntry(
+                                itemId = -1,
+                                itemName = "No Headwear",
+                                itemType = "Hats",
+                                itemDescription = "",
+                                itemTags = emptyList(),
+                                isFavorite = false,
+                                isDeletionCandidate = false,
+                                itemPhotoUri = ""
+                            )
+                        ) + filteredItems
+                    } else {
+                        closetState.filteredItems.filter { it.itemType in types }
+                    }
+
                 ClothingScroll(
-                    items = closetState.filteredItems.filter { it.itemType in types },
+                    items = itemsWithOptional,
                     selectedItem = selectedItems[category],
                     onSelect = { item -> closetViewModel.selectItem(category, item) },
                     category = category,
@@ -153,10 +173,10 @@ fun MyWardrobeScreen(
                 ) {
                     IconButton(onClick = {
                         val itemsToAdd = listOfNotNull(
-                            centeredHeadwear,
-                            centeredTopwear,
-                            centeredBottomwear,
-                            centeredShoes
+                            centeredHeadwear?.takeIf { it.itemId > 0 },
+                            centeredTopwear?.takeIf { it.itemId > 0 },
+                            centeredBottomwear?.takeIf { it.itemId > 0 },
+                            centeredShoes?.takeIf { it.itemId > 0 }
                         )
                         if (itemsToAdd.isEmpty()) return@IconButton
 
