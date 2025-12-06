@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.AddCircle
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,9 +20,7 @@ import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
-import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
-import com.cs407.fitfolio.ui.theme.PeachFuzz
 import com.cs407.fitfolio.ui.theme.TrueBlack
 
 // UI and navigation for the bottom navigation bar
@@ -79,7 +75,7 @@ fun BottomNavigationBar(navController: NavController) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     IconButton(onClick = { navController.navigate("add") }) {
                         Icon(
-                            painter = painterResource(R.drawable.add),
+                            painter = painterResource(R.drawable.add_nav_thin),
                             contentDescription = "Add",
                             tint = TrueBlack,
                             modifier = Modifier.size(35.dp)
