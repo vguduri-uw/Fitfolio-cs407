@@ -318,7 +318,6 @@ fun ActionButtonsRow(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.width(12.dp))
 
             // Shuffle button using carouselType
@@ -346,9 +345,9 @@ fun ActionButtonsRow(
                     )
                 }
             }
-
             Spacer(modifier = Modifier.width(12.dp))
-            // Remove combination button
+
+            // Filter by favorites button
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
@@ -356,28 +355,49 @@ fun ActionButtonsRow(
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
-                    onClick = {
-                        val allItemsByCategory = mapOf(
-                            CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-                            CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                            CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                            CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-                        )
-
-                        carouselViewModel.removeCurrentCombination(allItemsByCategory)
-                        Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
-                    },
-                    enabled = itemsToAdd.isNotEmpty()
+                    onClick = { carouselViewModel.toggleFavorites() }
                 ) {
                     Icon(
-                        painter = painterResource(R.drawable.minus),
-                        contentDescription = "Remove combination",
-                        tint = Color.Black,
+                        painter = if (carouselState.isFavoritesActive) painterResource(R.drawable.heart_filled_red) else painterResource(R.drawable.heart_outline),
+                        contentDescription = "Filter by favorites",
+                        tint = Color.Unspecified,
                         modifier = Modifier.size(20.dp)
                     )
                 }
             }
             Spacer(modifier = Modifier.weight(1f))
+
+            // TODO: decide if we want remove button or not
+//            Spacer(modifier = Modifier.width(12.dp))
+//            // Remove combination button
+//            Box(
+//                modifier = Modifier
+//                    .clip(MaterialTheme.shapes.medium)
+//                    .background(Color(0xFFE0E0E0)),
+//                contentAlignment = Alignment.Center
+//            ) {
+//                IconButton(
+//                    onClick = {
+//                        val allItemsByCategory = mapOf(
+//                            CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
+//                            CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+//                            CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+//                            CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+//                        )
+//
+//                        carouselViewModel.removeCurrentCombination(allItemsByCategory)
+//                        Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
+//                    },
+//                    enabled = itemsToAdd.isNotEmpty()
+//                ) {
+//                    Icon(
+//                        painter = painterResource(R.drawable.minus),
+//                        contentDescription = "Remove combination",
+//                        tint = Color.Black,
+//                        modifier = Modifier.size(20.dp)
+//                    )
+//                }
+//            }
         }
     }
 }
@@ -396,17 +416,19 @@ fun ClothingScroll(
     // Dynamically filter items based on currently centered items in other categories
     val filteredItems by remember(currentState, closetItems) {
         derivedStateOf {
-            closetItems.filter { item ->
-                val combo = when (category) {
-                    CarouselTypes.ACCESSORIES -> listOfNotNull(item, currentState.centeredTopwear, currentState.centeredBottomwear, currentState.centeredShoes)
-                    CarouselTypes.TOPWEAR -> listOfNotNull(currentState.centeredAccessories, item, currentState.centeredBottomwear, currentState.centeredShoes)
-                    CarouselTypes.BOTTOMWEAR -> listOfNotNull(currentState.centeredAccessories, currentState.centeredTopwear, item, currentState.centeredShoes)
-                    CarouselTypes.FOOTWEAR -> listOfNotNull(currentState.centeredAccessories, currentState.centeredTopwear, currentState.centeredBottomwear, item)
-                    else -> listOf(item)
-                }.map { it.itemId }.toSet()
-
-                carouselViewModel.blockedCombos.none { it == combo }
-            }
+            closetItems
+                .filter { item ->
+                    (!currentState.isFavoritesActive || item.isFavorite) &&
+                            carouselViewModel.blockedCombos.none { combo ->
+                                combo == listOfNotNull(
+                                    currentState.centeredAccessories.takeIf { category == CarouselTypes.ACCESSORIES },
+                                    currentState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
+                                    currentState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
+                                    currentState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
+                                    item.takeIf { true }
+                                ).mapNotNull { it?.itemId }.toSet()
+                            }
+                }
         }
     }
 

@@ -22,7 +22,8 @@ data class CarouselState(
     val centeredAccessories: ItemEntry? = null,
     val centeredTopwear: ItemEntry? = null,
     val centeredBottomwear: ItemEntry? = null,
-    val centeredShoes: ItemEntry? = null
+    val centeredShoes: ItemEntry? = null,
+    val isFavoritesActive: Boolean = false
 )
 
 class CarouselViewModel(
@@ -168,6 +169,14 @@ class CarouselViewModel(
             centeredShoes = shoes.firstOrNull { s -> _blockedCombos.none { it.contains(s.itemId) } }
         )
         _carouselState.value = newState
+    }
+
+    // Toggle favorites property
+    fun toggleFavorites() {
+        val current = _carouselState.value
+        _carouselState.value = current.copy(
+            isFavoritesActive = !current.isFavoritesActive
+        )
     }
 
     // Shuffle carousel screen
