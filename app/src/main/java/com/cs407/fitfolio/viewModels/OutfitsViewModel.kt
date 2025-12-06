@@ -151,7 +151,7 @@ class OutfitsViewModel(
         }
     }
 
-    // SETTERS FOR OUTFIT PROPERTIES (for use in wardrobe screen and outfit modal)
+    // SETTERS FOR OUTFIT PROPERTIES (for use in carousel screen and outfit modal)
     // call this function to upsert the outfit's photo uri
     fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String) {
         viewModelScope.launch {

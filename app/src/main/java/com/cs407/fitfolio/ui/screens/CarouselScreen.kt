@@ -63,13 +63,13 @@ import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
-import com.cs407.fitfolio.viewModels.WardrobeState
-import com.cs407.fitfolio.viewModels.WardrobeViewModel
+import com.cs407.fitfolio.viewModels.CarouselState
+import com.cs407.fitfolio.viewModels.CarouselViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.abs
 
 @Composable
-fun MyWardrobeScreen(
+fun CarouselScreen(
     onNavigateToOutfitsScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
@@ -79,11 +79,11 @@ fun MyWardrobeScreen(
     weatherViewModel: WeatherViewModel,
     outfitsViewModel: OutfitsViewModel,
     userViewModel: UserViewModel,
-    wardrobeViewModel: WardrobeViewModel
+    carouselViewModel: CarouselViewModel
 ) {
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
-    val wardrobeState by wardrobeViewModel.wardrobeState.collectAsState()
+    val carouselState by carouselViewModel.carouselState.collectAsState()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
@@ -97,9 +97,9 @@ fun MyWardrobeScreen(
     // Use filteredItems if available, else fallback to full item list
     val allItems = closetState.filteredItems.takeIf { !it.isNullOrEmpty() } ?: closetState.items
 
-    // Load wardrobe items by carouselType
+    // Load carousel items by carouselType
     LaunchedEffect(Unit) {
-        wardrobeViewModel.loadWardrobe(
+        carouselViewModel.loadCarousel(
             accessories = allItems.filter { it.carouselType == CarouselTypes.ACCESSORIES },
             topwear = allItems.filter { it.carouselType == CarouselTypes.TOPWEAR },
             bottomwear = allItems.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
@@ -112,7 +112,7 @@ fun MyWardrobeScreen(
             modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SimpleHeader("My Wardrobe")
+            SimpleHeader("Outfit Carousel")
             Spacer(modifier = Modifier.weight(1f))
             WeatherDataChip(weatherData = weatherState.weatherData)
         }
@@ -146,15 +146,15 @@ fun MyWardrobeScreen(
             } else {
                 ClothingScroll(
                     selectedItem = when (category) {
-                        CarouselTypes.ACCESSORIES -> wardrobeState.centeredAccessories
-                        CarouselTypes.TOPWEAR -> wardrobeState.centeredTopwear
-                        CarouselTypes.BOTTOMWEAR -> wardrobeState.centeredBottomwear
-                        CarouselTypes.FOOTWEAR -> wardrobeState.centeredShoes
+                        CarouselTypes.ACCESSORIES -> carouselState.centeredAccessories
+                        CarouselTypes.TOPWEAR -> carouselState.centeredTopwear
+                        CarouselTypes.BOTTOMWEAR -> carouselState.centeredBottomwear
+                        CarouselTypes.FOOTWEAR -> carouselState.centeredShoes
                         else -> null
                     },
                     category = category,
-                    wardrobeViewModel = wardrobeViewModel,
-                    onCenteredItemChange = { centered -> wardrobeViewModel.updateCenteredItem(category, centered) },
+                    carouselViewModel = carouselViewModel,
+                    onCenteredItemChange = { centered -> carouselViewModel.updateCenteredItem(category, centered) },
                     closetItems = itemsWithPlaceholder
                 )
             }
@@ -165,8 +165,8 @@ fun MyWardrobeScreen(
         ActionButtonsRow(
             closetState = closetState,
             closetViewModel = closetViewModel,
-            wardrobeState = wardrobeState,
-            wardrobeViewModel = wardrobeViewModel,
+            carouselState = carouselState,
+            carouselViewModel = carouselViewModel,
             outfitsViewModel = outfitsViewModel,
             userViewModel = userViewModel,
             scope = scope,
@@ -179,8 +179,8 @@ fun MyWardrobeScreen(
 
     if (showTryOnModal) {
         TryOnModal(
-            wardrobeState = wardrobeState,
-            wardrobeViewModel = wardrobeViewModel,
+            carouselState = carouselState,
+            carouselViewModel = carouselViewModel,
             outfitsViewModel = outfitsViewModel,
             userViewModel = userViewModel,
             onDismiss = { showTryOnModal = false },
@@ -207,8 +207,8 @@ fun MyWardrobeScreen(
 fun ActionButtonsRow(
     closetState: ClosetState,
     closetViewModel: ClosetViewModel,
-    wardrobeState: WardrobeState,
-    wardrobeViewModel: WardrobeViewModel,
+    carouselState: CarouselState,
+    carouselViewModel: CarouselViewModel,
     outfitsViewModel: OutfitsViewModel,
     userViewModel: UserViewModel,
     scope: CoroutineScope,
@@ -220,13 +220,13 @@ fun ActionButtonsRow(
     val userState by userViewModel.userState.collectAsState()
     var isUploading by remember { mutableStateOf(false) }
 
-    val itemsToAdd by remember(wardrobeState) {
+    val itemsToAdd by remember(carouselState) {
         derivedStateOf {
             listOfNotNull(
-                wardrobeState.centeredAccessories,
-                wardrobeState.centeredTopwear,
-                wardrobeState.centeredBottomwear,
-                wardrobeState.centeredShoes
+                carouselState.centeredAccessories,
+                carouselState.centeredTopwear,
+                carouselState.centeredBottomwear,
+                carouselState.centeredShoes
             ).filter { it.itemId > 0 }
         }
     }
@@ -266,13 +266,13 @@ fun ActionButtonsRow(
 
                             try {
                                 isUploading = true
-                                val result = wardrobeViewModel.dressMe(
+                                val result = carouselViewModel.dressMe(
                                     productUrls = itemsToAdd.map { it.itemPhotoUri },
                                     modelUrl = userState.avatarUri,
                                     carouselTypes = itemsToAdd.map { it.carouselType }
                                 )
 
-                                Log.d("MyWardrobe", "dressMe returned = $result")
+                                Log.d("Carousel", "dressMe returned = $result")
 
                                 if (result.isNullOrEmpty()) {
                                     Toast.makeText(
@@ -286,7 +286,7 @@ fun ActionButtonsRow(
 
                                 val outfitId = outfitsViewModel.addOutfit(
                                     name = "New Outfit",
-                                    description = "Created from My Wardrobe",
+                                    description = "Created from Carousel",
                                     tags = emptyList(),
                                     isFavorite = false,
                                     photoUri = result,
@@ -330,7 +330,7 @@ fun ActionButtonsRow(
             ) {
                 IconButton(
                     onClick = {
-                        wardrobeViewModel.shuffleItems(
+                        carouselViewModel.shuffleItems(
                             accessoriesList = closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
                             topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
                             bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
@@ -364,7 +364,7 @@ fun ActionButtonsRow(
                             CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
                         )
 
-                        wardrobeViewModel.removeCurrentCombination(allItemsByCategory)
+                        carouselViewModel.removeCurrentCombination(allItemsByCategory)
                         Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
                     },
                     enabled = itemsToAdd.isNotEmpty()
@@ -387,10 +387,10 @@ fun ClothingScroll(
     closetItems: List<ItemEntry>,
     selectedItem: ItemEntry?,
     category: CarouselTypes,
-    wardrobeViewModel: WardrobeViewModel,
+    carouselViewModel: CarouselViewModel,
     onCenteredItemChange: (ItemEntry?) -> Unit
 ) {
-    val currentState by wardrobeViewModel.wardrobeState.collectAsState()
+    val currentState by carouselViewModel.carouselState.collectAsState()
     val scope = rememberCoroutineScope()
 
     // Dynamically filter items based on currently centered items in other categories
@@ -405,7 +405,7 @@ fun ClothingScroll(
                     else -> listOf(item)
                 }.map { it.itemId }.toSet()
 
-                wardrobeViewModel.blockedCombos.none { it == combo }
+                carouselViewModel.blockedCombos.none { it == combo }
             }
         }
     }
@@ -517,15 +517,15 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
 
 @Composable
 fun TryOnModal(
-    wardrobeState: WardrobeState,
-    wardrobeViewModel: WardrobeViewModel,
+    carouselState: CarouselState,
+    carouselViewModel: CarouselViewModel,
     outfitsViewModel: OutfitsViewModel,
     userViewModel: UserViewModel,
     onDismiss: () -> Unit,
     context: Context,
     scope: CoroutineScope
 ) {
-    val tryOnUrl by wardrobeViewModel.tryOnPreview.collectAsState()
+    val tryOnUrl by carouselViewModel.tryOnPreview.collectAsState()
 
     Dialog(onDismissRequest = { onDismiss() }) {
         Box(

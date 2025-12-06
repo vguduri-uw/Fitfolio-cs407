@@ -1,7 +1,5 @@
 package com.cs407.fitfolio.viewModels
 
-import android.content.Context
-import android.widget.Toast
 import androidx.compose.runtime.mutableStateListOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -20,21 +18,21 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
-data class WardrobeState(
+data class CarouselState(
     val centeredAccessories: ItemEntry? = null,
     val centeredTopwear: ItemEntry? = null,
     val centeredBottomwear: ItemEntry? = null,
     val centeredShoes: ItemEntry? = null
 )
 
-class WardrobeViewModel(
+class CarouselViewModel(
     private val db: FitfolioDatabase,
     private val userViewModel: UserViewModel
 ) : ViewModel() {
     private val _tryOnPreview = MutableStateFlow<String?>(null)
     val tryOnPreview: StateFlow<String?> = _tryOnPreview.asStateFlow()
-    private val _wardrobeState = MutableStateFlow(WardrobeState())
-    val wardrobeState: StateFlow<WardrobeState> = _wardrobeState.asStateFlow()
+    private val _carouselState = MutableStateFlow(CarouselState())
+    val carouselState: StateFlow<CarouselState> = _carouselState.asStateFlow()
 
     private val _blockedCombos = mutableStateListOf<Set<Int>>()
     val blockedCombos: List<Set<Int>> get() = _blockedCombos
@@ -45,7 +43,7 @@ class WardrobeViewModel(
 
     /** BLOCK CURRENT COMBINATION */
     fun blockCurrentCombination() {
-        val current = _wardrobeState.value
+        val current = _carouselState.value
         val ids = listOfNotNull(
             current.centeredAccessories?.itemId,
             current.centeredTopwear?.itemId,
@@ -69,10 +67,10 @@ class WardrobeViewModel(
         }
     }
 
-    /** REMOVE CURRENT COMBINATION AND RELOAD WARDROBE */
+    /** REMOVE CURRENT COMBINATION AND RELOAD CAROUSEL */
     fun removeCurrentCombination(allItemsByCategory: Map<CarouselTypes, List<ItemEntry>>) {
         blockCurrentCombination()
-        loadWardrobe(
+        loadCarousel(
             accessories = allItemsByCategory[CarouselTypes.ACCESSORIES] ?: emptyList(),
             topwear = allItemsByCategory[CarouselTypes.TOPWEAR] ?: emptyList(),
             bottomwear = allItemsByCategory[CarouselTypes.BOTTOMWEAR] ?: emptyList(),
@@ -100,7 +98,7 @@ class WardrobeViewModel(
 
     /** UPDATE CENTERED ITEM */
     fun updateCenteredItem(category: CarouselTypes, item: ItemEntry?) {
-        val current = _wardrobeState.value
+        val current = _carouselState.value
         val newState = when (category) {
             CarouselTypes.ACCESSORIES -> current.copy(centeredAccessories = item)
             CarouselTypes.TOPWEAR -> current.copy(centeredTopwear = item)
@@ -117,13 +115,13 @@ class WardrobeViewModel(
                 )
             )
         ) {
-            _wardrobeState.value = newState
+            _carouselState.value = newState
         }
     }
 
     /** GET VALID ITEMS FOR A CATEGORY (FILTER BLOCKED) */
     fun getValidItemsForCategory(category: CarouselTypes, allItems: List<ItemEntry>): List<ItemEntry> {
-        val current = _wardrobeState.value
+        val current = _carouselState.value
         return allItems.filter { item ->
             val combo = when (category) {
                 CarouselTypes.ACCESSORIES -> setOf(
@@ -156,29 +154,30 @@ class WardrobeViewModel(
         }
     }
 
-    /** LOAD WARDROBE WITH BLOCKED FILTER */
-    fun loadWardrobe(
+    /** LOAD CAROUSEL WITH BLOCKED FILTER */
+    fun loadCarousel(
         accessories: List<ItemEntry>,
         topwear: List<ItemEntry>,
         bottomwear: List<ItemEntry>,
         shoes: List<ItemEntry>
     ) {
-        val newState = WardrobeState(
+        val newState = CarouselState(
             centeredAccessories = accessories.firstOrNull { hw -> _blockedCombos.none { it.contains(hw.itemId) } },
             centeredTopwear = topwear.firstOrNull { tw -> _blockedCombos.none { it.contains(tw.itemId) } },
             centeredBottomwear = bottomwear.firstOrNull { bw -> _blockedCombos.none { it.contains(bw.itemId) } },
             centeredShoes = shoes.firstOrNull { s -> _blockedCombos.none { it.contains(s.itemId) } }
         )
-        _wardrobeState.value = newState
+        _carouselState.value = newState
     }
 
+    // Shuffle carousel screen
     fun shuffleItems(
         accessoriesList: List<ItemEntry>,
         topwearList: List<ItemEntry>,
         bottomwearList: List<ItemEntry>,
         shoesList: List<ItemEntry>
     ) {
-        loadWardrobe(
+        loadCarousel(
             accessories = accessoriesList.shuffled(),
             topwear = topwearList.shuffled(),
             bottomwear = bottomwearList.shuffled(),
@@ -251,37 +250,5 @@ class WardrobeViewModel(
             println("productToModel EXCEPTION: ${e.message}")
             null
         }
-    }
-
-
-    fun generateTryOnPreview(
-        context: Context,
-        apiKey: String,
-        avatarUri: String? = null,
-        onError: (String) -> Unit = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
-    ) {
-        // Gather current centered items as garment URLs
-        val currentState = _wardrobeState.value
-        val garmentUrls = listOfNotNull(
-            currentState.centeredAccessories?.itemPhotoUri,
-            currentState.centeredTopwear?.itemPhotoUri,
-            currentState.centeredBottomwear?.itemPhotoUri,
-            currentState.centeredShoes?.itemPhotoUri
-        )
-
-        if (garmentUrls.isEmpty()) {
-            onError("No items selected for try-on.")
-            return
-        }
-
-        // Call dressMe internally
-        // TODO: Generate try on
-//        dressMe(
-//            context = context,
-//            apiKey = apiKey,
-//            avatarUri = avatarUri,
-//            garmentUrls = garmentUrls,
-//            onError = onError
-//        )
     }
 }
