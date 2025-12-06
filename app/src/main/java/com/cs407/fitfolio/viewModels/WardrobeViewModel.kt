@@ -21,6 +21,7 @@ import kotlin.random.Random
 import androidx.core.net.toUri
 import com.cs407.fitfolio.data.BlockedCombination
 import com.cs407.fitfolio.data.BlockedCombinationDao
+import com.cs407.fitfolio.enums.CarouselTypes
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -50,103 +51,148 @@ class WardrobeViewModel(
     private val db: FitfolioDatabase,
     private val userViewModel: UserViewModel
 ) : ViewModel() {
-
+    private val _tryOnPreview = MutableStateFlow<String?>(null)
+    val tryOnPreview: StateFlow<String?> = _tryOnPreview.asStateFlow()
     private val _wardrobeState = MutableStateFlow(WardrobeState())
     val wardrobeState: StateFlow<WardrobeState> = _wardrobeState.asStateFlow()
 
-    private val _tryOnPreview = MutableStateFlow<String?>(null)
-    val tryOnPreview: StateFlow<String?> = _tryOnPreview.asStateFlow()
-
-    // Store blocked combinations as lists of itemIds
-    // store blocked combos as sets of item IDs
     private val _blockedCombos = mutableStateListOf<Set<Int>>()
     val blockedCombos: List<Set<Int>> get() = _blockedCombos
 
-    fun blockCurrentCombination(
-        headwear: ItemEntry?,
-        topwear: ItemEntry?,
-        bottomwear: ItemEntry?,
-        shoes: ItemEntry?
-    ) {
-        val comboSet = listOf(headwear, topwear, bottomwear, shoes)
-            .filterNotNull()
-            .map { it.itemId }
-            .toSet()
+    init {
+        viewModelScope.launch { loadBlockedCombinations() }
+    }
 
-        if (comboSet.isEmpty() || comboSet in _blockedCombos) return
+    /** BLOCK CURRENT COMBINATION */
+    fun blockCurrentCombination() {
+        val current = _wardrobeState.value
+        val ids = listOfNotNull(
+            current.centeredHeadwear?.itemId,
+            current.centeredTopwear?.itemId,
+            current.centeredBottomwear?.itemId,
+            current.centeredShoes?.itemId
+        ).toSet()
 
-        _blockedCombos.add(comboSet)
+        if (ids.isEmpty() || _blockedCombos.contains(ids)) return
 
-        // Save into Room
+        _blockedCombos.add(ids)
+
         viewModelScope.launch(Dispatchers.IO) {
             db.blockedCombinationDao().insertCombination(
                 BlockedCombination(
-                    headwearId = headwear?.itemId,
-                    topwearId = topwear?.itemId,
-                    bottomwearId = bottomwear?.itemId,
-                    shoesId = shoes?.itemId
+                    headwearId = current.centeredHeadwear?.itemId,
+                    topwearId = current.centeredTopwear?.itemId,
+                    bottomwearId = current.centeredBottomwear?.itemId,
+                    shoesId = current.centeredShoes?.itemId
                 )
             )
         }
     }
 
+    /** REMOVE CURRENT COMBINATION AND RELOAD WARDROBE */
+    fun removeCurrentCombination(allItemsByCategory: Map<CarouselTypes, List<ItemEntry>>) {
+        blockCurrentCombination()
+        loadWardrobe(
+            headwear = allItemsByCategory[CarouselTypes.HEADWEAR] ?: emptyList(),
+            topwear = allItemsByCategory[CarouselTypes.TOPWEAR] ?: emptyList(),
+            bottomwear = allItemsByCategory[CarouselTypes.BOTTOMWEAR] ?: emptyList(),
+            shoes = allItemsByCategory[CarouselTypes.FOOTWEAR] ?: emptyList()
+        )
+    }
+
+    /** CHECK IF A COMBINATION IS BLOCKED */
     fun isComboBlocked(combo: List<ItemEntry?>): Boolean {
         val ids = combo.filterNotNull().map { it.itemId }.toSet()
         return _blockedCombos.any { it == ids }
     }
-    init {
-        viewModelScope.launch {
-            loadBlockedCombinations()
-        }
-    }
 
+    /** LOAD BLOCKED COMBINATIONS FROM DATABASE */
     private suspend fun loadBlockedCombinations() {
         val combos = withContext(Dispatchers.IO) {
             db.blockedCombinationDao().getAllBlockedCombinations()
         }
-        // Convert to Set<Int> for easy checking
         _blockedCombos.clear()
         combos.forEach { combo ->
             val ids = listOfNotNull(combo.headwearId, combo.topwearId, combo.bottomwearId, combo.shoesId).toSet()
             _blockedCombos.add(ids)
         }
     }
-    private fun filterItems(headwear: List<ItemEntry>, topwear: List<ItemEntry>,
-                            bottomwear: List<ItemEntry>, shoes: List<ItemEntry>): WardrobeState {
-        // Only keep items that aren't part of blocked combos with current selection
-        val newHead = headwear.firstOrNull { hw ->
-            _blockedCombos.none { combo -> combo.contains(hw.itemId) }
-        }
-        val newTop = topwear.firstOrNull { tw ->
-            _blockedCombos.none { combo -> combo.contains(tw.itemId) }
-        }
-        val newBottom = bottomwear.firstOrNull { bw ->
-            _blockedCombos.none { combo -> combo.contains(bw.itemId) }
-        }
-        val newShoes = shoes.firstOrNull { s ->
-            _blockedCombos.none { combo -> combo.contains(s.itemId) }
-        }
 
-        return WardrobeState(
-            centeredHeadwear = newHead,
-            centeredTopwear = newTop,
-            centeredBottomwear = newBottom,
-            centeredShoes = newShoes
+    /** UPDATE CENTERED ITEM */
+    fun updateCenteredItem(category: CarouselTypes, item: ItemEntry?) {
+        val current = _wardrobeState.value
+        val newState = when (category) {
+            CarouselTypes.HEADWEAR -> current.copy(centeredHeadwear = item)
+            CarouselTypes.TOPWEAR -> current.copy(centeredTopwear = item)
+            CarouselTypes.BOTTOMWEAR -> current.copy(centeredBottomwear = item)
+            CarouselTypes.FOOTWEAR -> current.copy(centeredShoes = item)
+            else -> current
+        }
+        if (item == null || !isComboBlocked(
+                listOf(
+                    newState.centeredHeadwear,
+                    newState.centeredTopwear,
+                    newState.centeredBottomwear,
+                    newState.centeredShoes
+                )
+            )
+        ) {
+            _wardrobeState.value = newState
+        }
+    }
+
+    /** GET VALID ITEMS FOR A CATEGORY (FILTER BLOCKED) */
+    fun getValidItemsForCategory(category: CarouselTypes, allItems: List<ItemEntry>): List<ItemEntry> {
+        val current = _wardrobeState.value
+        return allItems.filter { item ->
+            val combo = when (category) {
+                CarouselTypes.HEADWEAR -> setOf(
+                    item.itemId,
+                    current.centeredTopwear?.itemId,
+                    current.centeredBottomwear?.itemId,
+                    current.centeredShoes?.itemId
+                ).filterNotNull().toSet()
+                CarouselTypes.TOPWEAR -> setOf(
+                    current.centeredHeadwear?.itemId,
+                    item.itemId,
+                    current.centeredBottomwear?.itemId,
+                    current.centeredShoes?.itemId
+                ).filterNotNull().toSet()
+                CarouselTypes.BOTTOMWEAR -> setOf(
+                    current.centeredHeadwear?.itemId,
+                    current.centeredTopwear?.itemId,
+                    item.itemId,
+                    current.centeredShoes?.itemId
+                ).filterNotNull().toSet()
+                CarouselTypes.FOOTWEAR -> setOf(
+                    current.centeredHeadwear?.itemId,
+                    current.centeredTopwear?.itemId,
+                    current.centeredBottomwear?.itemId,
+                    item.itemId
+                ).filterNotNull().toSet()
+                else -> setOf(item.itemId)
+            }
+            _blockedCombos.none { it == combo }
+        }
+    }
+
+    /** LOAD WARDROBE WITH BLOCKED FILTER */
+    fun loadWardrobe(
+        headwear: List<ItemEntry>,
+        topwear: List<ItemEntry>,
+        bottomwear: List<ItemEntry>,
+        shoes: List<ItemEntry>
+    ) {
+        val newState = WardrobeState(
+            centeredHeadwear = headwear.firstOrNull { hw -> _blockedCombos.none { it.contains(hw.itemId) } },
+            centeredTopwear = topwear.firstOrNull { tw -> _blockedCombos.none { it.contains(tw.itemId) } },
+            centeredBottomwear = bottomwear.firstOrNull { bw -> _blockedCombos.none { it.contains(bw.itemId) } },
+            centeredShoes = shoes.firstOrNull { s -> _blockedCombos.none { it.contains(s.itemId) } }
         )
-    }
-    fun loadWardrobe(headwear: List<ItemEntry>, topwear: List<ItemEntry>,
-                     bottomwear: List<ItemEntry>, shoes: List<ItemEntry>) {
-        viewModelScope.launch {
-            // Ensure blocked combos are loaded first
-            if (_blockedCombos.isEmpty()) loadBlockedCombinations()
-
-            // Filter first, then update state
-            val filteredState = filterItems(headwear, topwear, bottomwear, shoes)
-            _wardrobeState.value = filteredState
-        }
+        _wardrobeState.value = newState
     }
 
-    /** Shuffle items randomly for each category, respecting exclusions */
+    /** SHUFFLE ITEMS RESPECTING BLOCKED COMBINATIONS */
     fun shuffleItems(
         headwearList: List<ItemEntry>,
         topwearList: List<ItemEntry>,
@@ -154,64 +200,22 @@ class WardrobeViewModel(
         shoesList: List<ItemEntry>
     ) {
         viewModelScope.launch {
-            val maxAttempts = 50 // prevent infinite loops
-            var attempts = 0
-            var shuffled: WardrobeState? = null
-
-            while (attempts < maxAttempts && shuffled == null) {
-                attempts++
-
-                val head = if (headwearList.isNotEmpty()) headwearList.random() else null
-                val top = if (topwearList.isNotEmpty()) topwearList.random() else null
-                val bottom = if (bottomwearList.isNotEmpty()) bottomwearList.random() else null
-                val shoes = if (shoesList.isNotEmpty()) shoesList.random() else null
-
-                val combo = listOf(head, top, bottom, shoes)
-                if (!isComboBlocked(combo)) {
-                    shuffled = WardrobeState(
-                        centeredHeadwear = head,
-                        centeredTopwear = top,
-                        centeredBottomwear = bottom,
-                        centeredShoes = shoes
-                    )
+            val validCombos = mutableListOf<WardrobeState>()
+            for (h in headwearList) {
+                for (t in topwearList) {
+                    for (b in bottomwearList) {
+                        for (s in shoesList) {
+                            val comboIds = listOf(h, t, b, s).mapNotNull { it.itemId }.toSet()
+                            if (_blockedCombos.none { it == comboIds }) {
+                                validCombos.add(WardrobeState(h, t, b, s))
+                            }
+                        }
+                    }
                 }
             }
-
-            // If a valid combo was found, update state
-            shuffled?.let { _wardrobeState.value = it }
+            _wardrobeState.value = validCombos.randomOrNull() ?: _wardrobeState.value
         }
     }
-
-    /** Update the centered item for a specific category */
-    fun updateCenteredItem(category: String, item: ItemEntry?) {
-        val current = _wardrobeState.value
-
-        // Build the hypothetical new outfit
-        val newHead = if (category == "Headwear") item else current.centeredHeadwear
-        val newTop = if (category == "Topwear") item else current.centeredTopwear
-        val newBottom = if (category == "Bottomwear") item else current.centeredBottomwear
-        val newShoes = if (category == "Shoes") item else current.centeredShoes
-
-        // Check if new outfit is blocked BEFORE showing it
-        val isBlocked = isComboBlocked(listOf(newHead, newTop, newBottom, newShoes))
-
-        if (isBlocked) {
-            return
-        }
-
-        // ✅ Safe → Update UI
-        _wardrobeState.value = current.copy(
-            centeredHeadwear = newHead,
-            centeredTopwear = newTop,
-            centeredBottomwear = newBottom,
-            centeredShoes = newShoes
-        )
-    }
-
-//    /** Optional: retrieve all excluded combinations for the current user */
-//    suspend fun getRemovedCombinations(): List<RemovedCombination> {
-//        return removedDao.getByUser(userViewModel.userState.value.id)
-//    }
 
 
     fun dressMe(
@@ -322,6 +326,36 @@ class WardrobeViewModel(
             delay(1000) // wait 1 second before next retry
         }
         return null
+    }
+
+    fun generateTryOnPreview(
+        context: Context,
+        apiKey: String,
+        avatarUri: String? = null,
+        onError: (String) -> Unit = { Toast.makeText(context, it, Toast.LENGTH_SHORT).show() }
+    ) {
+        // Gather current centered items as garment URLs
+        val currentState = _wardrobeState.value
+        val garmentUrls = listOfNotNull(
+            currentState.centeredHeadwear?.itemPhotoUri,
+            currentState.centeredTopwear?.itemPhotoUri,
+            currentState.centeredBottomwear?.itemPhotoUri,
+            currentState.centeredShoes?.itemPhotoUri
+        )
+
+        if (garmentUrls.isEmpty()) {
+            onError("No items selected for try-on.")
+            return
+        }
+
+        // Call dressMe internally
+        dressMe(
+            context = context,
+            apiKey = apiKey,
+            avatarUri = avatarUri,
+            garmentUrls = garmentUrls,
+            onError = onError
+        )
     }
 
 }
