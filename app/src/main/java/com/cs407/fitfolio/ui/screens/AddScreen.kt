@@ -52,7 +52,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.ui.modals.InformationModal
@@ -61,6 +64,8 @@ import androidx.core.content.ContextCompat
 import com.cs407.fitfolio.BuildConfig
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.ItemModal
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -99,10 +104,18 @@ fun ItemTypeDropdown(
         modifier = modifier
     ) {
         OutlinedTextField(
-            placeholder = { Text("Choose or create an item type.") },
+            placeholder = {
+                Text("Choose or create an item type.",
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold) },
             value = selectedItemType,
             onValueChange = { newType -> onItemTypeSelected(newType) },
-            label = { Text("Item Type") },
+            label = {
+                Text(
+                    "Item Type",
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold
+                )},
             modifier = Modifier
                 .menuAnchor()
         )
@@ -114,7 +127,12 @@ fun ItemTypeDropdown(
         ) {
             allItemTypes.forEach { typeName ->
                 DropdownMenuItem(
-                    text = { Text(typeName) },
+                    text = {
+                        Text(
+                            typeName,
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold
+                        ) },
                     onClick = {
                         onItemTypeSelected(typeName)
                         expanded = false
@@ -143,8 +161,10 @@ fun CarouselTypeDropdown(
     ) {
         OutlinedTextField(
             value = selectedCarouselType.carouselType,
+            textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold),
             onValueChange = {},
-            label = { Text("Carousel Type") },
+            label = { Text("Carousel Type", fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold) },
             modifier = Modifier
                 .menuAnchor()
                 .clickable { expanded = true },
@@ -161,7 +181,8 @@ fun CarouselTypeDropdown(
         ) {
             allCarouselTypes.forEach { typeName ->
                 DropdownMenuItem(
-                    text = { Text(typeName.carouselType) },
+                    text = { Text(typeName.carouselType, fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold) },
                     onClick = {
                         onCarouselTypeSelected(typeName)
                         expanded = false
@@ -280,7 +301,8 @@ fun AddScreen(
                 }
 
                 if (selectedImageUri == null) {
-                    Text("No image selected yet")
+                    Text("No image selected yet", fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold)
                 } else {
                     AsyncImage(
                         model = selectedImageUri,
@@ -312,7 +334,8 @@ fun AddScreen(
                 OutlinedButton(
                     onClick = { galleryLauncher.launch("image/*") },
                     modifier = Modifier.weight(1f)
-                ) { Text("Upload") }
+                ) { Text("Upload", fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold, fontSize = 15.sp) }
 
                 Button(
                     onClick = {
@@ -330,7 +353,8 @@ fun AddScreen(
                         }
                     },
                     modifier = Modifier.weight(1f)
-                ) { Text("Take Photo") }
+                ) { Text("Take Photo", fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold, fontSize = 15.sp)) }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -424,7 +448,8 @@ fun AddScreen(
                 enabled = !isUploading && selectedItemType.isNotEmpty() && selectedCarouselType != CarouselTypes.DEFAULT && selectedImageUri != null,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Save to Closet")
+                Text("Save to Closet", fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold, fontSize = 15.sp))
             }
 
             Spacer(Modifier.height(12.dp))
