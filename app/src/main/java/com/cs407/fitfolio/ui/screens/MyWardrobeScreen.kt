@@ -405,10 +405,12 @@ fun ClothingItemCard(item: ItemEntry) {
             )
         } else {
             // fallback if no image is available
-            Icon(
-                painter = painterResource(R.drawable.hanger),
-                contentDescription = "No item image found"
-            )
+            if (item.itemId != -1) { // do not show icon for optional slot
+                Icon(
+                    painter = painterResource(R.drawable.hanger),
+                    contentDescription = "No item image found"
+                )
+            }
         }
     }
 }
