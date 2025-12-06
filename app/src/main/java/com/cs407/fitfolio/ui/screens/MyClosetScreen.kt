@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -9,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -46,14 +48,17 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -68,6 +73,7 @@ import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
@@ -267,6 +273,9 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     var expanded by remember { mutableStateOf(false) }
     var showSearchDialog by remember { mutableStateOf(false) }
 
+    // Context for Toast messages
+    val context = LocalContext.current
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth(),
@@ -359,9 +368,14 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         // Tags filtering
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 14.dp),
+                .background(LightPeachFuzz)
+                .padding(horizontal = 15.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -388,7 +402,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                offset = DpOffset(x = (-10).dp, y = 15.dp),
+                modifier = Modifier
+                    .height(450.dp)
             ) {
                 closetState.tags
                     .sortedByDescending { it in closetState.activeTags }
@@ -430,7 +445,14 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         ) {
             when (closetState.isDeleteActive) {
                 DeletionStates.Inactive.name -> {
-                    IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Active.name) }) {
+                    IconButton(onClick = {
+                        closetViewModel.toggleDeleteState(DeletionStates.Active.name)
+                        Toast.makeText(
+                            context,
+                            "Select all items to delete, then press Delete. Otherwise, press Cancel.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Enter deletion candidate state",
@@ -490,6 +512,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
+
     if (closetState.isFiltering) {
         CircularProgressIndicator(
             modifier = Modifier.padding(32.dp)
@@ -579,8 +603,17 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                 model = item.itemPhotoUri,
                                 contentDescription = item.itemName,
                                 modifier = Modifier
-                                    .fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                    .fillMaxWidth()
+                                    .aspectRatio(aspectRatio),
+                                contentScale = ContentScale.Fit,
+                                onSuccess = {
+                                    val w = it.result.drawable.intrinsicWidth
+                                    val h = it.result.drawable.intrinsicHeight
+                                    if (w > 0 && h > 0) {
+                                        val r = w.toFloat() / h.toFloat()
+                                        aspectRatio = maxOf(r, 0.55f)
+                                    }
+                                }
                             )
                         } else {
                             Image(

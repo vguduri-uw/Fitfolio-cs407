@@ -225,16 +225,6 @@ class ClosetViewModel(
             _closetState.value = _closetState.value.copy(items = updatedItems)
         }
     }
-    fun editItemPhoto(item: ItemEntry, photo: String) {
-        viewModelScope.launch(Dispatchers.IO) {
-            // Update database
-            val updatedItem = item.copy(itemPhotoUri = photo)
-            db.itemDao().upsert(updatedItem)
-
-            val updatedItems = db.userDao().getItemsByUserId(userId)
-            _closetState.value = _closetState.value.copy(items = updatedItems)
-        }
-    }
 
     // Removes the background from a photo of an item
     suspend fun removeBackground(imageUrl: String): String? = withContext(Dispatchers.IO) {

@@ -8,10 +8,10 @@ enum class DefaultItemTypes(val typeName: String, val iconRes: Int) {
     ALL("All", iconRes = R.drawable.hanger),
 
     // Shirts
-    T_SHIRTS("T-Shirts", iconRes = R.drawable.shirt), // TODO: update
+    T_SHIRTS("T-Shirts", iconRes = R.drawable.t_shirt),
     SHIRTS("Shirts", iconRes = R.drawable.shirt),
     LONG_SLEEVE_SHIRTS("Long Sleeve Tops", iconRes = R.drawable.long_sleeve_shirt),
-    SWEATSHIRTS("Sweatshirts", iconRes = R.drawable.hanger), // TODO: update
+    SWEATSHIRTS("Sweatshirts", iconRes = R.drawable.sweatshirt),
 
     // Bottoms
     JEANS("Jeans", iconRes = R.drawable.jeans),
