@@ -12,12 +12,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.weather.WeatherApiResponse
 import com.cs407.fitfolio.weather.WeatherUtils
 import java.time.LocalDate
@@ -46,6 +51,8 @@ fun WeatherCarousel(
             else -> {
                 Text(
                     text = "Unable to load weather",
+                    fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp,
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.error
                 )
@@ -88,12 +95,17 @@ private fun WeatherDayCard(
     val dayOfWeek = localDate.dayOfWeek.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     val month = localDate.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
     val dayOfMonth = localDate.dayOfMonth
-    val cardBackgroundColor = Color(0xFFE8E8E8)
+    val cardBackgroundColor = LightPeachFuzz
     //weather cards
     Card(
         modifier = Modifier
             .width(200.dp)
-            .height(70.dp),
+            .height(70.dp)
+            .shadow(
+                elevation = 3.dp,
+                shape = RoundedCornerShape(12.dp),
+                clip = false
+            ),
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = cardBackgroundColor
@@ -118,14 +130,16 @@ private fun WeatherDayCard(
                     Text(
                         text = "$month $dayOfMonth",
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
                         text = dayOfWeek,
                         fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.SemiBold,
                         color = Color.Black
                     )
                 }
@@ -136,7 +150,8 @@ private fun WeatherDayCard(
                         else -> ""
                     },
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Normal,
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.SemiBold,
                     color = Color.Gray
                 )
             }
@@ -154,7 +169,7 @@ private fun WeatherDayCard(
                 Text(
                     text = "${tempMax.toInt()}/${tempMin.toInt()} °F",
                     fontSize = 16.sp,
-                    fontWeight = FontWeight.Normal,
+                    fontFamily = Kudryashev_Regular,
                     color = Color.Black
                 )
             }
@@ -175,7 +190,7 @@ fun WeatherCard(
             .height(40.dp)
             .width(100.dp)
             .clip(MaterialTheme.shapes.medium)
-            .background(Color(0xFFE0E0E0)),
+            .background(LightPeachFuzz),
         contentAlignment = Alignment.Center
     ) {
         Row(
@@ -193,7 +208,7 @@ fun WeatherCard(
 
             Text(
                 text = "$tempHigh/$tempLow°F",
-                style = MaterialTheme.typography.bodySmall,
+                fontFamily = Kudryashev_Regular,
                 color = Color.Black,
                 fontSize = 12.sp
             )
@@ -216,12 +231,12 @@ fun WeatherDataChip(weatherData: WeatherApiResponse?) {
                 .height(40.dp)
                 .width(100.dp)
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             Text(
                 text = "weather",
-                style = MaterialTheme.typography.bodyMedium,
+                fontFamily = Google_Sans_Flex,
                 color = Color.DarkGray
             )
         }
