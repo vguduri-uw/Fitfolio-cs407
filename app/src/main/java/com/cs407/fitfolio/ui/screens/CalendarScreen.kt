@@ -19,13 +19,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
-import androidx.compose.material.icons.filled.ArrowForward
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Info
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
@@ -68,23 +62,16 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.ui.res.painterResource
 import com.cs407.fitfolio.R
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.ui.draw.shadow
-import androidx.compose.ui.graphics.Paint
-import androidx.compose.ui.graphics.painter.Painter
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.unit.sp
-import com.cs407.fitfolio.ui.theme.AirForceBlue
 import com.cs407.fitfolio.ui.theme.GoldenApricot
 import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
@@ -592,7 +579,7 @@ fun OutfitDateModal(
                                     }
                                 ) {
                                     Icon(
-                                        painter = painterResource(R.drawable.add2),
+                                        painter = painterResource(R.drawable.add_nav_thick),
                                         contentDescription = "Add outfit",
                                         modifier = Modifier.size(20.dp)
                                     )
