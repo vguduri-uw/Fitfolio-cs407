@@ -15,14 +15,21 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.cs407.fitfolio.ui.theme.DrySage
 import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
+import com.cs407.fitfolio.ui.theme.LightAirForceBlue
+import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
+import com.cs407.fitfolio.ui.theme.RustBrown
+import com.cs407.fitfolio.ui.theme.SoftChocolate
+import com.cs407.fitfolio.ui.theme.SoftRust
 import com.cs407.fitfolio.weather.WeatherApiResponse
 import com.cs407.fitfolio.weather.WeatherUtils
 import java.time.LocalDate
@@ -131,7 +138,7 @@ private fun WeatherDayCard(
                         text = "$month $dayOfMonth",
                         fontSize = 14.sp,
                         fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -139,7 +146,7 @@ private fun WeatherDayCard(
                         text = dayOfWeek,
                         fontSize = 14.sp,
                         fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Bold,
                         color = Color.Black
                     )
                 }
@@ -151,7 +158,8 @@ private fun WeatherDayCard(
                     },
                     fontSize = 14.sp,
                     fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.SemiBold,
+                    fontWeight = FontWeight.Bold,
+                    fontStyle = FontStyle.Italic,
                     color = Color.Gray
                 )
             }

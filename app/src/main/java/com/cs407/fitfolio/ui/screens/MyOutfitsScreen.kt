@@ -64,6 +64,7 @@ import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.theme.DrySage
 import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
@@ -479,7 +480,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     text = "Tags",
                     fontFamily = Kudryashev_Display_Sans_Regular,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
+                    fontSize = 15.sp,
                     color = Color.Black,
                 )
 
@@ -496,7 +497,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                containerColor = GoldenApricot,
+                containerColor = DrySage,
                 modifier = Modifier
                     .height(450.dp)
             ) {
