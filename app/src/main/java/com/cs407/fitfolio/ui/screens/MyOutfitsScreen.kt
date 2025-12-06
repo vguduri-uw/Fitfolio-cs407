@@ -468,7 +468,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz)
-                .padding(horizontal = 15.dp, vertical = 14.dp),
+                .padding(horizontal = 15.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
