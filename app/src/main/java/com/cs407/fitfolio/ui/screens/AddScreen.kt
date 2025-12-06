@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -39,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -190,6 +192,7 @@ fun AddScreen(
     var createdItemId: Int by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
     var isUploading by remember { mutableStateOf(false) }
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
     val scope =  rememberCoroutineScope()
 
     // reset screen after successful save to closet
@@ -271,9 +274,19 @@ fun AddScreen(
             } else {
                 AsyncImage(
                     model = selectedImageUri,
-                    contentDescription = "selected photo",
-                    modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentDescription = "Photo $selectedImageUri",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(aspectRatio),
+                    contentScale = ContentScale.Fit,
+                    onSuccess = {
+                        val w = it.result.drawable.intrinsicWidth
+                        val h = it.result.drawable.intrinsicHeight
+                        if (w > 0 && h > 0) {
+                            val r = w.toFloat() / h.toFloat()
+                            aspectRatio = maxOf(r, 0.55f)
+                        }
+                    }
                 )
             }
         }

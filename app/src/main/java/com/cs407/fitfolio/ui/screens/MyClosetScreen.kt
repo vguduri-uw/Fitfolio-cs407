@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -47,6 +48,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -510,6 +512,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
 // Grid of the items currently shown in the closet
 @Composable
 fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
+
     if (closetState.isFiltering) {
         CircularProgressIndicator(
             modifier = Modifier.padding(32.dp)
@@ -599,8 +603,17 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                 model = item.itemPhotoUri,
                                 contentDescription = item.itemName,
                                 modifier = Modifier
-                                    .fillMaxSize(),
-                                contentScale = ContentScale.Crop
+                                    .fillMaxWidth()
+                                    .aspectRatio(aspectRatio),
+                                contentScale = ContentScale.Fit,
+                                onSuccess = {
+                                    val w = it.result.drawable.intrinsicWidth
+                                    val h = it.result.drawable.intrinsicHeight
+                                    if (w > 0 && h > 0) {
+                                        val r = w.toFloat() / h.toFloat()
+                                        aspectRatio = maxOf(r, 0.55f)
+                                    }
+                                }
                             )
                         } else {
                             Image(

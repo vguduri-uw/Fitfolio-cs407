@@ -6,7 +6,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -41,6 +43,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -142,6 +145,9 @@ fun IconBox (
     var showAddDialog by remember { mutableStateOf(false) }
     var itemWithNewType: ItemEntry? by remember { mutableStateOf(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
+
+    // scope for calling suspend functions
     val scope = rememberCoroutineScope()
 
     // Update selected item type whenever it changes
@@ -351,7 +357,6 @@ fun IconBox (
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color.White)
                 .fillMaxWidth()
-                .height(300.dp)
         ) {
             // Item photo
             if (item.itemPhotoUri.isNotEmpty()) {
@@ -359,8 +364,16 @@ fun IconBox (
                     model = item.itemPhotoUri,
                     contentDescription = item.itemName,
                     modifier = Modifier
-                        .fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                        .fillMaxWidth()
+                        .aspectRatio(aspectRatio),
+                    contentScale = ContentScale.Fit,
+                    onSuccess = {
+                        val w = it.result.drawable.intrinsicWidth
+                        val h = it.result.drawable.intrinsicHeight
+                        if (w > 0 && h > 0) {
+                            aspectRatio = w.toFloat() / h.toFloat()
+                        }
+                    }
                 )
             } else {
                 Image(
