@@ -56,20 +56,25 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.ItemEntry
-import com.cs407.fitfolio.data.testData.AddTestItemData
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
+import com.cs407.fitfolio.ui.theme.PeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
@@ -90,14 +95,14 @@ fun MyOutfitsScreen(
     //for weather
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
 
-    // TODO: remove after testing
-    LaunchedEffect(Unit) {
-        val dbOutfits = outfitsViewModel.getOutfits()
-
-        if (dbOutfits.isEmpty()) {
-            AddTestItemData(closetViewModel, outfitsViewModel)
-        }
-    }
+//    // TODO: remove after testing
+//    LaunchedEffect(Unit) {
+//        val dbOutfits = outfitsViewModel.getOutfits()
+//
+//        if (dbOutfits.isEmpty()) {
+//            AddTestItemData(closetViewModel, outfitsViewModel)
+//        }
+//    }
 
     // re-filter when an item is added or deleted
     LaunchedEffect(outfitsState.outfits) {
@@ -383,7 +388,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center,
         ) {
             IconButton(
@@ -404,7 +409,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.shuffleOutfits() }) {
@@ -421,7 +426,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.toggleSearchState(true) }) {
@@ -463,7 +468,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
+                .background(LightPeachFuzz)
                 .padding(horizontal = 10.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
@@ -474,7 +479,8 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             ) {
                 Text(
                     text = "Tags",
-                    style = MaterialTheme.typography.bodyMedium,
+                    fontFamily = Google_Sans_Flex,
+                    fontSize = 15.sp,
                     color = Color.Black,
                 )
 
@@ -537,7 +543,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             when (outfitsState.isDeleteActive) {
@@ -565,9 +571,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         enabled = outfitsState.isDeleteActive == DeletionStates.Inactive.name
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Delete,
+                            imageVector = Icons.Outlined.Delete,
                             contentDescription = "Inactive delete icon during active delete state",
-                            tint = Color.Black,
+                            tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -593,7 +599,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.clearFilters() }) {
@@ -617,7 +623,10 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             )
         } else if (outfitsState.filteredOutfits.isEmpty()) {
             Text(
-                "No items found.",
+                text = "No outfits found.",
+                fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 20.sp,
                 modifier = Modifier.padding(16.dp)
             )
         } else {

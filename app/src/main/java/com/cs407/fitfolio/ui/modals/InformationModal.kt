@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -23,7 +24,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -43,7 +47,6 @@ fun InformationModal (onDismiss: () -> Unit, screen: String) {
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 24.dp, bottom = 48.dp, start = 24.dp, end = 24.dp)
@@ -69,38 +72,39 @@ fun InformationHeader() {
         contentDescription = "App logo",
         contentScale = ContentScale.Fit,
         modifier = Modifier
-            .size(150.dp)
+            .size(130.dp)
             .clip(CircleShape),
         alignment = Alignment.Center
     )
 
-    Spacer(modifier = Modifier.size(16.dp))
-    Text(text = "FitFolio", style = MaterialTheme.typography.titleLarge)
-    Text(text = "Information", style = MaterialTheme.typography.titleLarge)
+    Spacer(modifier = Modifier.size(25.dp))
+    Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp)
+    Text(text = "Information", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 25.sp)
+    Spacer(modifier = Modifier.size(10.dp))
 }
 
 // TODO: insert instructions/tips composable for each screen
 @Composable
 fun OutfitScreenInfo() {
-    Text("Outfit")
+    Text("Outfits", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp)
 }
 
 @Composable
 fun CalendarScreenInfo() {
-    Text("Calendar")
+    Text("Calendar", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp)
 }
 
 @Composable
 fun WardrobeScreenInfo() {
-    Text("My Wardrobe")
+    Text("My Wardrobe", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp)
 }
 
 @Composable
 fun AddScreenInfo() {
-    Text("Add")
+    Text("Add", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp)
 }
 
 @Composable
 fun ClosetScreenInfo() {
-    Text("Closet")
+    Text("Closet", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
 }
