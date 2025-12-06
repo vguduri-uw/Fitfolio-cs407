@@ -13,6 +13,7 @@ import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemOutfitRelation
 import com.cs407.fitfolio.data.ItemTag
 import com.cs407.fitfolio.data.ItemType
+import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.enums.DefaultItemTags
 import com.cs407.fitfolio.enums.DefaultItemTypes
 import com.cs407.fitfolio.services.FashnRunRequest
@@ -53,17 +54,17 @@ class ClosetViewModel(
     val closetState = _closetState.asStateFlow()
 
     // Track selected items by category
-    private val _selectedItems = MutableStateFlow<Map<String, ItemEntry?>>(
+    private val _selectedItems = MutableStateFlow<Map<CarouselTypes, ItemEntry?>>(
         mapOf(
-            "Headwear" to null,
-            "Topwear" to null,
-            "Bottomwear" to null,
-            "Shoes" to null
+            CarouselTypes.HEADWEAR to null,
+            CarouselTypes.TOPWEAR to null,
+            CarouselTypes.BOTTOMWEAR to null,
+            CarouselTypes.FOOTWEAR to null
         )
     )
-    val selectedItems: StateFlow<Map<String, ItemEntry?>> = _selectedItems
+    val selectedItems: StateFlow<Map<CarouselTypes, ItemEntry?>> = _selectedItems
 
-    fun selectItem(category: String, item: ItemEntry) {
+    fun selectItem(category: CarouselTypes, item: ItemEntry) {
         _selectedItems.value = _selectedItems.value.toMutableMap().also { it[category] = item }
     }
 
@@ -104,8 +105,8 @@ class ClosetViewModel(
 
     // Adds an item to the closet to be used in add screen
     suspend fun addItem(
-        name: String, type: String, description: String, tags: List<String>,
-        isFavorites: Boolean, photoUri: String
+        name: String, type: String, carouselType: CarouselTypes, description: String,
+        tags: List<String>, isFavorites: Boolean, photoUri: String
     ) : Int {
         val existingTypes = db.userDao().getItemsTypesByUserId(userId).map { it.itemType }
         if (type !in existingTypes) {
@@ -119,6 +120,7 @@ class ClosetViewModel(
             itemId = 0,
             itemName = name,
             itemType = type,
+            carouselType = carouselType,
             itemDescription = description,
             itemTags = tags,
             isFavorite = isFavorites,
@@ -275,43 +277,43 @@ class ClosetViewModel(
     suspend fun getOutfitsList(itemId: Int): List<OutfitEntry> {
         return db.itemDao().getOutfitsByItemId(itemId)
     }
-
-    // TODO: remove after testing
-    fun addItemWithOutfitsTest(
-        name: String,
-        type: String,
-        description: String,
-        tags: List<String>,
-        isFavorites: Boolean,
-        photoUri: String,
-        outfitList: List<OutfitEntry>
-    ) {
-        val newItem = ItemEntry(
-            itemId = 0,
-            itemName = name,
-            itemType = type,
-            itemDescription = description,
-            itemTags = tags,
-            isFavorite = isFavorites,
-            isDeletionCandidate = false,
-            itemPhotoUri = photoUri,
-        )
-
-        viewModelScope.launch(Dispatchers.IO) {
-            // Insert item
-            val itemId = db.itemDao().upsertItem(newItem, userId)
-
-            // Insert relations between the item and each outfit
-            outfitList.forEach { outfit ->
-                db.outfitDao().insertRelation(
-                    ItemOutfitRelation(itemId, outfit.outfitId)
-                )
-            }
-
-            val items = db.userDao().getItemsByUserId(userId)
-            _closetState.value = _closetState.value.copy(items = items)
-        }
-    }
+//
+//    // TODO: remove after testing
+//    fun addItemWithOutfitsTest(
+//        name: String,
+//        type: String,
+//        description: String,
+//        tags: List<String>,
+//        isFavorites: Boolean,
+//        photoUri: String,
+//        outfitList: List<OutfitEntry>
+//    ) {
+//        val newItem = ItemEntry(
+//            itemId = 0,
+//            itemName = name,
+//            itemType = type,
+//            itemDescription = description,
+//            itemTags = tags,
+//            isFavorite = isFavorites,
+//            isDeletionCandidate = false,
+//            itemPhotoUri = photoUri,
+//        )
+//
+//        viewModelScope.launch(Dispatchers.IO) {
+//            // Insert item
+//            val itemId = db.itemDao().upsertItem(newItem, userId)
+//
+//            // Insert relations between the item and each outfit
+//            outfitList.forEach { outfit ->
+//                db.outfitDao().insertRelation(
+//                    ItemOutfitRelation(itemId, outfit.outfitId)
+//                )
+//            }
+//
+//            val items = db.userDao().getItemsByUserId(userId)
+//            _closetState.value = _closetState.value.copy(items = items)
+//        }
+//    }
 
     // CLOSET FUNCTIONS //
 

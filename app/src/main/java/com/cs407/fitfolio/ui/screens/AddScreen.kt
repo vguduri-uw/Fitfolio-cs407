@@ -11,6 +11,7 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,6 +57,7 @@ import com.cs407.fitfolio.ui.modals.InformationModal
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import androidx.core.content.ContextCompat
 import com.cs407.fitfolio.BuildConfig
+import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import kotlinx.coroutines.Dispatchers
@@ -64,6 +67,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import kotlin.enums.EnumEntries
 
 fun createImageUri(context: Context): Uri {
     val contentResolver = context.contentResolver
@@ -80,24 +84,25 @@ fun createImageUri(context: Context): Uri {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ItemTypeDropdown(
-    selectedType: String,
-    allTypes: List<String>,
-    onTypeSelected: (String) -> Unit
+    selectedItemType: String,
+    allItemTypes: List<String>,
+    onItemTypeSelected: (String) -> Unit,
+    modifier: Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
 
     ExposedDropdownMenuBox(
         expanded = expanded,
-        onExpandedChange = { expanded = !expanded }
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
     ) {
         OutlinedTextField(
             placeholder = { Text("Choose or create an item type.") },
-            value = selectedType,
-            onValueChange = { newType -> onTypeSelected(newType) },
+            value = selectedItemType,
+            onValueChange = { newType -> onItemTypeSelected(newType) },
             label = { Text("Item Type") },
             modifier = Modifier
                 .menuAnchor()
-                .fillMaxWidth(),
         )
 
         ExposedDropdownMenu(
@@ -105,11 +110,58 @@ fun ItemTypeDropdown(
             onDismissRequest = { expanded = false },
             modifier = Modifier.heightIn(max = 250.dp)
         ) {
-            allTypes.forEach { typeName ->
+            allItemTypes.forEach { typeName ->
                 DropdownMenuItem(
                     text = { Text(typeName) },
                     onClick = {
-                        onTypeSelected(typeName)
+                        onItemTypeSelected(typeName)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+// Carousel type dropdown for wardrobe display
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun CarouselTypeDropdown(
+    selectedCarouselType: CarouselTypes,
+    allCarouselTypes: EnumEntries<CarouselTypes>,
+    onCarouselTypeSelected: (CarouselTypes) -> Unit,
+    modifier: Modifier
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    ExposedDropdownMenuBox(
+        expanded = expanded,
+        onExpandedChange = { expanded = !expanded },
+        modifier = modifier
+    ) {
+        OutlinedTextField(
+            value = selectedCarouselType.carouselType,
+            onValueChange = {},
+            label = { Text("Carousel Type") },
+            modifier = Modifier
+                .menuAnchor()
+                .clickable { expanded = true },
+            readOnly = true,
+            trailingIcon = {
+                Icon(Icons.Default.ArrowDropDown, contentDescription = null)
+            }
+        )
+
+        ExposedDropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false },
+            modifier = Modifier.heightIn(max = 250.dp)
+        ) {
+            allCarouselTypes.forEach { typeName ->
+                DropdownMenuItem(
+                    text = { Text(typeName.carouselType) },
+                    onClick = {
+                        onCarouselTypeSelected(typeName)
                         expanded = false
                     }
                 )
@@ -128,10 +180,12 @@ fun AddScreen(
     val context = LocalContext.current // context for toast message
 
     val closetState by closetViewModel.closetState.collectAsState()
-    val availableTypes = closetState.itemTypes.filter { it != DefaultItemTypes.ALL.typeName }
+    val availableItemTypes = closetState.itemTypes.filter { it != DefaultItemTypes.ALL.typeName }
+    val carouselTypes = CarouselTypes.entries
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // selected pic
-    var selectedType by remember { mutableStateOf("") }
+    var selectedItemType by remember { mutableStateOf("") }
+    var selectedCarouselType: CarouselTypes by remember { mutableStateOf(CarouselTypes.TOPWEAR) }
     var showItemModal by remember { mutableStateOf(false) }
     var createdItemId: Int by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
@@ -141,7 +195,8 @@ fun AddScreen(
     // reset screen after successful save to closet
     fun reset() {
         selectedImageUri = null
-        selectedType = ""
+        selectedItemType = ""
+        selectedCarouselType = CarouselTypes.TOPWEAR
         createdItemId = -1
         saveError = false
         showInfo = false
@@ -257,12 +312,29 @@ fun AddScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        //dropdown menu
-        ItemTypeDropdown(
-            selectedType = selectedType,
-            allTypes = availableTypes,
-            onTypeSelected = { selectedType = it }
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Item type dropdown menu
+            ItemTypeDropdown(
+                selectedItemType = selectedItemType,
+                allItemTypes = availableItemTypes,
+                onItemTypeSelected = { selectedItemType = it },
+                modifier = Modifier.weight(1f)
+            )
+
+            // Carousel type dropdown menu
+            CarouselTypeDropdown(
+                selectedCarouselType = selectedCarouselType,
+                allCarouselTypes = carouselTypes,
+                onCarouselTypeSelected = { selectedCarouselType = it },
+                modifier = Modifier.weight(1f)
+            )
+        }
 
         Spacer(Modifier.height(12.dp))
 
@@ -299,7 +371,8 @@ fun AddScreen(
                     // add item to closet
                     val itemId = closetViewModel.addItem(
                         name = "New Item",
-                        type = selectedType,
+                        type = selectedItemType,
+                        carouselType = selectedCarouselType,
                         description = "Created from Add Page",
                         tags = emptyList(),
                         isFavorites = false,
@@ -316,7 +389,7 @@ fun AddScreen(
                     }
                 }
             },
-            enabled = !isUploading && selectedType.isNotEmpty(),
+            enabled = !isUploading && selectedItemType.isNotEmpty(),
             modifier = Modifier.fillMaxWidth()
         ) {
             Text("Save to Closet")
@@ -358,10 +431,7 @@ suspend fun uploadToImgbb(localUri: Uri, context: Context): String? {
         runCatching {
             val stream = context.contentResolver.openInputStream(localUri)
                 ?: return@withContext null
-
             val bytes = stream.readBytes()
-            println("📌 uploadToImgbb: image size = ${bytes.size} bytes")
-
             val encodedImage = Base64.encodeToString(bytes, Base64.DEFAULT)
 
             val client = OkHttpClient()
@@ -378,8 +448,6 @@ suspend fun uploadToImgbb(localUri: Uri, context: Context): String? {
 
             val response = client.newCall(request).execute()
             val bodyString = response.body?.string()
-
-            println("📌 uploadToImgbb RESPONSE = $bodyString")
 
             val json = JSONObject(bodyString ?: return@withContext null)
             val data = json.getJSONObject("data")

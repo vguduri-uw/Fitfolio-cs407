@@ -35,19 +35,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.SimpleHeader
 import com.cs407.fitfolio.ui.components.WeatherDataChip
-import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
@@ -61,6 +58,7 @@ import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.data.ItemOutfitRelation
 import com.cs407.fitfolio.data.OutfitDao
 import com.cs407.fitfolio.data.OutfitEntry
+import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
@@ -90,12 +88,7 @@ fun MyWardrobeScreen(
     val context = LocalContext.current
     val selectedItems by closetViewModel.selectedItems.collectAsStateWithLifecycle()
     val db = FitfolioDatabase.getDatabase(context)
-    val categories = listOf(
-        "Headwear" to listOf("Hats", "Headbands"),
-        "Topwear" to listOf("T-Shirts", "Shirts", "Dresses"),
-        "Bottomwear" to listOf("Jeans", "Pants", "Shorts", "Skirts"),
-        "Shoes" to listOf("Shoes")
-    )
+    val categories = CarouselTypes.entries
 
     var showOutfitModal by remember { mutableStateOf(false) }
     var createdOutfitId by remember { mutableIntStateOf(-1) }
@@ -119,16 +112,17 @@ fun MyWardrobeScreen(
                     weatherData = weatherState.weatherData
                 )
             }
-            categories.forEach { (category, types) ->
-                val filteredItems = closetState.filteredItems.filter { it.itemType in types }
+            categories.forEach { category ->
+                val filteredItems = closetState.filteredItems.filter { it.carouselType == category }
 
                 val itemsWithOptional =
-                    if (category == "Headwear") {
+                    if (category == CarouselTypes.HEADWEAR && filteredItems.isNotEmpty()) {
                         listOf(
                             ItemEntry(
                                 itemId = -1,
                                 itemName = "No Headwear",
-                                itemType = "Hats",
+                                carouselType = category,
+                                itemType = "",
                                 itemDescription = "",
                                 itemTags = emptyList(),
                                 isFavorite = false,
@@ -137,7 +131,7 @@ fun MyWardrobeScreen(
                             )
                         ) + filteredItems
                     } else {
-                        closetState.filteredItems.filter { it.itemType in types }
+                        filteredItems
                     }
 
                 ClothingScroll(
@@ -147,10 +141,10 @@ fun MyWardrobeScreen(
                     category = category,
                     onCenteredItemChange = { centeredItem ->
                         when (category) {
-                            "Headwear" -> centeredHeadwear = centeredItem
-                            "Topwear" -> centeredTopwear = centeredItem
-                            "Bottomwear" -> centeredBottomwear = centeredItem
-                            "Shoes" -> centeredShoes = centeredItem
+                            CarouselTypes.HEADWEAR -> centeredHeadwear = centeredItem
+                            CarouselTypes.TOPWEAR -> centeredTopwear = centeredItem
+                            CarouselTypes.BOTTOMWEAR ->  centeredBottomwear = centeredItem
+                            CarouselTypes.FOOTWEAR ->  centeredShoes = centeredItem
                         }
                     }
                 )
@@ -180,8 +174,6 @@ fun MyWardrobeScreen(
                         )
                         if (itemsToAdd.isEmpty()) return@IconButton
 
-                        val userId = outfitsViewModel.userId // Make sure you have current user ID
-
                         // Add outfit
                         scope.launch {
                             val outfitId = outfitsViewModel.addOutfit(
@@ -204,7 +196,7 @@ fun MyWardrobeScreen(
                         }
                     }) {
                         Icon(
-                            painter = painterResource(R.drawable.add),
+                            painter = painterResource(R.drawable.add_nav_thin),
                             contentDescription = "add outfit",
                             tint = Color.Black,
                             modifier = Modifier.size(20.dp),
@@ -281,7 +273,7 @@ fun ClothingScroll(
     items: List<ItemEntry>,
     selectedItem: ItemEntry?,
     onSelect: (ItemEntry) -> Unit,
-    category: String,
+    category: CarouselTypes,
     onCenteredItemChange: (ItemEntry?) -> Unit
 
 ) {
@@ -329,7 +321,7 @@ fun ClothingScroll(
         Box(
             modifier = Modifier.fillMaxWidth().height(150.dp),
             contentAlignment = Alignment.Center
-        ) { Text("No $category items") }
+        ) { Text("No ${category.carouselType} Items Found") }
         return
     }
     Row(

@@ -59,7 +59,7 @@ fun TopHeader (title: String) {
             Text(text = title, fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp)
 
             IconButton(onClick = { showInformation = true }) { // todo: add info onClick lambda
-                Icon(Icons.Outlined.Info,
+                Icon(painter = painterResource(R.drawable.info),
                     contentDescription = "Information",
                     modifier = Modifier.size(24.dp)
                 )
