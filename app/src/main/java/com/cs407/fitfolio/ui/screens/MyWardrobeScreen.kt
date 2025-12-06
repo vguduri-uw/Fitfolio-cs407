@@ -138,7 +138,7 @@ fun MyWardrobeScreen(
         categories.forEach { category ->
             val filteredItems = allItems.filter { it.carouselType == category }
 
-            val itemsWithPlaceholder = if (category == CarouselTypes.HEADWEAR) {
+            val itemsWithPlaceholder = if (category == CarouselTypes.HEADWEAR && filteredItems.isNotEmpty()) {
                 listOf(
                     ItemEntry(
                         itemId = -1,
@@ -159,7 +159,7 @@ fun MyWardrobeScreen(
                     modifier = Modifier.fillMaxWidth().height(150.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No ${category.name.lowercase().replace('_', ' ')} items found")
+                    Text("No ${category.carouselType.lowercase()} items found")
                 }
             } else {
                 ClothingScroll(
@@ -235,6 +235,17 @@ fun ActionButtonsRow(
     onOutfitSaved: (Int) -> Unit,
     onSaveError: () -> Unit
 ) {
+    val itemsToAdd by remember(wardrobeState) {
+        derivedStateOf {
+            listOfNotNull(
+                wardrobeState.centeredHeadwear,
+                wardrobeState.centeredTopwear,
+                wardrobeState.centeredBottomwear,
+                wardrobeState.centeredShoes
+            ).filter { it.itemId > 0 }
+        }
+    }
+
     Row(
         modifier = Modifier.fillMaxWidth().padding(16.dp),
         verticalAlignment = Alignment.CenterVertically
@@ -246,47 +257,42 @@ fun ActionButtonsRow(
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = {
-                scope.launch {
-                    val currentState = wardrobeViewModel.wardrobeState.value
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        val currentState = wardrobeViewModel.wardrobeState.value
 
-                    // Filter out placeholder items (itemId <= 0)
-                    val itemsToAdd = listOfNotNull(
-                        currentState.centeredHeadwear,
-                        currentState.centeredTopwear,
-                        currentState.centeredBottomwear,
-                        currentState.centeredShoes
-                    ).filter { it.itemId > 0 }
+                        if (itemsToAdd.isEmpty()) {
+                            Toast.makeText(context, "Select at least one item to save an outfit", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
 
-                    if (itemsToAdd.isEmpty()) {
-                        Toast.makeText(context, "Select at least one item to save an outfit", Toast.LENGTH_SHORT).show()
-                        return@launch
-                    }
+                        try {
+                            val outfitId = outfitsViewModel.addOutfit(
+                                name = "New Outfit",
+                                description = "Created from My Wardrobe",
+                                tags = emptyList(),
+                                isFavorite = false,
+                                photoUri = "", // optional: could use a snapshot URI of the outfit
+                                itemList = itemsToAdd
+                            )
 
-                    try {
-                        val outfitId = outfitsViewModel.addOutfit(
-                            name = "New Outfit",
-                            description = "Created from My Wardrobe",
-                            tags = emptyList(),
-                            isFavorite = false,
-                            photoUri = "", // optional: could use a snapshot URI of the outfit
-                            itemList = itemsToAdd
-                        )
-
-                        if (outfitId > 0) {
-                            Toast.makeText(context, "Outfit saved successfully!", Toast.LENGTH_SHORT).show()
-                            onOutfitSaved(outfitId)
-                        } else {
-                            Toast.makeText(context, "Outfit could not be saved.", Toast.LENGTH_SHORT).show()
+                            if (outfitId > 0) {
+                                Toast.makeText(context, "Outfit saved successfully!", Toast.LENGTH_SHORT).show()
+                                onOutfitSaved(outfitId)
+                            } else {
+                                Toast.makeText(context, "Outfit could not be saved.", Toast.LENGTH_SHORT).show()
+                                onSaveError()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            Toast.makeText(context, "Error saving outfit: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
                             onSaveError()
                         }
-                    } catch (e: Exception) {
-                        e.printStackTrace()
-                        Toast.makeText(context, "Error saving outfit: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                        onSaveError()
                     }
-                }
-            }) {
+                },
+                enabled = itemsToAdd.isNotEmpty()
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.add),
                     contentDescription = "save outfit",
@@ -305,14 +311,17 @@ fun ActionButtonsRow(
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = {
-                wardrobeViewModel.shuffleItems(
-                    headwearList = closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
-                    topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                    bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                    shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-                )
-            }) {
+            IconButton(
+                onClick = {
+                    wardrobeViewModel.shuffleItems(
+                        headwearList = closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
+                        topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                        bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                        shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                    )
+                },
+                enabled = itemsToAdd.isNotEmpty()
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.shuffle),
                     contentDescription = "shuffle",
@@ -323,24 +332,27 @@ fun ActionButtonsRow(
         }
 
         Spacer(modifier = Modifier.width(12.dp))
-// Remove combination button
+        // Remove combination button
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color(0xFFE0E0E0)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = {
-                val allItemsByCategory = mapOf(
-                    CarouselTypes.HEADWEAR to closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
-                    CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                    CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                    CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-                )
+            IconButton(
+                onClick = {
+                    val allItemsByCategory = mapOf(
+                        CarouselTypes.HEADWEAR to closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
+                        CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                        CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                        CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                    )
 
-                wardrobeViewModel.removeCurrentCombination(allItemsByCategory)
-                Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
-            }) {
+                    wardrobeViewModel.removeCurrentCombination(allItemsByCategory)
+                    Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
+                },
+                enabled = itemsToAdd.isNotEmpty()
+            ) {
                 Icon(
                     painter = painterResource(R.drawable.minus),
                     contentDescription = "Remove combination",
@@ -391,15 +403,19 @@ fun ClothingScroll(
         return
     }
 
+    val stableItems = remember(filteredItems.size) { filteredItems.toList() }
     val listState = rememberLazyListState()
     val LOOP_SIZE = 10_000
     val middleIndex = LOOP_SIZE / 2
-    val startIndex = middleIndex - (middleIndex % filteredItems.size)
+    val startIndex = middleIndex - (middleIndex % stableItems.size)
 
     LaunchedEffect(selectedItem) {
         selectedItem?.let {
-            val index = filteredItems.indexOf(it)
-            if (index != -1) listState.animateScrollToItem(startIndex + index)
+            val index = stableItems.indexOf(it)
+            if (index != -1) {
+                val target = startIndex + index
+                listState.scrollToItem(target)
+            }
         }
     }
 
@@ -420,8 +436,8 @@ fun ClothingScroll(
             flingBehavior = flingBehavior
         ) {
             items(LOOP_SIZE) { index ->
-                val realIndex = index % filteredItems.size
-                ClothingItemCard(filteredItems[realIndex])
+                val realIndex = index % stableItems.size
+                ClothingItemCard(stableItems[realIndex])
             }
         }
 
@@ -436,8 +452,9 @@ fun ClothingScroll(
             val visible = listState.layoutInfo.visibleItemsInfo
             if (visible.isEmpty()) return@derivedStateOf null
             val center = (listState.layoutInfo.viewportStartOffset + listState.layoutInfo.viewportEndOffset) / 2
-            val closest = visible.minByOrNull { abs(it.offset + it.size / 2 - center) } ?: return@derivedStateOf null
-            filteredItems[closest.index % filteredItems.size]
+            val closet = visible.minByOrNull { abs(it.offset + it.size / 2 - center) } ?: return@derivedStateOf null
+            stableItems[closet.index % stableItems.size]
+
         }
     }
 
@@ -470,7 +487,13 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
                 }
             )
         } else {
-            Text(item.itemName, modifier = Modifier.padding(4.dp))
+            // fallback if no image is available
+            if (item.itemId != -1) { // do not show icon for optional slot
+                Icon(
+                    painter = painterResource(R.drawable.hanger),
+                    contentDescription = "No item image found"
+                )
+            }
         }
     }
 }
