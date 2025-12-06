@@ -63,8 +63,8 @@ fun WelcomeScreen(
         Spacer(Modifier.height(12.dp))
 
         Text(
-            text = "FitFolio helps you upload clothing items, organize your wardrobe, and build outfits for every occasion. " +
-                    "You can browse your wardrobe via a item carousel, plan looks on the calendar, favorite items and outfits, and more!",
+            text = "FitFolio helps you upload clothing items, organize your closet, and build outfits for every occasion. " +
+                    "You can browse your wardrobe via an item carousel, plan looks on the calendar, favorite items and outfits, and more!",
             style = MaterialTheme.typography.bodyLarge,
             textAlign = TextAlign.Center,
             modifier = Modifier.padding(horizontal = 24.dp)

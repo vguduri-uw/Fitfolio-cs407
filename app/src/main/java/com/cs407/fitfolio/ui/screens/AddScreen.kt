@@ -125,7 +125,7 @@ fun ItemTypeDropdown(
     }
 }
 
-// Carousel type dropdown for wardrobe display
+// Carousel type dropdown for carousel screen
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CarouselTypeDropdown(

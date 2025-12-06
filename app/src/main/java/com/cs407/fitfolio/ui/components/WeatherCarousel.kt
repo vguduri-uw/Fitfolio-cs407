@@ -177,7 +177,7 @@ private fun WeatherDayCard(
     }
 }
 
-//for WardrobeScreen
+//for CarouselScreen
 @Composable
 fun WeatherCard(
     weatherCode: Int,
@@ -216,7 +216,7 @@ fun WeatherCard(
     }
 }
 
-//for Wardrobe again, similar to the carousel
+//for Carousel again
 @Composable
 fun WeatherDataChip(weatherData: WeatherApiResponse?) {
     if (weatherData != null) {

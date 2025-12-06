@@ -87,7 +87,7 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun CalendarScreen(
     onNavigateToOutfitsScreen: () -> Unit,
-    onNavigateToWardrobeScreen: () -> Unit,
+    onNavigateToCarouselScreen: () -> Unit,
     onNavigateToAddScreen: () -> Unit,
     onNavigateToClosetScreen: () -> Unit,
     onNavigateToSignInScreen: () -> Unit,

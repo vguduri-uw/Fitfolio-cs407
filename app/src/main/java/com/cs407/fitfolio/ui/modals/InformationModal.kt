@@ -1,19 +1,15 @@
 package com.cs407.fitfolio.ui.modals
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -57,7 +53,7 @@ fun InformationModal (onDismiss: () -> Unit, screen: String) {
             when (screen) {
                 "My Outfits" -> OutfitScreenInfo()
                 "My Calendar" -> CalendarScreenInfo()
-                "My Wardrobe" -> WardrobeScreenInfo()
+                "Outfit Carousel" -> CarouselScreenInfo()
                 "Add" -> AddScreenInfo()
                 "My Closet" -> ClosetScreenInfo()
             }
@@ -95,8 +91,8 @@ fun CalendarScreenInfo() {
 }
 
 @Composable
-fun WardrobeScreenInfo() {
-    Text("My Wardrobe", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp)
+fun CarouselScreenInfo() {
+    Text("Carousel", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp)
 }
 
 @Composable
