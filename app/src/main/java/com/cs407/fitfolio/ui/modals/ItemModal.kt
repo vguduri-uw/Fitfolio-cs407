@@ -355,29 +355,6 @@ fun IconBox (
                         .align(Alignment.Center)
                 )
             }
-            // TODO: verify if we want item photo to be editable
-            FloatingActionButton(
-                onClick = { /*closetViewModel.editItemPhoto(item, null)*/ },
-                containerColor = Color(0xFFE0E0E0).copy(alpha = 0.75f),
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                ),
-                modifier = Modifier
-                    .align(alignment = Alignment.BottomEnd)
-                    .padding(8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Replace item photo"
-                    )
-                }
-            }
         }
 
         // Row for calendar, delete, and favorite actions
@@ -558,7 +535,6 @@ fun ItemInformation(
                         onValueChange = { description = it },
                         enabled = isEditingDescription,
                         textStyle = TextStyle(
-                            //fontSize = 15.sp,
                             color = Color.Black
                         ),
                         modifier = Modifier
