@@ -191,30 +191,21 @@ class WardrobeViewModel(
         )
         _wardrobeState.value = newState
     }
+    private val _shuffledItems = MutableStateFlow<Map<CarouselTypes, List<ItemEntry>>>(emptyMap())
+    val shuffledItems = _shuffledItems.asStateFlow()
 
-    /** SHUFFLE ITEMS RESPECTING BLOCKED COMBINATIONS */
     fun shuffleItems(
         headwearList: List<ItemEntry>,
         topwearList: List<ItemEntry>,
         bottomwearList: List<ItemEntry>,
         shoesList: List<ItemEntry>
     ) {
-        viewModelScope.launch {
-            val validCombos = mutableListOf<WardrobeState>()
-            for (h in headwearList) {
-                for (t in topwearList) {
-                    for (b in bottomwearList) {
-                        for (s in shoesList) {
-                            val comboIds = listOf(h, t, b, s).mapNotNull { it.itemId }.toSet()
-                            if (_blockedCombos.none { it == comboIds }) {
-                                validCombos.add(WardrobeState(h, t, b, s))
-                            }
-                        }
-                    }
-                }
-            }
-            _wardrobeState.value = validCombos.randomOrNull() ?: _wardrobeState.value
-        }
+        _shuffledItems.value = mapOf(
+            CarouselTypes.HEADWEAR to headwearList.shuffled(),
+            CarouselTypes.TOPWEAR to topwearList.shuffled(),
+            CarouselTypes.BOTTOMWEAR to bottomwearList.shuffled(),
+            CarouselTypes.FOOTWEAR to shoesList.shuffled(),
+        )
     }
 
 

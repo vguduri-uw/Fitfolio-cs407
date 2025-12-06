@@ -364,19 +364,20 @@ fun ClothingScroll(
     val currentState by wardrobeViewModel.wardrobeState.collectAsState()
     val scope = rememberCoroutineScope()
 
-    // Filter items based on currently centered items in other categories
-    val filteredItems = remember(currentState, closetItems) {
-        closetItems.filter { item ->
-            val combo = when (category) {
-                CarouselTypes.HEADWEAR -> listOfNotNull(item, currentState.centeredTopwear, currentState.centeredBottomwear, currentState.centeredShoes)
-                CarouselTypes.TOPWEAR -> listOfNotNull(currentState.centeredHeadwear, item, currentState.centeredBottomwear, currentState.centeredShoes)
-                CarouselTypes.BOTTOMWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, item, currentState.centeredShoes)
-                CarouselTypes.FOOTWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, currentState.centeredBottomwear, item)
-                else -> listOf(item)
-            }.map { it.itemId }.toSet()
+    // Dynamically filter items based on currently centered items in other categories
+    val filteredItems by remember(currentState, closetItems) {
+        derivedStateOf {
+            closetItems.filter { item ->
+                val combo = when (category) {
+                    CarouselTypes.HEADWEAR -> listOfNotNull(item, currentState.centeredTopwear, currentState.centeredBottomwear, currentState.centeredShoes)
+                    CarouselTypes.TOPWEAR -> listOfNotNull(currentState.centeredHeadwear, item, currentState.centeredBottomwear, currentState.centeredShoes)
+                    CarouselTypes.BOTTOMWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, item, currentState.centeredShoes)
+                    CarouselTypes.FOOTWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, currentState.centeredBottomwear, item)
+                    else -> listOf(item)
+                }.map { it.itemId }.toSet()
 
-            // Only keep items that are not blocked
-            wardrobeViewModel.blockedCombos.none { it == combo }
+                wardrobeViewModel.blockedCombos.none { it == combo }
+            }
         }
     }
 
@@ -395,8 +396,7 @@ fun ClothingScroll(
     val middleIndex = LOOP_SIZE / 2
     val startIndex = middleIndex - (middleIndex % filteredItems.size)
 
-    LaunchedEffect(filteredItems, selectedItem) {
-        if (listState.firstVisibleItemIndex == 0) listState.scrollToItem(startIndex)
+    LaunchedEffect(selectedItem) {
         selectedItem?.let {
             val index = filteredItems.indexOf(it)
             if (index != -1) listState.animateScrollToItem(startIndex + index)
@@ -411,12 +411,13 @@ fun ClothingScroll(
         IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex - 1) } }) {
             Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous")
         }
-
+        val flingBehavior = rememberSnapFlingBehavior(listState)
         LazyRow(
             state = listState,
             modifier = Modifier.weight(1f).height(150.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 75.dp)
+            contentPadding = PaddingValues(horizontal = 75.dp),
+            flingBehavior = flingBehavior
         ) {
             items(LOOP_SIZE) { index ->
                 val realIndex = index % filteredItems.size
