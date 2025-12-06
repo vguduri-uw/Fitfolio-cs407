@@ -1,5 +1,7 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -48,18 +50,41 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.window.Dialog
+import coil.compose.rememberAsyncImagePainter
+import com.cs407.fitfolio.BuildConfig.FASHN_API_KEY
 import coil.compose.AsyncImage
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.OutfitModal
+import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
+import com.cs407.fitfolio.viewModels.WardrobeState
+import com.cs407.fitfolio.viewModels.WardrobeViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONArray
+import org.json.JSONObject
+import kotlin.math.abs
 
 @Composable
 fun MyWardrobeScreen(
@@ -71,184 +96,115 @@ fun MyWardrobeScreen(
     closetViewModel: ClosetViewModel,
     weatherViewModel: WeatherViewModel,
     outfitsViewModel: OutfitsViewModel,
-    userViewModel: UserViewModel
+    userViewModel: UserViewModel,
+    wardrobeViewModel: WardrobeViewModel
 ) {
-
     val closetState by closetViewModel.closetState.collectAsStateWithLifecycle()
-    //for weather
-    val scope = rememberCoroutineScope()
     val weatherState by weatherViewModel.uiState.collectAsStateWithLifecycle()
-    var centeredHeadwear by remember { mutableStateOf<ItemEntry?>(null) }
-    var centeredTopwear by remember { mutableStateOf<ItemEntry?>(null) }
-    var centeredBottomwear by remember { mutableStateOf<ItemEntry?>(null) }
-    var centeredShoes by remember { mutableStateOf<ItemEntry?>(null) }
+    val wardrobeState by wardrobeViewModel.wardrobeState.collectAsState()
     val context = LocalContext.current
-    val selectedItems by closetViewModel.selectedItems.collectAsStateWithLifecycle()
-    val db = FitfolioDatabase.getDatabase(context)
-    val categories = CarouselTypes.entries.filter { it != CarouselTypes.DEFAULT }
+    val scope = rememberCoroutineScope()
 
+    var showTryOnModal by remember { mutableStateOf(false) }
     var showOutfitModal by remember { mutableStateOf(false) }
     var createdOutfitId by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
+    val categories = CarouselTypes.entries.filter { it != CarouselTypes.DEFAULT }
+
+    // Use filteredItems if available, else fallback to full item list
+    val allItems = closetState.filteredItems.takeIf { !it.isNullOrEmpty() } ?: closetState.items
+
+    // Load wardrobe items by carouselType
+    LaunchedEffect(allItems) {
+        wardrobeViewModel.loadWardrobe(
+            headwear = allItems.filter { it.carouselType == CarouselTypes.HEADWEAR },
+            topwear = allItems.filter { it.carouselType == CarouselTypes.TOPWEAR },
+            bottomwear = allItems.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+            shoes = allItems.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+        )
+    }
+
+    Column(modifier = Modifier.fillMaxSize().padding(vertical = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 30.dp, vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                //TODO: Title of Page and Weather
-                SimpleHeader("My Wardrobe")
-                Spacer(modifier = Modifier.weight(1f))
-                WeatherDataChip(
-                    weatherData = weatherState.weatherData
-                )
-            }
-            categories.forEach { category ->
-                val filteredItems = closetState.filteredItems.filter { it.carouselType == category }
+            SimpleHeader("My Wardrobe")
+            Spacer(modifier = Modifier.weight(1f))
+            WeatherDataChip(weatherData = weatherState.weatherData)
+        }
 
-                val itemsWithOptional =
-                    if (category == CarouselTypes.HEADWEAR && filteredItems.isNotEmpty()) {
-                        listOf(
-                            ItemEntry(
-                                itemId = -1,
-                                itemName = "No Headwear",
-                                carouselType = category,
-                                itemType = "",
-                                itemDescription = "",
-                                itemTags = emptyList(),
-                                isFavorite = false,
-                                isDeletionCandidate = false,
-                                itemPhotoUri = ""
-                            )
-                        ) + filteredItems
-                    } else {
-                        filteredItems
-                    }
+        categories.forEach { category ->
+            val filteredItems = allItems.filter { it.carouselType == category }
 
+            val itemsWithPlaceholder = if (category == CarouselTypes.HEADWEAR && filteredItems.isNotEmpty()) {
+                listOf(
+                    ItemEntry(
+                        itemId = -1,
+                        itemName = "No Headwear",
+                        itemType = "HEADWEAR",
+                        carouselType = category,
+                        itemDescription = "",
+                        itemTags = emptyList(),
+                        isFavorite = false,
+                        isDeletionCandidate = false,
+                        itemPhotoUri = ""
+                    )
+                ) + filteredItems
+            } else filteredItems
+
+            if (itemsWithPlaceholder.isEmpty()) {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(150.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text("No ${category.carouselType.lowercase()} items found")
+                }
+            } else {
                 ClothingScroll(
-                    items = itemsWithOptional,
-                    selectedItem = selectedItems[category],
-                    onSelect = { item -> closetViewModel.selectItem(category, item) },
+                    selectedItem = when (category) {
+                        CarouselTypes.HEADWEAR -> wardrobeState.centeredHeadwear
+                        CarouselTypes.TOPWEAR -> wardrobeState.centeredTopwear
+                        CarouselTypes.BOTTOMWEAR -> wardrobeState.centeredBottomwear
+                        CarouselTypes.FOOTWEAR -> wardrobeState.centeredShoes
+                        else -> null
+                    },
                     category = category,
-                    onCenteredItemChange = { centeredItem ->
-                        when (category) {
-                            CarouselTypes.HEADWEAR -> centeredHeadwear = centeredItem
-                            CarouselTypes.TOPWEAR -> centeredTopwear = centeredItem
-                            CarouselTypes.BOTTOMWEAR ->  centeredBottomwear = centeredItem
-                            CarouselTypes.FOOTWEAR ->  centeredShoes = centeredItem
-                            CarouselTypes.DEFAULT -> null
-                        }
-                    }
+                    wardrobeViewModel = wardrobeViewModel,
+                    onCenteredItemChange = { centered -> wardrobeViewModel.updateCenteredItem(category, centered) },
+                    closetItems = itemsWithPlaceholder
                 )
-            }
-
-            Spacer(modifier = Modifier.height(10.dp))
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp), // space between icons
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 10.dp, vertical = 8.dp),
-            ) {
-                //adds outfit to the outfits page
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(Color(0xFFE0E0E0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = {
-                        val itemsToAdd = listOfNotNull(
-                            centeredHeadwear?.takeIf { it.itemId > 0 },
-                            centeredTopwear?.takeIf { it.itemId > 0 },
-                            centeredBottomwear?.takeIf { it.itemId > 0 },
-                            centeredShoes?.takeIf { it.itemId > 0 }
-                        )
-                        if (itemsToAdd.isEmpty()) return@IconButton
-
-                        // Add outfit
-                        scope.launch {
-                            val outfitId = outfitsViewModel.addOutfit(
-                                name = "New Outfit",
-                                description = "Created from My Wardrobe",
-                                tags = emptyList(),
-                                isFavorite = false,
-                                photoUri = "",
-                                itemList = itemsToAdd
-                            )
-
-                            if (outfitId > 0) {
-                                createdOutfitId = outfitId
-                                Toast.makeText(context, "Outfit saved.", Toast.LENGTH_SHORT).show()
-                                showOutfitModal = true
-                                Log.d("WARDROBE", "head=$centeredHeadwear top=$centeredTopwear bottom=$centeredBottomwear shoes=$centeredShoes")
-                            } else {
-                                saveError = true
-                            }
-                        }
-                    }) {
-                        Icon(
-                            painter = painterResource(R.drawable.add_nav_thin),
-                            contentDescription = "add outfit",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
-                //ensures the combo is never seen again
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(Color(0xFFE0E0E0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = { closetViewModel.shuffleItems() }) {
-                        Icon(
-                            painter = painterResource(R.drawable.minus),
-                            contentDescription = "remove combination",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
-                // shuffle button
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(Color(0xFFE0E0E0)),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(onClick = {
-                        centeredHeadwear = closetState.items.filter { it.itemType in listOf("Hats") }.randomOrNull()
-                        centeredTopwear = closetState.items.filter { it.itemType in listOf("T-Shirts", "Shirts", "Dresses") }.randomOrNull()
-                        centeredBottomwear = closetState.items.filter { it.itemType in listOf("Jeans", "Pants", "Shorts", "Skirts") }.randomOrNull()
-                        centeredShoes = closetState.items.filter { it.itemType == "Shoes" }.randomOrNull()
-                    }) {
-                        Icon(
-                            painter = painterResource(R.drawable.shuffle),
-                            contentDescription = "shuffle",
-                            tint = Color.Black,
-                            modifier = Modifier.size(20.dp),
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.weight(1f))
-                //TODO: Dress me icon
-                Button(
-                    //change this when we figure out how we are implementing shuffleItems list
-                    onClick = { closetViewModel.shuffleItems() },
-                    modifier = Modifier.width(120.dp)
-                ) {
-                    Text("Dress Me!")
-                }
             }
         }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        ActionButtonsRow(
+            closetState = closetState,
+            closetViewModel = closetViewModel,
+            wardrobeState = wardrobeState,
+            wardrobeViewModel = wardrobeViewModel,
+            outfitsViewModel = outfitsViewModel,
+            userViewModel = userViewModel,
+            scope = scope,
+            context = context,
+            onTryOn = { showTryOnModal = true },
+            onOutfitSaved = { id -> createdOutfitId = id; showOutfitModal = true },
+            onSaveError = { saveError = true }
+        )
+    }
+
+    if (showTryOnModal) {
+        TryOnModal(
+            wardrobeState = wardrobeState,
+            wardrobeViewModel = wardrobeViewModel,
+            outfitsViewModel = outfitsViewModel,
+            userViewModel = userViewModel,
+            onDismiss = { showTryOnModal = false },
+            context = context,
+            scope = scope
+        )
     }
 
     if (showOutfitModal) {
@@ -256,9 +212,7 @@ fun MyWardrobeScreen(
             closetViewModel = closetViewModel,
             outfitsViewModel = outfitsViewModel,
             outfitId = createdOutfitId,
-            onDismiss = {
-                showOutfitModal = false
-            },
+            onDismiss = { showOutfitModal = false },
             onNavigateToCalendarScreen = onNavigateToCalendarScreen
         )
     } else if (saveError) {
@@ -266,142 +220,270 @@ fun MyWardrobeScreen(
         saveError = false
     }
 }
+
 @Composable
-fun ClothingScroll(
-    items: List<ItemEntry>,
-    selectedItem: ItemEntry?,
-    onSelect: (ItemEntry) -> Unit,
-    category: CarouselTypes,
-    onCenteredItemChange: (ItemEntry?) -> Unit
-
+fun ActionButtonsRow(
+    closetState: ClosetState,
+    closetViewModel: ClosetViewModel,
+    wardrobeState: WardrobeState,
+    wardrobeViewModel: WardrobeViewModel,
+    outfitsViewModel: OutfitsViewModel,
+    userViewModel: UserViewModel,
+    scope: CoroutineScope,
+    context: Context,
+    onTryOn: () -> Unit,
+    onOutfitSaved: (Int) -> Unit,
+    onSaveError: () -> Unit
 ) {
-//    val items = closetState.items.filter{ it.itemType in types}
-    val listState = rememberLazyListState( initialFirstVisibleItemIndex = Int.MAX_VALUE / 2)
-    val scope = rememberCoroutineScope()
-    val itemSize = 150.dp
-//    LaunchedEffect(centeredItem) {
-//        centeredItem?.let {
-//            val index = items.indexOf(it)
-//            if (index != -1) listState.animateScrollToItem(index)
-//        }
-//    }
-    LaunchedEffect(selectedItem) {
-        selectedItem?.let {
-            val index = items.indexOf(it)
-            if (index != -1) listState.animateScrollToItem(index)
+    val itemsToAdd by remember(wardrobeState) {
+        derivedStateOf {
+            listOfNotNull(
+                wardrobeState.centeredHeadwear,
+                wardrobeState.centeredTopwear,
+                wardrobeState.centeredBottomwear,
+                wardrobeState.centeredShoes
+            ).filter { it.itemId > 0 }
         }
     }
 
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.layoutInfo }
-            .collect { layoutInfo ->
-                val visibleItems = layoutInfo.visibleItemsInfo
-                if (visibleItems.isEmpty()) return@collect
-
-                // Center of the LazyRow viewport
-                val center = layoutInfo.viewportStartOffset +
-                        layoutInfo.viewportEndOffset / 2
-
-                // Find item whose center is closest to viewport center
-                val centered = visibleItems.minByOrNull { item ->
-                    val itemCenter = item.offset + item.size / 2
-                    kotlin.math.abs(itemCenter - center)
-                }
-
-                centered?.let {
-                    val index = it.index % items.size
-                    onCenteredItemChange(items[index])
-                }
-            }
-    }
-
-    if (items.isEmpty()) {
-        Box(
-            modifier = Modifier.fillMaxWidth().height(150.dp),
-            contentAlignment = Alignment.Center
-        ) { Text("No ${category.carouselType} Items Found") }
-        return
-    }
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Center,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp)    ) {
-        IconButton(
-            onClick = {
-                scope.launch {
-                    val prevIndex = (listState.firstVisibleItemIndex - 1).coerceAtLeast(0)
-                    listState.animateScrollToItem(prevIndex)
-                }
-            },
+        modifier = Modifier.fillMaxWidth().padding(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        // Add / Save Outfit button
+        Box(
             modifier = Modifier
-                .size(48.dp)
-                .background(Color.Black.copy(alpha = 0.25f), shape = RectangleShape)
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color(0xFFE0E0E0)),
+            contentAlignment = Alignment.Center
         ) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous", tint = Color.White)
-        }
+            IconButton(
+                onClick = {
+                    scope.launch {
+                        val currentState = wardrobeViewModel.wardrobeState.value
 
-            LazyRow(
-                state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .height(itemSize),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                contentPadding = PaddingValues(horizontal = itemSize / 2),
-                flingBehavior = rememberSnapFlingBehavior(lazyListState = listState)
+                        if (itemsToAdd.isEmpty()) {
+                            Toast.makeText(context, "Select at least one item to save an outfit", Toast.LENGTH_SHORT).show()
+                            return@launch
+                        }
+
+                        try {
+                            val outfitId = outfitsViewModel.addOutfit(
+                                name = "New Outfit",
+                                description = "Created from My Wardrobe",
+                                tags = emptyList(),
+                                isFavorite = false,
+                                photoUri = "", // optional: could use a snapshot URI of the outfit
+                                itemList = itemsToAdd
+                            )
+
+                            if (outfitId > 0) {
+                                Toast.makeText(context, "Outfit saved successfully!", Toast.LENGTH_SHORT).show()
+                                onOutfitSaved(outfitId)
+                            } else {
+                                Toast.makeText(context, "Outfit could not be saved.", Toast.LENGTH_SHORT).show()
+                                onSaveError()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            Toast.makeText(context, "Error saving outfit: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+                            onSaveError()
+                        }
+                    }
+                },
+                enabled = itemsToAdd.isNotEmpty()
             ) {
-                val total = items.size
-
-                items(Int.MAX_VALUE) { index ->
-                    val item = items[index % total]
-
-                    ClothingItemCard(item)
-                }
+                Icon(
+                    painter = painterResource(R.drawable.add),
+                    contentDescription = "save outfit",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
+                )
             }
-        // Right arrow
-        IconButton(
-            onClick = {
-                scope.launch {
-                    val nextIndex = listState.firstVisibleItemIndex + 1
-                    listState.animateScrollToItem(nextIndex)
-                }
-            },
-            modifier = Modifier
-                .size(48.dp)
-                .background(Color.Black.copy(alpha = 0.25f), shape = RectangleShape)
-        ) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next", tint = Color.White)
         }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        // Shuffle button using carouselType
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color(0xFFE0E0E0)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(
+                onClick = {
+                    wardrobeViewModel.shuffleItems(
+                        headwearList = closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
+                        topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                        bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                        shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                    )
+                },
+                enabled = itemsToAdd.isNotEmpty()
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.shuffle),
+                    contentDescription = "shuffle",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+        // Remove combination button
+        Box(
+            modifier = Modifier
+                .clip(MaterialTheme.shapes.medium)
+                .background(Color(0xFFE0E0E0)),
+            contentAlignment = Alignment.Center
+        ) {
+            IconButton(
+                onClick = {
+                    val allItemsByCategory = mapOf(
+                        CarouselTypes.HEADWEAR to closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
+                        CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                        CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                        CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                    )
+
+                    wardrobeViewModel.removeCurrentCombination(allItemsByCategory)
+                    Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
+                },
+                enabled = itemsToAdd.isNotEmpty()
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.minus),
+                    contentDescription = "Remove combination",
+                    tint = Color.Black,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-fun ClothingItemCard(item: ItemEntry) {
+fun ClothingScroll(
+    closetItems: List<ItemEntry>,
+    selectedItem: ItemEntry?,
+    category: CarouselTypes,
+    wardrobeViewModel: WardrobeViewModel,
+    onCenteredItemChange: (ItemEntry?) -> Unit
+) {
+    val currentState by wardrobeViewModel.wardrobeState.collectAsState()
+    val scope = rememberCoroutineScope()
+
+    // Dynamically filter items based on currently centered items in other categories
+    val filteredItems by remember(currentState, closetItems) {
+        derivedStateOf {
+            closetItems.filter { item ->
+                val combo = when (category) {
+                    CarouselTypes.HEADWEAR -> listOfNotNull(item, currentState.centeredTopwear, currentState.centeredBottomwear, currentState.centeredShoes)
+                    CarouselTypes.TOPWEAR -> listOfNotNull(currentState.centeredHeadwear, item, currentState.centeredBottomwear, currentState.centeredShoes)
+                    CarouselTypes.BOTTOMWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, item, currentState.centeredShoes)
+                    CarouselTypes.FOOTWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, currentState.centeredBottomwear, item)
+                    else -> listOf(item)
+                }.map { it.itemId }.toSet()
+
+                wardrobeViewModel.blockedCombos.none { it == combo }
+            }
+        }
+    }
+
+    if (filteredItems.isEmpty()) {
+        Box(
+            modifier = Modifier.fillMaxWidth().height(150.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Text("No ${category.name.lowercase().replace('_', ' ')} items available")
+        }
+        return
+    }
+
+    val stableItems = remember(filteredItems.size) { filteredItems.toList() }
+    val listState = rememberLazyListState()
+    val LOOP_SIZE = 10_000
+    val middleIndex = LOOP_SIZE / 2
+    val startIndex = middleIndex - (middleIndex % stableItems.size)
+
+    LaunchedEffect(selectedItem) {
+        selectedItem?.let {
+            val index = stableItems.indexOf(it)
+            if (index != -1) {
+                val target = startIndex + index
+                listState.scrollToItem(target)
+            }
+        }
+    }
+
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+    ) {
+        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex - 1) } }) {
+            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous")
+        }
+        val flingBehavior = rememberSnapFlingBehavior(listState)
+        LazyRow(
+            state = listState,
+            modifier = Modifier.weight(1f).height(150.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            contentPadding = PaddingValues(horizontal = 75.dp),
+            flingBehavior = flingBehavior
+        ) {
+            items(LOOP_SIZE) { index ->
+                val realIndex = index % stableItems.size
+                ClothingItemCard(stableItems[realIndex])
+            }
+        }
+
+        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex + 1) } }) {
+            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next")
+        }
+    }
+
+    // Update the centered item
+    val centeredItem by remember {
+        derivedStateOf {
+            val visible = listState.layoutInfo.visibleItemsInfo
+            if (visible.isEmpty()) return@derivedStateOf null
+            val center = (listState.layoutInfo.viewportStartOffset + listState.layoutInfo.viewportEndOffset) / 2
+            val closet = visible.minByOrNull { abs(it.offset + it.size / 2 - center) } ?: return@derivedStateOf null
+            stableItems[closet.index % stableItems.size]
+
+        }
+    }
+
+    LaunchedEffect(centeredItem) {
+        centeredItem?.let { onCenteredItemChange(it) }
+    }
+}
+@Composable
+fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
     var aspectRatio by remember { mutableFloatStateOf(1f) }
 
     Box(
         modifier = Modifier
             .size(150.dp)
             .clip(MaterialTheme.shapes.medium)
-            .background(Color(0xFFE0E0E0).copy(alpha = .2f)),
+            .background(if (isBlocked) Color.Gray.copy(alpha = 0.3f) else Color(0xFFE0E0E0).copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
-        if (item.itemPhotoUri.isNotEmpty()) {
+        if (item.itemPhotoUri.isNotBlank()) {
             AsyncImage(
                 model = item.itemPhotoUri,
                 contentDescription = item.itemName,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(aspectRatio),
+                modifier = Modifier.fillMaxSize().aspectRatio(aspectRatio),
                 contentScale = ContentScale.Fit,
-                onSuccess = {
-                    val w = it.result.drawable.intrinsicWidth
-                    val h = it.result.drawable.intrinsicHeight
-                    if (w > 0 && h > 0) {
-                        val r = w.toFloat() / h.toFloat()
-                        aspectRatio = maxOf(r, 0.55f)
-                    }
+                alpha = if (isBlocked) 0.5f else 1f,
+                onSuccess = { result ->
+                    val w = result.result.drawable.intrinsicWidth
+                    val h = result.result.drawable.intrinsicHeight
+                    if (w > 0 && h > 0) aspectRatio = (w.toFloat() / h.toFloat()).coerceIn(0.55f, 2f)
                 }
             )
         } else {
@@ -416,35 +498,46 @@ fun ClothingItemCard(item: ItemEntry) {
     }
 }
 
+@Composable
+fun TryOnModal(
+    wardrobeState: WardrobeState,
+    wardrobeViewModel: WardrobeViewModel,
+    outfitsViewModel: OutfitsViewModel,
+    userViewModel: UserViewModel,
+    onDismiss: () -> Unit,
+    context: Context,
+    scope: CoroutineScope
+) {
+    val tryOnUrl by wardrobeViewModel.tryOnPreview.collectAsState()
 
-//@Composable
-//fun OutfitPreviewBoxStack(
-//    headwear: ItemEntry?,
-//    topwear: ItemEntry?,
-//    bottomwear: ItemEntry?,
-//    shoes: ItemEntry?
-//) {
-//    val items = listOfNotNull(headwear, topwear, bottomwear, shoes)
-//
-//    Box(
-//        modifier = Modifier
-//            .size(200.dp) // overall preview size
-//            .background(Color.LightGray.copy(alpha = 0.2f))
-//            .clip(MaterialTheme.shapes.medium),
-//        contentAlignment = Alignment.Center
-//    ) {
-//        items.forEachIndexed { index, item ->
-//            // You can optionally offset each layer slightly for effect
-//            val offset = (index * 4).dp
-//            Image(
-//                painter = painterResource(id = item.itemPhoto), // your drawable
-//                contentDescription = item.itemName,
-//                contentScale = ContentScale.Crop,
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(offset)
-//                    .clip(MaterialTheme.shapes.medium)
-//            )
-//        }
-//    }
-//}
+    Dialog(onDismissRequest = { onDismiss() }) {
+        Box(
+            modifier = Modifier
+                .size(300.dp)
+                .background(Color.White, shape = MaterialTheme.shapes.medium)
+                .padding(16.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text("Try-On Preview", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(12.dp))
+
+                if (!tryOnUrl.isNullOrEmpty()) {
+                    AsyncImage(
+                        model = tryOnUrl,
+                        contentDescription = "Try-On Image",
+                        modifier = Modifier.size(200.dp),
+                        contentScale = ContentScale.Fit
+                    )
+                } else {
+                    Text("Loading...")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Button(onClick = { onDismiss() }) {
+                    Text("Close")
+                }
+            }
+        }
+    }
+}
