@@ -681,7 +681,6 @@ private fun TagsEditableCard(
 
     // local selection buffer for tags; sync when item changes
     var selectedTags by remember(item.itemId) { mutableStateOf(item.itemTags.toSet()) }
-    LaunchedEffect(item.itemTags) { selectedTags = item.itemTags.toSet() }
 
     Box(
         modifier = Modifier
