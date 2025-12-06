@@ -130,7 +130,7 @@ fun ItemTypeDropdown(
 @Composable
 fun CarouselTypeDropdown(
     selectedCarouselType: CarouselTypes,
-    allCarouselTypes: EnumEntries<CarouselTypes>,
+    allCarouselTypes: List<CarouselTypes>,
     onCarouselTypeSelected: (CarouselTypes) -> Unit,
     modifier: Modifier
 ) {
@@ -183,11 +183,11 @@ fun AddScreen(
 
     val closetState by closetViewModel.closetState.collectAsState()
     val availableItemTypes = closetState.itemTypes.filter { it != DefaultItemTypes.ALL.typeName }
-    val carouselTypes = CarouselTypes.entries
+    val carouselTypes = CarouselTypes.entries.filter { it != CarouselTypes.DEFAULT }
 
     var selectedImageUri by remember { mutableStateOf<Uri?>(null) } // selected pic
     var selectedItemType by remember { mutableStateOf("") }
-    var selectedCarouselType: CarouselTypes by remember { mutableStateOf(CarouselTypes.TOPWEAR) }
+    var selectedCarouselType: CarouselTypes by remember { mutableStateOf(CarouselTypes.DEFAULT) }
     var showItemModal by remember { mutableStateOf(false) }
     var createdItemId: Int by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
@@ -199,7 +199,7 @@ fun AddScreen(
     fun reset() {
         selectedImageUri = null
         selectedItemType = ""
-        selectedCarouselType = CarouselTypes.TOPWEAR
+        selectedCarouselType = CarouselTypes.DEFAULT
         createdItemId = -1
         saveError = false
         showInfo = false
@@ -422,7 +422,7 @@ fun AddScreen(
                         }
                     }
                 },
-                enabled = !isUploading && selectedItemType.isNotEmpty(),
+                enabled = !isUploading && selectedItemType.isNotEmpty() && selectedCarouselType != CarouselTypes.DEFAULT && selectedImageUri != null,
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Save to Closet")

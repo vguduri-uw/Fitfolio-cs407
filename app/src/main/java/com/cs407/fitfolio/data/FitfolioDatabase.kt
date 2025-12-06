@@ -30,7 +30,8 @@ data class User(
     val userUID: String,
     val username: String,
     val email: String,
-    val avatarUri: String = ""
+    val avatarUri: String = "",
+    val newUser: Boolean
 )
 
 // Item table
@@ -263,6 +264,8 @@ interface UserDao {
     @Query("UPDATE user SET username = :username, email = :email WHERE userId = :id")
     suspend fun updateUser(id: Int, username: String, email: String)
 
+    @Query("UPDATE user SET newUser = :newUser WHERE userId = :id")
+    suspend fun updateUserFlag(id: Int, newUser: Boolean)
     @Query("UPDATE user SET avatarUri = :avatarUri WHERE userId = :id")
     suspend fun updateAvatar(id: Int, avatarUri: String)
 
@@ -536,7 +539,7 @@ interface DeleteDao {
         UserItemTagsRelation::class,
         UserOutfitsTagsRelation::class
     ],
-    version = 5
+    version = 7
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
