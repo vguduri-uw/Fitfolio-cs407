@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
@@ -349,6 +350,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     // tracks whether tags dropdown is expanded
     var expanded by remember { mutableStateOf(false) }
 
+    // tracks whether search dialog is visible or not
+    var showSearchDialog by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
 
     Row(
@@ -419,7 +423,10 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = { outfitsViewModel.toggleSearchState(true) }) {
+            IconButton(onClick = {
+                outfitsViewModel.toggleSearchState(true)
+                showSearchDialog = true
+            }) {
                 Icon(
                     painter = painterResource(R.drawable.loupe),
                     contentDescription = "search",
@@ -430,33 +437,34 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         }
 
         // search bar dialog
-        if (outfitsState.isSearchActive) {
+        if (showSearchDialog) {
             AlertDialog(
                 title = {
-                    Text(text = "Search for an item", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
+                    Text(text = "Search for an outfit", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                 },
                 text = {
                     TextField(
                         value = outfitsState.searchQuery,
                         onValueChange = { it -> outfitsViewModel.updateSearchQuery(it) },
-                        placeholder = { Text("Enter item name", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
+                        placeholder = { Text("Enter outfit name", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = LightPeachFuzz,
                             unfocusedContainerColor = LightPeachFuzz,
                             disabledContainerColor = LightPeachFuzz.copy(alpha = 0.7f)
-                        )
+                        ),
+                        textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                     )
                 },
-                onDismissRequest = { outfitsViewModel.toggleSearchState(false) },
+                onDismissRequest = { showSearchDialog = false },
                 confirmButton = {
                     Button(onClick = {
-                        outfitsViewModel.toggleSearchState(false)
                         outfitsViewModel.applyFilters()
+                        showSearchDialog = false
                     }) {
                         Text(text = "Search", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                     }
                 },
-                containerColor = FloralWhite
+                containerColor = FloralWhite,
             )
         }
 
