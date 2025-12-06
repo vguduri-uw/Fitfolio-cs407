@@ -53,6 +53,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -70,6 +71,7 @@ import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
@@ -364,9 +366,14 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         // Tags filtering
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0))
-                .padding(horizontal = 10.dp, vertical = 14.dp),
+                .background(LightPeachFuzz)
+                .padding(horizontal = 15.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -393,7 +400,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                offset = DpOffset(x = (-10).dp, y = 15.dp),
+                modifier = Modifier
+                    .height(450.dp)
             ) {
                 closetState.tags
                     .sortedByDescending { it in closetState.activeTags }
