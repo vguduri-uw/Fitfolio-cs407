@@ -354,7 +354,7 @@ fun AddScreen(
                     },
                     modifier = Modifier.weight(1f)
                 ) { Text("Take Photo", fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.Bold, fontSize = 15.sp)) }
+                    fontWeight = FontWeight.Bold, fontSize = 15.sp) }
             }
 
             Spacer(Modifier.height(12.dp))
