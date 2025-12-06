@@ -145,8 +145,8 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     weatherViewModel = weatherViewModel,
                     onSignOut = onSignOut,
                     closetViewModel = closetViewModel,
-                    userViewModel = userViewModel,
-                    )
+                    userViewModel = userViewModel
+                )
             }
             // Defines the "calendar" route and what UI to display there
             composable("calendar") {
@@ -160,9 +160,8 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     outfitsViewModel = outfitsViewModel,
                     closetViewModel = closetViewModel,
                     userViewModel = userViewModel,
-                    onSignOut = onSignOut,
-
-                    )
+                    onSignOut = onSignOut
+                )
             }
             // Defines the "wardrobe" route and what UI to display there
             composable(route = "wardrobe") {
@@ -194,10 +193,8 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     closetViewModel = closetViewModel,
                     outfitsViewModel = outfitsViewModel,
                     userViewModel = userViewModel,
-                    onSignOut = onSignOut,
-
-
-                    )
+                    onSignOut = onSignOut
+                )
             }
         }
     }

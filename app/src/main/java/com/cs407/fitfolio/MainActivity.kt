@@ -20,6 +20,7 @@ import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.navigation.AppNavigation
 import com.cs407.fitfolio.ui.screens.SignInScreen
 import com.cs407.fitfolio.ui.screens.SignUpScreen
+import com.cs407.fitfolio.ui.screens.WelcomeScreen
 import com.cs407.fitfolio.ui.theme.FitfolioTheme
 import com.cs407.fitfolio.viewModels.UserState
 import com.cs407.fitfolio.viewModels.UserViewModel
@@ -64,7 +65,7 @@ fun AuthNavigation() {
                         id = local.userId,
                         name = local.username,
                         uid = local.userUID,
-                        email = local.email ?: "",
+                        email = local.email,
                         avatarUri = local.avatarUri
                     )
                 )
@@ -78,9 +79,12 @@ fun AuthNavigation() {
         LoadingScreen()
     } else {
         // Only start NavHost after we know if user is signed in
-        val startDestination =
-            if (userState.id == 0) "sign_in"
-            else "app_nav"
+        // If user is new, navigate to welcome screen
+        val startDestination = when {
+            userState.id == 0 -> "sign_in"
+            userState.newUser -> "welcome"
+            else -> "app_nav"
+        }
         NavHost(
             navController = navController,
             startDestination = startDestination
@@ -107,6 +111,18 @@ fun AuthNavigation() {
                         popUpTo(0) { inclusive = true }
                     }
                 })
+            }
+            composable("welcome") {
+                WelcomeScreen(
+                    userState = userState,
+                    onContinue = {
+                        // Clear the newUser flag and navigate to main app navigation
+                        userViewModel.setUserFlag(db)
+                        navController.navigate("app_nav") {
+                            popUpTo("welcome") { inclusive = true }
+                        }
+                    }
+                )
             }
         }
     }

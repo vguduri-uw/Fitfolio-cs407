@@ -18,7 +18,8 @@ data class UserState(
     val uid: String = "",
     val email: String = "",
     val avatarUri: String = "",
-    val isLoggedOut: Boolean = false
+    val isLoggedOut: Boolean = false,
+    val newUser: Boolean = false
 )
 
 class UserViewModel : ViewModel() {
@@ -41,6 +42,14 @@ class UserViewModel : ViewModel() {
         }
     }
 
+    fun setUserFlag(db: FitfolioDatabase) {
+        val user = _userState.value
+        viewModelScope.launch {
+            db.userDao().updateUserFlag(user.id, false)
+        }
+        setUser(user.copy(newUser = false))
+    }
+
     // Logs the user into the application
     fun loginUser(db: FitfolioDatabase) {
         val firebaseUser = auth.currentUser ?: return
@@ -57,7 +66,8 @@ class UserViewModel : ViewModel() {
                         name = localUser.username,
                         uid = localUser.userUID,
                         email = localUser.email,
-                        avatarUri = localUser.avatarUri
+                        avatarUri = localUser.avatarUri,
+                        newUser = localUser.newUser
                     )
                 )
             } else {
@@ -67,7 +77,8 @@ class UserViewModel : ViewModel() {
                         userUID = firebaseUser.uid,
                         username = firebaseUser.displayName ?: "",
                         email = firebaseUser.email ?: "",
-                        avatarUri = ""
+                        avatarUri = "",
+                        newUser = false
                     )
                 )
                 setUser(
