@@ -82,6 +82,7 @@ dependencies {
     implementation("io.coil-kt:coil-compose:2.4.0")
     implementation(libs.androidx.material3)
     implementation("androidx.compose.material:material-icons-extended")
+    implementation(libs.androidx.compose.foundation.layout)
     ksp("androidx.room:room-compiler:2.8.3")
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

@@ -20,17 +20,7 @@ import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.ArrowDropDown
-import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -43,6 +33,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -52,6 +43,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.dropShadow
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -71,15 +64,16 @@ import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
-import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
-import com.cs407.fitfolio.ui.theme.PeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
+import com.cs407.fitfolio.ui.theme.GoldenApricot
+import com.cs407.fitfolio.ui.theme.SoftRust
 
 @Composable
 fun MyOutfitsScreen(
@@ -112,9 +106,11 @@ fun MyOutfitsScreen(
     // track settings modal state
     var showSettings by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 8.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FloralWhite)
+            .padding(horizontal = 8.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -152,7 +148,7 @@ fun MyOutfitsScreen(
                 .align(alignment = Alignment.TopEnd)
         ) {
             Icon(
-                imageVector = Icons.Outlined.Settings,
+                painter = painterResource(R.drawable.cog),
                 contentDescription = "Settings",
                 Modifier.size(36.dp)
             )
@@ -160,7 +156,11 @@ fun MyOutfitsScreen(
 
         // pull up settings modal
         if (showSettings) {
-            SettingsModal(onDismiss = { showSettings = false }, userViewModel = userViewModel, onSignOut = onSignOut)
+            SettingsModal(
+                onDismiss = { showSettings = false },
+                userViewModel = userViewModel,
+                onSignOut = onSignOut
+            )
         }
 
         // show outfit modal
@@ -174,31 +174,11 @@ fun MyOutfitsScreen(
             )
         }
 
-        // navigate to sign up and sign in screens
-//        Column(
-//            modifier = Modifier
-//                .align(alignment = Alignment.TopStart)
-//                .padding(bottom = 16.dp)
-//        ) {
-//            Button(
-//                onClick = { onNavigateToSignUpScreen() },
-//                modifier = Modifier.width(100.dp)
-//            ) {
-//                Text("Sign Up")
-//            }
-//            Button(
-//                onClick = { onNavigateToSignInScreen() },
-//                modifier = Modifier.width(100.dp)
-//            ) {
-//                Text("Sign In")
-//            }
-//        }
-
         if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
             // Exit delete mode
             FloatingActionButton(
                 onClick = { outfitsViewModel.toggleDeleteState(DeletionStates.Inactive.name) },
-                containerColor = Color.LightGray.copy(alpha = 0.75f),
+                containerColor = LightPeachFuzz.copy(alpha = 0.9f),
                 elevation = FloatingActionButtonDefaults.elevation(
                     defaultElevation = 0.dp,
                     pressedElevation = 0.dp
@@ -212,11 +192,16 @@ fun MyOutfitsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    Text("Cancel")
+                    Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
+
+                    Spacer(Modifier.size(10.dp))
+
                     Icon(
-                        imageVector = Icons.Outlined.Clear,
+                        painter = painterResource(R.drawable.clear),
                         contentDescription = "Exit delete mode",
-                        tint = Color.Black
+                        tint = Color.Black,
+                        modifier = Modifier
+                            .size(20.dp)
                     )
                 }
             }
@@ -244,11 +229,16 @@ fun MyOutfitsScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    Text("Delete", color = Color.White)
+                    Text("Delete", color = Color.White, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
+
+                    Spacer(Modifier.size(10.dp))
+
                     Icon(
-                        imageVector = Icons.Filled.Delete,
+                        painter = painterResource(R.drawable.delete),
                         contentDescription = "Confirm delete mode",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(22.dp)
                     )
                 }
             }
@@ -292,41 +282,43 @@ private fun PreviewSquare(
             .aspectRatio(1f)
             .padding(squarePadding)
             .clip(MaterialTheme.shapes.small)
-            .background(Color(0xFFF5F5F5)),
+            .background(FloralWhite),
         contentAlignment = Alignment.Center
     ) {
-
         when {
             item == null -> {
-                // placeholder image for an empty slot
                 Image(
                     painter = painterResource(R.drawable.hanger),
                     contentDescription = "Empty slot",
-                    modifier = Modifier.size(iconSize)
+                    modifier = Modifier
+                        .size(35.dp),
+                    contentScale = ContentScale.Fit
                 )
             }
 
             item.itemPhotoUri.isNotBlank() -> {
-                // outfit image
                 Image(
                     painter = rememberAsyncImagePainter(item.itemPhotoUri),
                     contentDescription = item.itemName,
-                    modifier = Modifier.size(iconSize),
-                    contentScale = ContentScale.Crop
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.Fit
                 )
             }
 
             else -> {
-                // placeholder image if outfit photo can't be found
                 Image(
                     painter = painterResource(R.drawable.hanger),
                     contentDescription = "Placeholder for ${item.itemName}",
-                    modifier = Modifier.size(iconSize)
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentScale = ContentScale.Fit
                 )
             }
         }
     }
 }
+
 
 @Composable
 fun OutfitPreviewGrid(
@@ -349,29 +341,6 @@ fun OutfitPreviewGrid(
     }
 }
 
-// TODO: Veda will provide weather section
-//@Composable
-//fun WeatherRow() {
-//    LazyRow (
-//        horizontalArrangement = Arrangement.spacedBy(15.dp),
-//        modifier = Modifier.fillMaxWidth()
-//    ) {
-//        items(7) { index ->
-//            Box (
-//                modifier = Modifier
-//                    .clip(shape = MaterialTheme.shapes.medium)
-//                    .background(Color(0xFFE0E0E0)),
-//            ) {
-//                Text(
-//                    "Weather for Day ${index + 1}",
-//                    modifier = Modifier
-//                        .padding(horizontal = 55.dp, vertical = 20.dp)
-//                )
-//            }
-//        }
-//    }
-//}
-
 @Composable
 fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     // tracks whether tags dropdown is expanded
@@ -387,6 +356,11 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         // favorites filter toggle
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center,
@@ -397,7 +371,10 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 }
             ) {
                 Icon(
-                    imageVector = if (outfitsState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    painter = if (outfitsState.isFavoritesActive)
+                        painterResource(R.drawable.heart_filled_red)
+                    else
+                        painterResource(R.drawable.heart_outline),
                     contentDescription = if (outfitsState.isFavoritesActive) "Remove favorites filter" else "Filter by favorites",
                     tint = if (outfitsState.isFavoritesActive) Color.Red else Color.Black,
                     modifier = Modifier.size(20.dp),
@@ -408,6 +385,11 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         // shuffle button
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
@@ -417,7 +399,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     painter = painterResource(R.drawable.shuffle),
                     contentDescription = "shuffle",
                     tint = Color.Black,
-                    modifier = Modifier.size(20.dp),
+                    modifier = Modifier.size(23.dp),
                 )
             }
         }
@@ -425,13 +407,18 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         // search button
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.toggleSearchState(true) }) {
                 Icon(
-                    imageVector = Icons.Outlined.Search,
+                    painter = painterResource(R.drawable.loupe),
                     contentDescription = "search",
                     modifier = Modifier.size(20.dp),
                     tint = Color.Black
@@ -443,13 +430,18 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         if (outfitsState.isSearchActive) {
             AlertDialog(
                 title = {
-                    Text(text = "Search for an item")
+                    Text(text = "Search for an item", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                 },
                 text = {
                     TextField(
                         value = outfitsState.searchQuery,
                         onValueChange = { it -> outfitsViewModel.updateSearchQuery(it) },
-                        placeholder = { Text("Enter item name") },
+                        placeholder = { Text("Enter item name", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = LightPeachFuzz,
+                            unfocusedContainerColor = LightPeachFuzz,
+                            disabledContainerColor = LightPeachFuzz.copy(alpha = 0.7f)
+                        )
                     )
                 },
                 onDismissRequest = { outfitsViewModel.toggleSearchState(false) },
@@ -458,18 +450,24 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         outfitsViewModel.toggleSearchState(false)
                         outfitsViewModel.applyFilters()
                     }) {
-                        Text(text = "Search")
+                        Text(text = "Search", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                     }
-                }
+                },
+                containerColor = FloralWhite
             )
         }
 
         // tags drop down menu
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz)
-                .padding(horizontal = 10.dp, vertical = 14.dp),
+                .padding(horizontal = 15.dp, vertical = 14.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -479,8 +477,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             ) {
                 Text(
                     text = "Tags",
-                    fontFamily = Google_Sans_Flex,
-                    fontSize = 15.sp,
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 12.sp,
                     color = Color.Black,
                 )
 
@@ -497,14 +496,16 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                offset = DpOffset(x = -10.dp, y = 15.dp)
+                containerColor = GoldenApricot,
+                modifier = Modifier
+                    .height(450.dp)
             ) {
                 // note: outfitsState.allTags is the master list of tags/types
                 outfitsState.tags
                     .sortedByDescending { it in outfitsState.activeTags }
                     .forEach { tag ->
                         DropdownMenuItem(
-                            text = { Text(tag) },
+                            text = { Text(tag, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
                             onClick = {
                                 if (tag in outfitsState.activeTags) {
                                     outfitsViewModel.removeFromActiveTags(tag)
@@ -515,20 +516,20 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                             trailingIcon = {
                                 if (tag in outfitsState.activeTags) {
                                     Icon(
-                                        Icons.Outlined.Clear,
+                                        painter = painterResource(R.drawable.clear),
                                         contentDescription = "Remove tag",
                                         tint = Color.Black,
                                         modifier = Modifier
-                                            .size(20.dp)
+                                            .size(15.dp)
                                             .weight(.25f),
                                     )
                                 } else {
                                     Icon(
-                                        Icons.Outlined.Add,
+                                        painter = painterResource(R.drawable.add),
                                         contentDescription = "Add tag",
                                         tint = Color.Black,
                                         modifier = Modifier
-                                            .size(20.dp)
+                                            .size(15.dp)
                                             .weight(.25f),
                                     )
                                 }
@@ -542,6 +543,11 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         // Enter deletion candidate state/confirm delete state
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
@@ -557,7 +563,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         ).show()
                     }) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            painter = painterResource(R.drawable.delete),
                             contentDescription = "Enter deletion candidate state",
                             tint = Color.Black,
                             modifier = Modifier.size(20.dp)
@@ -571,7 +577,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         enabled = outfitsState.isDeleteActive == DeletionStates.Inactive.name
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            painter = painterResource(R.drawable.delete),
                             contentDescription = "Inactive delete icon during active delete state",
                             tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
@@ -585,7 +591,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         enabled = outfitsState.isDeleteActive == DeletionStates.Inactive.name
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            painter = painterResource(R.drawable.delete),
                             contentDescription = "Placeholder during alert dialog composition",
                             tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
@@ -598,58 +604,72 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         // clear filters button
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.clearFilters() }) {
                 Icon(
-                    imageVector = Icons.Outlined.Clear,
+                    painter = painterResource(R.drawable.clear),
                     contentDescription = "clear filters",
                     tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(17.dp)
                 )
             }
         }
     }
 }
 
-    // grid of outfits currently shown in outfits
-    @Composable
-    fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
-        if (outfitsState.isFiltering) {
-            CircularProgressIndicator(
-                modifier = Modifier.padding(32.dp)
-            )
-        } else if (outfitsState.filteredOutfits.isEmpty()) {
-            Text(
-                text = "No outfits found.",
-                fontFamily = Kudryashev_Display_Sans_Regular,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 20.sp,
-                modifier = Modifier.padding(16.dp)
-            )
-        } else {
-            LazyVerticalStaggeredGrid(
-                columns = StaggeredGridCells.Fixed(2),
-                modifier = Modifier.fillMaxWidth(),
-                verticalItemSpacing = 8.dp,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(outfitsState.filteredOutfits) { outfit ->
-                    // load the items for this outfit from the ViewModel
-                    var items by remember { mutableStateOf<List<ItemEntry>>(emptyList()) }
+// grid of outfits currently shown in outfits
+@Composable
+fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
+    if (outfitsState.isFiltering) {
+        CircularProgressIndicator(
+            modifier = Modifier.padding(32.dp)
+        )
+    } else if (outfitsState.filteredOutfits.isEmpty()) {
+        Text(
+            text = "No outfits found.",
+            fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.SemiBold,
+            fontSize = 20.sp,
+            modifier = Modifier.padding(16.dp)
+        )
+    } else {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = Modifier.fillMaxWidth(),
+            verticalItemSpacing = 0.dp,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            items(outfitsState.filteredOutfits) { outfit ->
+                // load the items for this outfit from the ViewModel
+                var items by remember { mutableStateOf<List<ItemEntry>>(emptyList()) }
 
-                    LaunchedEffect(outfit.outfitId) {
-                        items = outfitsViewModel.getItemsList(outfit.outfitId)
-                    }
+                LaunchedEffect(outfit.outfitId) {
+                    items = outfitsViewModel.getItemsList(outfit.outfitId)
+                }
 
+                Box(
+                    modifier = Modifier
+                        .padding(bottom = 10.dp)
+                ) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
                             .height(230.dp)
+                            .shadow(
+                                elevation = 3.dp,
+                                shape = MaterialTheme.shapes.medium,
+                                clip = false
+                            )
                             .clip(MaterialTheme.shapes.medium)
-                            .background(Color(0xFFE0E0E0))
+                            .background(LightPeachFuzz)
                             .clickable(
                                 enabled = outfitsState.isDeleteActive != DeletionStates.Confirmed.name,
                                 onClick = {
@@ -668,46 +688,44 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         // outfit name
                         Text(
                             text = outfit.outfitName,
-                            style = MaterialTheme.typography.bodyMedium,
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
                             maxLines = 2,
                             modifier = Modifier
                                 .align(Alignment.TopStart)
                                 .padding(start = 12.dp, top = 8.dp, end = 45.dp)
                         )
 
-                        // icon: heart or check
+                        // icon: heart or delete selection
                         if (outfitsState.isDeleteActive == DeletionStates.Inactive.name) {
-                            // favorite toggle
                             IconButton(
                                 onClick = { outfitsViewModel.toggleFavoritesProperty(outfit) },
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
-                                    .padding(top = 8.dp, end = 10.dp)
+                                    .padding(top = 10.dp, end = 10.dp)
                                     .size(24.dp)
                             ) {
                                 Icon(
-                                    imageVector = if (outfit.isFavorite)
-                                        Icons.Filled.Favorite
+                                    painter = if (outfit.isFavorite)
+                                        painterResource(R.drawable.heart_filled_red)
                                     else
-                                        Icons.Outlined.FavoriteBorder,
+                                        painterResource(R.drawable.heart_outline),
                                     contentDescription = if (outfit.isFavorite)
                                         "Remove item from favorites"
                                     else
                                         "Add item to favorites",
-                                    tint = if (outfit.isFavorite) Color.Red else Color.Black
+                                    tint = if (outfit.isFavorite) Color.Red else Color.Black,
+                                    modifier = Modifier.size(20.dp)
                                 )
                             }
                         } else if (outfitsState.isDeleteActive == DeletionStates.Active.name) {
-                            // deletion candidate icon
                             Icon(
-                                imageVector = if (outfit.isDeletionCandidate)
-                                    Icons.Filled.CheckCircle
-                                else
-                                    Icons.Outlined.CheckCircle,
+                                painter = painterResource(R.drawable.delete),
                                 contentDescription = if (outfit.isDeletionCandidate)
                                     "Remove item from deletion candidates"
                                 else
                                     "Add item to deletion candidates",
+                                tint = if (outfit.isDeletionCandidate) Color.Red else Color.Gray,
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)
                                     .padding(top = 6.dp, end = 6.dp)
@@ -733,9 +751,10 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     }
                 }
             }
+        }
 
-            if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
-                DeleteOutfitDialog(outfitsViewModel)
-            }
+        if (outfitsState.isDeleteActive == DeletionStates.Confirmed.name) {
+            DeleteOutfitDialog(outfitsViewModel)
         }
     }
+}

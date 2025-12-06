@@ -35,19 +35,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.ui.components.SimpleHeader
 import com.cs407.fitfolio.ui.components.WeatherDataChip
-import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
@@ -58,10 +55,6 @@ import androidx.compose.ui.platform.LocalContext
 import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
-import com.cs407.fitfolio.data.ItemOutfitRelation
-import com.cs407.fitfolio.data.OutfitDao
-import com.cs407.fitfolio.data.OutfitEntry
-import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
@@ -204,7 +197,7 @@ fun MyWardrobeScreen(
                         }
                     }) {
                         Icon(
-                            painter = painterResource(R.drawable.add),
+                            painter = painterResource(R.drawable.add_nav_thin),
                             contentDescription = "add outfit",
                             tint = Color.Black,
                             modifier = Modifier.size(20.dp),
