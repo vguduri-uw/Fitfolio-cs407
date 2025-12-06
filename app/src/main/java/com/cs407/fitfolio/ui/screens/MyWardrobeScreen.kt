@@ -116,7 +116,7 @@ fun MyWardrobeScreen(
     val allItems = closetState.filteredItems.takeIf { !it.isNullOrEmpty() } ?: closetState.items
 
     // Load wardrobe items by carouselType
-    LaunchedEffect(allItems) {
+    LaunchedEffect(Unit) {
         wardrobeViewModel.loadWardrobe(
             headwear = allItems.filter { it.carouselType == CarouselTypes.HEADWEAR },
             topwear = allItems.filter { it.carouselType == CarouselTypes.TOPWEAR },
@@ -319,8 +319,7 @@ fun ActionButtonsRow(
                         bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
                         shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
                     )
-                },
-                enabled = itemsToAdd.isNotEmpty()
+                }
             ) {
                 Icon(
                     painter = painterResource(R.drawable.shuffle),

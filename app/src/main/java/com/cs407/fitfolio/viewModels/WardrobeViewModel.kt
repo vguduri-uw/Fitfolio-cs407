@@ -191,8 +191,6 @@ class WardrobeViewModel(
         )
         _wardrobeState.value = newState
     }
-    private val _shuffledItems = MutableStateFlow<Map<CarouselTypes, List<ItemEntry>>>(emptyMap())
-    val shuffledItems = _shuffledItems.asStateFlow()
 
     fun shuffleItems(
         headwearList: List<ItemEntry>,
@@ -200,14 +198,13 @@ class WardrobeViewModel(
         bottomwearList: List<ItemEntry>,
         shoesList: List<ItemEntry>
     ) {
-        _shuffledItems.value = mapOf(
-            CarouselTypes.HEADWEAR to headwearList.shuffled(),
-            CarouselTypes.TOPWEAR to topwearList.shuffled(),
-            CarouselTypes.BOTTOMWEAR to bottomwearList.shuffled(),
-            CarouselTypes.FOOTWEAR to shoesList.shuffled(),
+        loadWardrobe(
+            headwear = headwearList.shuffled(),
+            topwear = topwearList.shuffled(),
+            bottomwear = bottomwearList.shuffled(),
+            shoes = shoesList.shuffled()
         )
     }
-
 
     fun dressMe(
         context: Context,
