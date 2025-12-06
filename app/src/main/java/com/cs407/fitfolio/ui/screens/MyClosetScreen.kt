@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -54,6 +55,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -267,6 +269,9 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     var expanded by remember { mutableStateOf(false) }
     var showSearchDialog by remember { mutableStateOf(false) }
 
+    // Context for Toast messages
+    val context = LocalContext.current
+
     Row(
         horizontalArrangement = Arrangement.SpaceBetween,
         modifier = Modifier.fillMaxWidth(),
@@ -430,7 +435,14 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         ) {
             when (closetState.isDeleteActive) {
                 DeletionStates.Inactive.name -> {
-                    IconButton(onClick = { closetViewModel.toggleDeleteState(DeletionStates.Active.name) }) {
+                    IconButton(onClick = {
+                        closetViewModel.toggleDeleteState(DeletionStates.Active.name)
+                        Toast.makeText(
+                            context,
+                            "Select all items to delete, then press Delete. Otherwise, press Cancel.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }) {
                         Icon(
                             imageVector = Icons.Outlined.Delete,
                             contentDescription = "Enter deletion candidate state",
