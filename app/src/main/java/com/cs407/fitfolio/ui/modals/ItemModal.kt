@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
@@ -53,6 +54,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -213,7 +215,13 @@ fun IconBox (
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(selectedItemType)
+                        Text(
+                            text = selectedItemType,
+                            softWrap = true,
+                            maxLines = 3,
+                            modifier = Modifier.widthIn(max = 100.dp),
+                            overflow = TextOverflow.Ellipsis,
+                            )
                         Icon(
                             imageVector = Icons.Filled.ArrowDropDown,
                             contentDescription = "Item type dropdown",
@@ -233,7 +241,11 @@ fun IconBox (
                                 expanded = false
                             },
                             text = {
-                                Row {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
                                         "Add Item Type",
                                         color = Color(0xFF2E7D32)
@@ -261,7 +273,13 @@ fun IconBox (
                                 },
                                 text = {
                                     Row {
-                                        Text(option)
+                                        Text(
+                                            option,
+                                            modifier = Modifier.weight(1f),
+                                            softWrap = true,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
                                         if (option == selectedItemType) {
                                             Icon(
                                                 imageVector = Icons.Filled.Check,
