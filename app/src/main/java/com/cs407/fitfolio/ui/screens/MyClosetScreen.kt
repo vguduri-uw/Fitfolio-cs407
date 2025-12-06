@@ -607,7 +607,6 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         Text(
             "No items found.",
             fontFamily = Kudryashev_Display_Sans_Regular,
-            fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             modifier = Modifier
                 .padding(16.dp)

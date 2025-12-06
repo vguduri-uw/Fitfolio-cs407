@@ -450,7 +450,7 @@ fun AddScreen(
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Save to Closet", fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.Bold, fontSize = 15.sp))
+                    fontWeight = FontWeight.Bold, fontSize = 15.sp)
             }
 
             Spacer(Modifier.height(12.dp))
