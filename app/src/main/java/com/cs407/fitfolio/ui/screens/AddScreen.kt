@@ -235,206 +235,220 @@ fun AddScreen(
         }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
-        //show the selected/taken photo
+    if (isUploading) {
         Box(
             modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFECECEC)),
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(
-                onClick = { showInfo = true },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Info,
-                    contentDescription = "Info for camera use",
-                    tint = Color.Black
-                )
-            }
-
-            if (showInfo) {
-                InformationModal(
-                    onDismiss = { showInfo = false },
-                    screen = "Add"
-                )
-            }
-
-            if (selectedImageUri == null) {
-                Text("No image selected yet")
-            } else {
-                AsyncImage(
-                    model = selectedImageUri,
-                    contentDescription = "Photo $selectedImageUri",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .aspectRatio(aspectRatio),
-                    contentScale = ContentScale.Fit,
-                    onSuccess = {
-                        val w = it.result.drawable.intrinsicWidth
-                        val h = it.result.drawable.intrinsicHeight
-                        if (w > 0 && h > 0) {
-                            val r = w.toFloat() / h.toFloat()
-                            aspectRatio = maxOf(r, 0.55f)
-                        }
-                    }
-                )
-            }
+            CircularProgressIndicator(color = Color.White)
         }
+    } else {
 
-        Spacer(Modifier.height(12.dp))
-
-        //two button: upload & take photo
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            OutlinedButton(
-                onClick = { galleryLauncher.launch("image/*") },
-                modifier = Modifier.weight(1f)
-            ) { Text("Upload") }
-
-            Button(
-                onClick = {
-                    val permissionStatus = ContextCompat.checkSelfPermission(
-                        context,
-                        Manifest.permission.CAMERA
-                    )
-
-                    if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
-                        val uri = createImageUri(context)
-                        cameraImageUri = uri
-                        cameraLauncher.launch(uri)
-                    } else {
-                        cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
-                    }
-                },
-                modifier = Modifier.weight(1f)
-            ) { Text("Take Photo") }
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        Row(
+        Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 4.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
-            verticalAlignment = Alignment.CenterVertically
+                .fillMaxSize()
+                .padding(horizontal = 16.dp)
         ) {
-            // Item type dropdown menu
-            ItemTypeDropdown(
-                selectedItemType = selectedItemType,
-                allItemTypes = availableItemTypes,
-                onItemTypeSelected = { selectedItemType = it },
-                modifier = Modifier.weight(1f)
-            )
-
-            // Carousel type dropdown menu
-            CarouselTypeDropdown(
-                selectedCarouselType = selectedCarouselType,
-                allCarouselTypes = carouselTypes,
-                onCarouselTypeSelected = { selectedCarouselType = it },
-                modifier = Modifier.weight(1f)
-            )
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        // Save button
-        Button(
-            onClick = {
-                if (selectedImageUri == null) {
-                    Toast.makeText(
-                        context,
-                        "Please upload or take a photo first.",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    return@Button
-                }
-
-                scope.launch {
-                    // upload photo to imgbb
-                    isUploading = true
-                    val hostedUrl = uploadToImgbb(selectedImageUri!!, context)
-
-                    if (hostedUrl == null) {
-                        Toast.makeText(context, "Could not upload image. Please try again.", Toast.LENGTH_LONG).show()
-                        isUploading = false
-                        return@launch
-                    }
-
-                    // remove background from item photo
-                    var cleanedUrl = closetViewModel.removeBackground(hostedUrl)
-                    if (cleanedUrl == null) {
-                        cleanedUrl = hostedUrl
-                        Toast.makeText(context, "Could not remove background from image.", Toast.LENGTH_LONG).show()
-                    }
-
-                    // add item to closet
-                    val itemId = closetViewModel.addItem(
-                        name = "New Item",
-                        type = selectedItemType,
-                        carouselType = selectedCarouselType,
-                        description = "Created from Add Page",
-                        tags = emptyList(),
-                        isFavorites = false,
-                        photoUri = cleanedUrl
-                    )
-                    isUploading = false
-
-                    if (itemId > 0) {
-                        createdItemId = itemId
-                        Toast.makeText(context, "Item saved to closet.", Toast.LENGTH_SHORT).show()
-                        showItemModal = true
-                    } else {
-                        saveError = true
-                    }
-                }
-            },
-            enabled = !isUploading && selectedItemType.isNotEmpty(),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Text("Save to Closet")
-        }
-
-        Spacer(Modifier.height(12.dp))
-
-        if (isUploading) {
+            //show the selected/taken photo
             Box(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color.Black.copy(alpha = 0.4f)),
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color(0xFFECECEC)),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator(color = Color.White)
-            }
-        }
+                IconButton(
+                    onClick = { showInfo = true },
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(top = 8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = "Info for camera use",
+                        tint = Color.Black
+                    )
+                }
 
-        if (showItemModal) {
-            ItemModal(
-                closetViewModel = closetViewModel,
-                outfitsViewModel = outfitsViewModel,
-                itemId = createdItemId,
-                onDismiss = {
-                    showItemModal = false
-                    reset()
+                if (showInfo) {
+                    InformationModal(
+                        onDismiss = { showInfo = false },
+                        screen = "Add"
+                    )
+                }
+
+                if (selectedImageUri == null) {
+                    Text("No image selected yet")
+                } else {
+                    AsyncImage(
+                        model = selectedImageUri,
+                        contentDescription = "Photo $selectedImageUri",
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .aspectRatio(aspectRatio),
+                        contentScale = ContentScale.Fit,
+                        onSuccess = {
+                            val w = it.result.drawable.intrinsicWidth
+                            val h = it.result.drawable.intrinsicHeight
+                            if (w > 0 && h > 0) {
+                                val r = w.toFloat() / h.toFloat()
+                                aspectRatio = maxOf(r, 0.55f)
+                            }
+                        }
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            //two button: upload & take photo
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                OutlinedButton(
+                    onClick = { galleryLauncher.launch("image/*") },
+                    modifier = Modifier.weight(1f)
+                ) { Text("Upload") }
+
+                Button(
+                    onClick = {
+                        val permissionStatus = ContextCompat.checkSelfPermission(
+                            context,
+                            Manifest.permission.CAMERA
+                        )
+
+                        if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+                            val uri = createImageUri(context)
+                            cameraImageUri = uri
+                            cameraLauncher.launch(uri)
+                        } else {
+                            cameraPermissionLauncher.launch(Manifest.permission.CAMERA)
+                        }
+                    },
+                    modifier = Modifier.weight(1f)
+                ) { Text("Take Photo") }
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Item type dropdown menu
+                ItemTypeDropdown(
+                    selectedItemType = selectedItemType,
+                    allItemTypes = availableItemTypes,
+                    onItemTypeSelected = { selectedItemType = it },
+                    modifier = Modifier.weight(1f)
+                )
+
+                // Carousel type dropdown menu
+                CarouselTypeDropdown(
+                    selectedCarouselType = selectedCarouselType,
+                    allCarouselTypes = carouselTypes,
+                    onCarouselTypeSelected = { selectedCarouselType = it },
+                    modifier = Modifier.weight(1f)
+                )
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            // Save button
+            Button(
+                onClick = {
+                    if (selectedImageUri == null) {
+                        Toast.makeText(
+                            context,
+                            "Please upload or take a photo first.",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        return@Button
+                    }
+
+                    scope.launch {
+                        // upload photo to imgbb
+                        isUploading = true
+                        val hostedUrl = uploadToImgbb(selectedImageUri!!, context)
+
+                        if (hostedUrl == null) {
+                            Toast.makeText(
+                                context,
+                                "Could not upload image. Please try again.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                            isUploading = false
+                            return@launch
+                        }
+
+                        // remove background from item photo
+                        var cleanedUrl = closetViewModel.removeBackground(hostedUrl)
+                        if (cleanedUrl == null) {
+                            cleanedUrl = hostedUrl
+                            Toast.makeText(
+                                context,
+                                "Could not remove background from image.",
+                                Toast.LENGTH_LONG
+                            ).show()
+                        }
+
+                        // add item to closet
+                        val itemId = closetViewModel.addItem(
+                            name = "New Item",
+                            type = selectedItemType,
+                            carouselType = selectedCarouselType,
+                            description = "Created from Add Page",
+                            tags = emptyList(),
+                            isFavorites = false,
+                            photoUri = cleanedUrl
+                        )
+                        isUploading = false
+
+                        if (itemId > 0) {
+                            createdItemId = itemId
+                            Toast.makeText(context, "Item saved to closet.", Toast.LENGTH_SHORT)
+                                .show()
+                            showItemModal = true
+                        } else {
+                            saveError = true
+                        }
+                    }
                 },
-                onNavigateToCalendarScreen = onNavigateToCalendarScreen
-            )
-        } else if (saveError) {
-            Toast.makeText(context, "Item could not be saved. Please try again.", Toast.LENGTH_SHORT).show()
-            saveError = false
+                enabled = !isUploading && selectedItemType.isNotEmpty(),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("Save to Closet")
+            }
+
+            Spacer(Modifier.height(12.dp))
+
+            if (showItemModal) {
+                ItemModal(
+                    closetViewModel = closetViewModel,
+                    outfitsViewModel = outfitsViewModel,
+                    itemId = createdItemId,
+                    onDismiss = {
+                        showItemModal = false
+                        reset()
+                    },
+                    onNavigateToCalendarScreen = onNavigateToCalendarScreen
+                )
+            } else if (saveError) {
+                Toast.makeText(
+                    context,
+                    "Item could not be saved. Please try again.",
+                    Toast.LENGTH_SHORT
+                ).show()
+                saveError = false
+            }
         }
     }
 }
