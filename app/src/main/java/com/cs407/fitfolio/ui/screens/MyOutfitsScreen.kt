@@ -558,7 +558,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                         outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
                         Toast.makeText(
                             context,
-                            "Select outfits, then tap the filled delete icon to confirm deletion.",
+                            "Select all outfits to delete, then press Delete. Otherwise, press Cancel.",
                             Toast.LENGTH_LONG
                         ).show()
                     }) {

@@ -6,12 +6,15 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
@@ -27,8 +30,6 @@ import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -42,6 +43,7 @@ import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -55,6 +57,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -142,6 +145,9 @@ fun IconBox (
     var showAddDialog by remember { mutableStateOf(false) }
     var itemWithNewType: ItemEntry? by remember { mutableStateOf(null) }
     var showDeleteDialog by remember { mutableStateOf(false) }
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
+
+    // scope for calling suspend functions
     val scope = rememberCoroutineScope()
 
     // Update selected item type whenever it changes
@@ -215,7 +221,13 @@ fun IconBox (
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Text(selectedItemType)
+                        Text(
+                            text = selectedItemType,
+                            softWrap = true,
+                            maxLines = 3,
+                            modifier = Modifier.widthIn(max = 100.dp),
+                            overflow = TextOverflow.Ellipsis,
+                            )
                         Icon(
                             imageVector = Icons.Filled.ArrowDropDown,
                             contentDescription = "Item type dropdown",
@@ -235,7 +247,11 @@ fun IconBox (
                                 expanded = false
                             },
                             text = {
-                                Row {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
                                     Text(
                                         "Add Item Type",
                                         color = Color(0xFF2E7D32)
@@ -263,7 +279,13 @@ fun IconBox (
                                 },
                                 text = {
                                     Row {
-                                        Text(option)
+                                        Text(
+                                            option,
+                                            modifier = Modifier.weight(1f),
+                                            softWrap = true,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
                                         if (option == selectedItemType) {
                                             Icon(
                                                 imageVector = Icons.Filled.Check,
@@ -335,7 +357,6 @@ fun IconBox (
                 .clip(MaterialTheme.shapes.medium)
                 .background(Color.White)
                 .fillMaxWidth()
-                .height(300.dp)
         ) {
             // Item photo
             if (item.itemPhotoUri.isNotEmpty()) {
@@ -343,8 +364,16 @@ fun IconBox (
                     model = item.itemPhotoUri,
                     contentDescription = item.itemName,
                     modifier = Modifier
-                        .fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                        .fillMaxWidth()
+                        .aspectRatio(aspectRatio),
+                    contentScale = ContentScale.Fit,
+                    onSuccess = {
+                        val w = it.result.drawable.intrinsicWidth
+                        val h = it.result.drawable.intrinsicHeight
+                        if (w > 0 && h > 0) {
+                            aspectRatio = w.toFloat() / h.toFloat()
+                        }
+                    }
                 )
             } else {
                 Image(
@@ -354,29 +383,6 @@ fun IconBox (
                         .size(180.dp)
                         .align(Alignment.Center)
                 )
-            }
-            // TODO: verify if we want item photo to be editable
-            FloatingActionButton(
-                onClick = { /*closetViewModel.editItemPhoto(item, null)*/ },
-                containerColor = Color(0xFFE0E0E0).copy(alpha = 0.75f),
-                elevation = FloatingActionButtonDefaults.elevation(
-                    defaultElevation = 0.dp,
-                    pressedElevation = 0.dp
-                ),
-                modifier = Modifier
-                    .align(alignment = Alignment.BottomEnd)
-                    .padding(8.dp)
-            ) {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.padding(8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Edit,
-                        contentDescription = "Replace item photo"
-                    )
-                }
             }
         }
 
@@ -558,7 +564,6 @@ fun ItemInformation(
                         onValueChange = { description = it },
                         enabled = isEditingDescription,
                         textStyle = TextStyle(
-                            //fontSize = 15.sp,
                             color = Color.Black
                         ),
                         modifier = Modifier
@@ -689,7 +694,6 @@ private fun TagsEditableCard(
 
     // local selection buffer for tags; sync when item changes
     var selectedTags by remember(item.itemId) { mutableStateOf(item.itemTags.toSet()) }
-    LaunchedEffect(item.itemTags) { selectedTags = item.itemTags.toSet() }
 
     Box(
         modifier = Modifier

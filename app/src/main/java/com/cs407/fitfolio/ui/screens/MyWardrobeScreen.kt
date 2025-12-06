@@ -1,7 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
 import android.util.Log
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Arrangement
@@ -49,17 +48,15 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
-import coil.compose.rememberAsyncImagePainter
+import coil.compose.AsyncImage
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
-import com.cs407.fitfolio.data.ItemOutfitRelation
-import com.cs407.fitfolio.data.OutfitDao
-import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.CarouselTypes
-import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
@@ -380,6 +377,8 @@ fun ClothingScroll(
 
 @Composable
 fun ClothingItemCard(item: ItemEntry) {
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
+
     Box(
         modifier = Modifier
             .size(150.dp)
@@ -388,22 +387,31 @@ fun ClothingItemCard(item: ItemEntry) {
         contentAlignment = Alignment.Center
     ) {
         if (item.itemPhotoUri.isNotEmpty()) {
-            Image(
-                painter = rememberAsyncImagePainter(item.itemPhotoUri),
+            AsyncImage(
+                model = item.itemPhotoUri,
                 contentDescription = item.itemName,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .aspectRatio(aspectRatio),
+                contentScale = ContentScale.Fit,
+                onSuccess = {
+                    val w = it.result.drawable.intrinsicWidth
+                    val h = it.result.drawable.intrinsicHeight
+                    if (w > 0 && h > 0) {
+                        val r = w.toFloat() / h.toFloat()
+                        aspectRatio = maxOf(r, 0.55f)
+                    }
+                }
             )
         } else {
             // fallback if no image is available
-            Text(item.itemName)
+            if (item.itemId != -1) { // do not show icon for optional slot
+                Icon(
+                    painter = painterResource(R.drawable.hanger),
+                    contentDescription = "No item image found"
+                )
+            }
         }
-//        Image(
-//            painter = painterResource(id = R.drawable.shirt),
-//            contentDescription = item.itemName,
-//            contentScale = ContentScale.Crop,
-//            modifier = Modifier.fillMaxSize()
-//        )
     }
 }
 

@@ -412,7 +412,6 @@ private fun TagsEditableCard(
 
     // local selection buffer for tags; sync when outfit changes
     var selectedTags by remember(outfit.outfitId) { mutableStateOf(outfit.outfitTags.toSet()) }
-    LaunchedEffect(outfit.outfitTags) { selectedTags = outfit.outfitTags.toSet() }
 
     Box(
         modifier = Modifier
