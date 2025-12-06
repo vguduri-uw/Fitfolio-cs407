@@ -142,6 +142,8 @@ fun MyOutfitsScreen(
             OutfitGrid(outfitsState, outfitsViewModel)
         }
 
+        Spacer(modifier = Modifier.size(10.dp))
+
         // settings button
         IconButton(
             onClick = { showSettings = true }, // TODO: add settings onClick lambda

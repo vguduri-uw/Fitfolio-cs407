@@ -34,6 +34,9 @@ import com.cs407.fitfolio.ui.theme.RustBrown
 @Composable
 fun TopHeader (title: String) {
     var showInformation by remember { mutableStateOf(false) }
+
+    Spacer(modifier = Modifier.size(10.dp))
+
     Image(
         // todo: replace with actual profile image
         painter = painterResource(id = R.drawable.user),
