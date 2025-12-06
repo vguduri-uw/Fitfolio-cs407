@@ -19,7 +19,11 @@ private val DarkColorScheme = darkColorScheme(
     secondary = GoldenApricot,
     onSecondary = FloralWhite,
     tertiary = ChocolateBrown,
-    onTertiary = FloralWhite
+    onTertiary = FloralWhite,
+    background = FloralWhite,
+    onBackground = TrueBlack,
+    surface = FloralWhite,
+    onSurface = TrueBlack
 )
 
 private val LightColorScheme = lightColorScheme(
@@ -29,7 +33,7 @@ private val LightColorScheme = lightColorScheme(
     onSecondary = FloralWhite,
     tertiary = RustBrown,
     onTertiary = FloralWhite,
-    background = TrueWhite,
+    background = FloralWhite,
     onBackground = TrueBlack,
     surface = FloralWhite,
     onSurface = TrueBlack
