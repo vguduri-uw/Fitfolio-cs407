@@ -52,6 +52,8 @@ import com.cs407.fitfolio.viewModels.ClosetViewModelFactory
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModelFactory
 import com.cs407.fitfolio.viewModels.UserViewModel
+import com.cs407.fitfolio.viewModels.WardrobeViewModel
+import com.cs407.fitfolio.viewModels.WardrobeViewModelFactory
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 
 // Composable function responsible for the main app navigation
@@ -73,6 +75,9 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
     )
     val weatherViewModel: WeatherViewModel = viewModel()
 
+    val wardrobeViewModel: WardrobeViewModel = viewModel(
+        factory = WardrobeViewModelFactory(db, userViewModel)
+    )
     //Veda: location permission
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -174,7 +179,8 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     closetViewModel = closetViewModel,
                     weatherViewModel = weatherViewModel,
                     userViewModel = userViewModel,
-                    outfitsViewModel = outfitsViewModel
+                    outfitsViewModel = outfitsViewModel,
+                    wardrobeViewModel = wardrobeViewModel
                 )
             }
             // Defines the "add" route and what UI to display there

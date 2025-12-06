@@ -80,6 +80,14 @@ data class OutfitTag(
     @PrimaryKey(autoGenerate = true) val tagId: Int = 0,
     val outfitTag: String
 )
+@Entity(tableName = "blocked_combinations")
+data class BlockedCombination(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val headwearId: Int?,
+    val topwearId: Int?,
+    val bottomwearId: Int?,
+    val shoesId: Int?
+)
 
 // Converter for storing List<String> in Room
 class Converters {
@@ -266,6 +274,7 @@ interface UserDao {
 
     @Query("UPDATE user SET newUser = :newUser WHERE userId = :id")
     suspend fun updateUserFlag(id: Int, newUser: Boolean)
+
     @Query("UPDATE user SET avatarUri = :avatarUri WHERE userId = :id")
     suspend fun updateAvatar(id: Int, avatarUri: String)
 
@@ -468,6 +477,16 @@ interface OutfitDao {
     suspend fun getDatesForOutfit(outfitId: Int): List<Long>
 }
 
+//remove combinations
+@Dao
+interface BlockedCombinationDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCombination(combination: BlockedCombination)
+
+    @Query("SELECT * FROM blocked_combinations")
+    suspend fun getAllBlockedCombinations(): List<BlockedCombination>
+}
+
 // Delete queries
 @Dao
 interface DeleteDao {
@@ -537,7 +556,8 @@ interface DeleteDao {
         OutfitTag::class,
         UserItemTypeRelation::class,
         UserItemTagsRelation::class,
-        UserOutfitsTagsRelation::class
+        UserOutfitsTagsRelation::class,
+        BlockedCombination::class
     ],
     version = 7
 )
@@ -547,6 +567,8 @@ abstract class FitfolioDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
     abstract fun outfitDao(): OutfitDao
     abstract fun deleteDao(): DeleteDao
+
+    abstract fun blockedCombinationDao(): BlockedCombinationDao
 
     companion object {
         @Volatile
