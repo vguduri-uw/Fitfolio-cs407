@@ -85,7 +85,7 @@ fun MyWardrobeScreen(
     val context = LocalContext.current
     val selectedItems by closetViewModel.selectedItems.collectAsStateWithLifecycle()
     val db = FitfolioDatabase.getDatabase(context)
-    val categories = CarouselTypes.entries
+    val categories = CarouselTypes.entries.filter { it != CarouselTypes.DEFAULT }
 
     var showOutfitModal by remember { mutableStateOf(false) }
     var createdOutfitId by remember { mutableIntStateOf(-1) }
@@ -142,6 +142,7 @@ fun MyWardrobeScreen(
                             CarouselTypes.TOPWEAR -> centeredTopwear = centeredItem
                             CarouselTypes.BOTTOMWEAR ->  centeredBottomwear = centeredItem
                             CarouselTypes.FOOTWEAR ->  centeredShoes = centeredItem
+                            CarouselTypes.DEFAULT -> null
                         }
                     }
                 )
