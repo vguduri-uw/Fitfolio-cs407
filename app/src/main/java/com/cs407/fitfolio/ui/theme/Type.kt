@@ -11,30 +11,29 @@ import com.cs407.fitfolio.R
 
 // Typography for our app (custom font)
 val FitFolioFontFamily = FontFamily(
-    Font(R.font.kudryashev_display_sans_regular, FontWeight.Normal),
     Font(R.font.kudryashev_display_sans_regular, FontWeight.Bold)
 )
 
 val Typography = Typography(
-    displayLarge = TextStyle(fontFamily = FitFolioFontFamily),
-    displayMedium = TextStyle(fontFamily = FitFolioFontFamily),
-    displaySmall = TextStyle(fontFamily = FitFolioFontFamily),
+    displayLarge = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    displayMedium = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    displaySmall = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
 
-    headlineLarge = TextStyle(fontFamily = FitFolioFontFamily),
-    headlineMedium = TextStyle(fontFamily = FitFolioFontFamily),
-    headlineSmall = TextStyle(fontFamily = FitFolioFontFamily),
+    headlineLarge = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    headlineMedium = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    headlineSmall = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
 
-    titleLarge = TextStyle(fontFamily = FitFolioFontFamily),
-    titleMedium = TextStyle(fontFamily = FitFolioFontFamily),
-    titleSmall = TextStyle(fontFamily = FitFolioFontFamily),
+    titleLarge = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    titleMedium = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    titleSmall = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
 
-    bodyLarge = TextStyle(fontFamily = FitFolioFontFamily),
-    bodyMedium = TextStyle(fontFamily = FitFolioFontFamily),
-    bodySmall = TextStyle(fontFamily = FitFolioFontFamily),
+    bodyLarge = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    bodyMedium = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    bodySmall = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
 
-    labelLarge = TextStyle(fontFamily = FitFolioFontFamily),
-    labelMedium = TextStyle(fontFamily = FitFolioFontFamily),
-    labelSmall = TextStyle(fontFamily = FitFolioFontFamily),
+    labelLarge = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    labelMedium = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
+    labelSmall = TextStyle(fontFamily = FitFolioFontFamily, fontWeight = FontWeight.Bold),
 )
 
 // Set of Material typography styles to start with
