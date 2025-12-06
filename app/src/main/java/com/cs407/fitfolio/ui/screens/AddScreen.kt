@@ -65,6 +65,7 @@ import com.cs407.fitfolio.BuildConfig
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import kotlinx.coroutines.Dispatchers
@@ -105,7 +106,7 @@ fun ItemTypeDropdown(
     ) {
         OutlinedTextField(
             placeholder = {
-                Text("Choose or create an item type.",
+                Text("Choose or create an item type",
                     fontFamily = Kudryashev_Display_Sans_Regular,
                     fontWeight = FontWeight.Bold) },
             value = selectedItemType,
@@ -260,7 +261,7 @@ fun AddScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
+                .background(LightChocolate),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = Color.White)
@@ -270,28 +271,28 @@ fun AddScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
+    ) {
+        //show the selected/taken photo
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.medium)
+                .background(LightPeachFuzz),
+            contentAlignment = Alignment.Center
         ) {
-            //show the selected/taken photo
-            Box(
+            IconButton(
+                onClick = { showInfo = true },
                 modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth()
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFECECEC)),
-                contentAlignment = Alignment.Center
+                    .align(Alignment.TopEnd)
+                    .padding(top = 8.dp)
             ) {
-                IconButton(
-                    onClick = { showInfo = true },
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(top = 8.dp)
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Info,
-                        contentDescription = "Info for camera use",
-                        tint = Color.Black
-                    )
-                }
+                Icon(
+                    imageVector = Icons.Outlined.Info,
+                    contentDescription = "Info for camera use",
+                    tint = Color.Black
+                )
+            }
 
                 if (showInfo) {
                     InformationModal(
