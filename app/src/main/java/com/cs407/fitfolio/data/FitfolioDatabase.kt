@@ -17,6 +17,7 @@ import androidx.room.Transaction
 import androidx.room.TypeConverter
 import androidx.room.TypeConverters
 import androidx.room.Upsert
+import com.cs407.fitfolio.enums.CarouselTypes
 
 // User table
 @Entity(
@@ -38,6 +39,7 @@ data class ItemEntry(
     @PrimaryKey(autoGenerate = true) val itemId : Int, // the unique id of the item
     var itemName: String,               // the name of the item
     var itemType: String,               // the type of the item
+    var carouselType: CarouselTypes,
     var itemDescription: String,        // the description of the item
     var itemTags: List<String>,         // the tags corresponding to the item
     var isFavorite: Boolean,            // whether or not the item is in favorites
@@ -86,6 +88,12 @@ class Converters {
     @TypeConverter
     fun toStringList(data: String): List<String> =
         if (data.isEmpty()) emptyList() else data.split(",")
+
+    @TypeConverter
+    fun fromCarouselType(type: CarouselTypes): String = type.name
+
+    @TypeConverter
+    fun toCarouselType(data: String): CarouselTypes = CarouselTypes.valueOf(data)
 }
 
 // User <--> Item relation
@@ -528,7 +536,7 @@ interface DeleteDao {
         UserItemTagsRelation::class,
         UserOutfitsTagsRelation::class
     ],
-    version = 4
+    version = 5
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
