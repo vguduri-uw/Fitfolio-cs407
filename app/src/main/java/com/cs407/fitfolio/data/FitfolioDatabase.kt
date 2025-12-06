@@ -83,7 +83,7 @@ data class OutfitTag(
 @Entity(tableName = "blocked_combinations")
 data class BlockedCombination(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
-    val headwearId: Int?,
+    val accessoryId: Int?,
     val topwearId: Int?,
     val bottomwearId: Int?,
     val shoesId: Int?
@@ -559,7 +559,7 @@ interface DeleteDao {
         UserOutfitsTagsRelation::class,
         BlockedCombination::class
     ],
-    version = 8
+    version = 9
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {

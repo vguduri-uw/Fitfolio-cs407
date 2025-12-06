@@ -16,8 +16,15 @@ enum class DefaultItemTypes(val typeName: String, val iconRes: Int) {
     // Bottoms
     JEANS("Jeans", iconRes = R.drawable.jeans),
     PANTS("Pants", iconRes = R.drawable.pants),
-    SHORTS("Shorts", iconRes = R.drawable.shorts), // TODO: update
+    SHORTS("Shorts", iconRes = R.drawable.shorts),
     SKIRTS("Skirts", iconRes = R.drawable.skirt),
+
+
+    // Accessories
+    BAGS("Bags", iconRes = R.drawable.hanger),
+    JEWELRY("Jewlery", iconRes = R.drawable.hanger),
+    SCARVES("Scarves", iconRes = R.drawable.hanger),
+    HATS("Hats", iconRes = R.drawable.hanger),
 
     // Other
     DRESSES("Dresses", iconRes = R.drawable.dress),

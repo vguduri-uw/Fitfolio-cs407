@@ -245,7 +245,6 @@ fun AddScreen(
             CircularProgressIndicator(color = Color.White)
         }
     } else {
-
         Column(
             modifier = Modifier
                 .fillMaxSize()

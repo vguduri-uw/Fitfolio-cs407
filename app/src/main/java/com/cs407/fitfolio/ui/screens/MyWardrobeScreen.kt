@@ -1,7 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
 import android.content.Context
-import android.net.Uri
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -38,7 +37,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -50,22 +48,15 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.wrapContentHeight
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.window.Dialog
-import coil.compose.rememberAsyncImagePainter
-import com.cs407.fitfolio.BuildConfig.FASHN_API_KEY
 import coil.compose.AsyncImage
-import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.OutfitModal
@@ -75,15 +66,6 @@ import com.cs407.fitfolio.viewModels.UserViewModel
 import com.cs407.fitfolio.viewModels.WardrobeState
 import com.cs407.fitfolio.viewModels.WardrobeViewModel
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONArray
-import org.json.JSONObject
 import kotlin.math.abs
 
 @Composable
@@ -118,7 +100,7 @@ fun MyWardrobeScreen(
     // Load wardrobe items by carouselType
     LaunchedEffect(Unit) {
         wardrobeViewModel.loadWardrobe(
-            headwear = allItems.filter { it.carouselType == CarouselTypes.HEADWEAR },
+            accessories = allItems.filter { it.carouselType == CarouselTypes.ACCESSORIES },
             topwear = allItems.filter { it.carouselType == CarouselTypes.TOPWEAR },
             bottomwear = allItems.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
             shoes = allItems.filter { it.carouselType == CarouselTypes.FOOTWEAR }
@@ -138,12 +120,12 @@ fun MyWardrobeScreen(
         categories.forEach { category ->
             val filteredItems = allItems.filter { it.carouselType == category }
 
-            val itemsWithPlaceholder = if (category == CarouselTypes.HEADWEAR && filteredItems.isNotEmpty()) {
+            val itemsWithPlaceholder = if (category == CarouselTypes.ACCESSORIES && filteredItems.isNotEmpty()) {
                 listOf(
                     ItemEntry(
                         itemId = -1,
-                        itemName = "No Headwear",
-                        itemType = "HEADWEAR",
+                        itemName = "No Accessories",
+                        itemType = "",
                         carouselType = category,
                         itemDescription = "",
                         itemTags = emptyList(),
@@ -164,7 +146,7 @@ fun MyWardrobeScreen(
             } else {
                 ClothingScroll(
                     selectedItem = when (category) {
-                        CarouselTypes.HEADWEAR -> wardrobeState.centeredHeadwear
+                        CarouselTypes.ACCESSORIES -> wardrobeState.centeredAccessories
                         CarouselTypes.TOPWEAR -> wardrobeState.centeredTopwear
                         CarouselTypes.BOTTOMWEAR -> wardrobeState.centeredBottomwear
                         CarouselTypes.FOOTWEAR -> wardrobeState.centeredShoes
@@ -235,10 +217,13 @@ fun ActionButtonsRow(
     onOutfitSaved: (Int) -> Unit,
     onSaveError: () -> Unit
 ) {
+    val userState by userViewModel.userState.collectAsState()
+    var isUploading by remember { mutableStateOf(false) }
+
     val itemsToAdd by remember(wardrobeState) {
         derivedStateOf {
             listOfNotNull(
-                wardrobeState.centeredHeadwear,
+                wardrobeState.centeredAccessories,
                 wardrobeState.centeredTopwear,
                 wardrobeState.centeredBottomwear,
                 wardrobeState.centeredShoes
@@ -246,121 +231,154 @@ fun ActionButtonsRow(
         }
     }
 
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        // Add / Save Outfit button
+    if (isUploading) {
         Box(
             modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f)),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(
-                onClick = {
-                    scope.launch {
-                        val currentState = wardrobeViewModel.wardrobeState.value
+            CircularProgressIndicator(color = Color.White)
+        }
+    } else {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Add / Save Outfit button
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color(0xFFE0E0E0)),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = {
+                        scope.launch {
+                            if (itemsToAdd.isEmpty()) {
+                                Toast.makeText(
+                                    context,
+                                    "Select at least one item to save an outfit",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@launch
+                            }
 
-                        if (itemsToAdd.isEmpty()) {
-                            Toast.makeText(context, "Select at least one item to save an outfit", Toast.LENGTH_SHORT).show()
-                            return@launch
-                        }
+                            try {
+                                isUploading = true
+                                val result = wardrobeViewModel.dressMe(
+                                    productUrls = itemsToAdd.map { it.itemPhotoUri },
+                                    modelUrl = userState.avatarUri,
+                                    carouselTypes = itemsToAdd.map { it.carouselType }
+                                )
 
-                        try {
-                            val outfitId = outfitsViewModel.addOutfit(
-                                name = "New Outfit",
-                                description = "Created from My Wardrobe",
-                                tags = emptyList(),
-                                isFavorite = false,
-                                photoUri = "", // optional: could use a snapshot URI of the outfit
-                                itemList = itemsToAdd
-                            )
+                                Log.d("MyWardrobe", "dressMe returned = $result")
 
-                            if (outfitId > 0) {
-                                Toast.makeText(context, "Outfit saved successfully!", Toast.LENGTH_SHORT).show()
-                                onOutfitSaved(outfitId)
-                            } else {
-                                Toast.makeText(context, "Outfit could not be saved.", Toast.LENGTH_SHORT).show()
+                                if (result.isNullOrEmpty()) {
+                                    Toast.makeText(
+                                        context,
+                                        "Could not generate outfit image. Please try again.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    isUploading = false
+                                    return@launch
+                                }
+
+                                val outfitId = outfitsViewModel.addOutfit(
+                                    name = "New Outfit",
+                                    description = "Created from My Wardrobe",
+                                    tags = emptyList(),
+                                    isFavorite = false,
+                                    photoUri = result,
+                                    itemList = itemsToAdd
+                                )
+                                isUploading = false
+
+                                if (outfitId > 0) {
+                                    Toast.makeText(context, "Outfit saved!", Toast.LENGTH_SHORT)
+                                        .show()
+                                    onOutfitSaved(outfitId)
+                                } else {
+                                    onSaveError()
+                                }
+
+                            } catch (e: Exception) {
+                                isUploading = false
                                 onSaveError()
                             }
-                        } catch (e: Exception) {
-                            e.printStackTrace()
-                            Toast.makeText(context, "Error saving outfit: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-                            onSaveError()
                         }
-                    }
-                },
-                enabled = itemsToAdd.isNotEmpty()
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.add),
-                    contentDescription = "save outfit",
-                    tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.width(12.dp))
-
-        // Shuffle button using carouselType
-        Box(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
-            contentAlignment = Alignment.Center
-        ) {
-            IconButton(
-                onClick = {
-                    wardrobeViewModel.shuffleItems(
-                        headwearList = closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
-                        topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                        bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                        shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                    },
+                    enabled = itemsToAdd.isNotEmpty()
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.add),
+                        contentDescription = "save outfit",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.shuffle),
-                    contentDescription = "shuffle",
-                    tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
-                )
             }
-        }
 
-        Spacer(modifier = Modifier.width(12.dp))
-        // Remove combination button
-        Box(
-            modifier = Modifier
-                .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
-            contentAlignment = Alignment.Center
-        ) {
-            IconButton(
-                onClick = {
-                    val allItemsByCategory = mapOf(
-                        CarouselTypes.HEADWEAR to closetState.items.filter { it.carouselType == CarouselTypes.HEADWEAR },
-                        CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                        CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                        CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+            Spacer(modifier = Modifier.width(12.dp))
+
+            // Shuffle button using carouselType
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color(0xFFE0E0E0)),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = {
+                        wardrobeViewModel.shuffleItems(
+                            accessoriesList = closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
+                            topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                            bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                            shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                        )
+                    }
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.shuffle),
+                        contentDescription = "shuffle",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
-
-                    wardrobeViewModel.removeCurrentCombination(allItemsByCategory)
-                    Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
-                },
-                enabled = itemsToAdd.isNotEmpty()
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.minus),
-                    contentDescription = "Remove combination",
-                    tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
-                )
+                }
             }
+
+            Spacer(modifier = Modifier.width(12.dp))
+            // Remove combination button
+            Box(
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(Color(0xFFE0E0E0)),
+                contentAlignment = Alignment.Center
+            ) {
+                IconButton(
+                    onClick = {
+                        val allItemsByCategory = mapOf(
+                            CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
+                            CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                            CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                            CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                        )
+
+                        wardrobeViewModel.removeCurrentCombination(allItemsByCategory)
+                        Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
+                    },
+                    enabled = itemsToAdd.isNotEmpty()
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.minus),
+                        contentDescription = "Remove combination",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            Spacer(modifier = Modifier.weight(1f))
         }
-        Spacer(modifier = Modifier.weight(1f))
     }
 }
 
@@ -380,10 +398,10 @@ fun ClothingScroll(
         derivedStateOf {
             closetItems.filter { item ->
                 val combo = when (category) {
-                    CarouselTypes.HEADWEAR -> listOfNotNull(item, currentState.centeredTopwear, currentState.centeredBottomwear, currentState.centeredShoes)
-                    CarouselTypes.TOPWEAR -> listOfNotNull(currentState.centeredHeadwear, item, currentState.centeredBottomwear, currentState.centeredShoes)
-                    CarouselTypes.BOTTOMWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, item, currentState.centeredShoes)
-                    CarouselTypes.FOOTWEAR -> listOfNotNull(currentState.centeredHeadwear, currentState.centeredTopwear, currentState.centeredBottomwear, item)
+                    CarouselTypes.ACCESSORIES -> listOfNotNull(item, currentState.centeredTopwear, currentState.centeredBottomwear, currentState.centeredShoes)
+                    CarouselTypes.TOPWEAR -> listOfNotNull(currentState.centeredAccessories, item, currentState.centeredBottomwear, currentState.centeredShoes)
+                    CarouselTypes.BOTTOMWEAR -> listOfNotNull(currentState.centeredAccessories, currentState.centeredTopwear, item, currentState.centeredShoes)
+                    CarouselTypes.FOOTWEAR -> listOfNotNull(currentState.centeredAccessories, currentState.centeredTopwear, currentState.centeredBottomwear, item)
                     else -> listOf(item)
                 }.map { it.itemId }.toSet()
 
