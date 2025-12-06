@@ -498,7 +498,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
 
                 Icon(
                     Icons.Outlined.ArrowDropDown,
-                    contentDescription = "Favorites",
+                    contentDescription = "Tags",
                     tint = Color.Black,
                     modifier = Modifier.size(20.dp),
                 )
