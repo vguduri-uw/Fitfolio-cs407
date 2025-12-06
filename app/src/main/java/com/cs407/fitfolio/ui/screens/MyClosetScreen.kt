@@ -22,17 +22,9 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.CheckCircle
-import androidx.compose.material.icons.outlined.Clear
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.FavoriteBorder
-import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +37,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -61,18 +54,22 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.DpOffset
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.components.DeleteItemDialog
 import com.cs407.fitfolio.ui.components.TopHeader
-import com.cs407.fitfolio.enums.DeletionStates
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.theme.DrySage
+import com.cs407.fitfolio.ui.theme.FloralWhite
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.ClosetViewModel
@@ -98,9 +95,11 @@ fun MyClosetScreen(
     // Track whether the settings modal is shown or not
     var showSettings by remember { mutableStateOf(false) }
 
-    Box(modifier = Modifier
-        .fillMaxSize()
-        .padding(horizontal = 8.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(FloralWhite)
+            .padding(horizontal = 8.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -133,9 +132,9 @@ fun MyClosetScreen(
                 onClick = { showSettings = true }
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.Settings,
+                    painter = painterResource(R.drawable.cog),
                     contentDescription = "Settings",
-                    Modifier.size(36.dp)
+                    modifier = Modifier.size(36.dp)
                 )
             }
         }
@@ -162,7 +161,7 @@ fun MyClosetScreen(
             // Exit delete mode
             FloatingActionButton(
                 onClick = { closetViewModel.toggleDeleteState(DeletionStates.Inactive.name) },
-                containerColor = Color.LightGray.copy(alpha = 0.75f),
+                containerColor = LightPeachFuzz.copy(alpha = 0.9f),
                 elevation = FloatingActionButtonDefaults.elevation(
                     defaultElevation = 0.dp,
                     pressedElevation = 0.dp
@@ -176,11 +175,17 @@ fun MyClosetScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    Text("Cancel")
+                    Text(
+                        "Cancel",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
                     Icon(
-                        imageVector = Icons.Outlined.Clear,
+                        painter = painterResource(R.drawable.clear),
                         contentDescription = "Exit delete mode",
-                        tint = Color.Black
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
             }
@@ -208,11 +213,18 @@ fun MyClosetScreen(
                     verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier.padding(8.dp)
                 ) {
-                    Text("Delete", color = Color.White)
+                    Text(
+                        "Delete",
+                        color = Color.White,
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.size(10.dp))
                     Icon(
-                        imageVector = Icons.Filled.Delete,
+                        painter = painterResource(R.drawable.delete),
                         contentDescription = "Confirm delete mode",
-                        tint = Color.White
+                        tint = Color.White,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }
@@ -231,9 +243,10 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     // Scroll state for the item type row
     val scrollState = rememberScrollState()
 
-    Row(modifier = Modifier
-        .horizontalScroll(scrollState)
-        .fillMaxWidth(),
+    Row(
+        modifier = Modifier
+            .horizontalScroll(scrollState)
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -242,7 +255,7 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(color = if (closetState.activeItemType == itemType) Color(0xFFE0E0E0) else Color.Transparent),
+                    .background(color = if (closetState.activeItemType == itemType) LightPeachFuzz else Color.Transparent),
                 contentAlignment = Alignment.Center
             ) {
                 Column(
@@ -259,7 +272,12 @@ fun ItemTypeRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         contentDescription = itemType,
                         modifier = Modifier.size(36.dp)
                     )
-                    Text(itemType)
+                    Text(
+                        itemType,
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp
+                    )
                 }
             }
         }
@@ -284,15 +302,23 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         // Filter by favorites
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = {
                 closetViewModel.toggleFavoritesState()
             }) {
                 Icon(
-                    imageVector = if (closetState.isFavoritesActive) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                    painter = if (closetState.isFavoritesActive)
+                        painterResource(R.drawable.heart_filled_red)
+                    else
+                        painterResource(R.drawable.heart_outline),
                     contentDescription = if (closetState.isFavoritesActive) "Remove favorites filter" else "Filter by favorites",
                     tint = if (closetState.isFavoritesActive) Color.Red else Color.Black,
                     modifier = Modifier.size(20.dp),
@@ -303,12 +329,17 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         // Shuffle items
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(
-                onClick = {closetViewModel.shuffleItems()},
+                onClick = { closetViewModel.shuffleItems() },
                 enabled = closetState.filteredItems.size > 1
             ) {
                 Icon(
@@ -323,8 +354,13 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         // Search bar
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.CenterStart
         ) {
             IconButton(onClick = {
@@ -332,7 +368,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 showSearchDialog = true
             }) {
                 Icon(
-                    imageVector = Icons.Outlined.Search,
+                    painter = painterResource(R.drawable.loupe),
                     contentDescription = "Search",
                     modifier = Modifier.size(20.dp),
                     tint = Color.Black
@@ -344,13 +380,32 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         if (showSearchDialog) {
             AlertDialog(
                 title = {
-                    Text(text = "Search for an item")
+                    Text(
+                        text = "Search for an item",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold
+                    )
                 },
                 text = {
                     TextField(
                         value = closetState.searchQuery,
                         onValueChange = { it -> closetViewModel.updateSearchQuery(it)},
-                        placeholder = { Text("Enter item name") },
+                        placeholder = {
+                            Text(
+                                "Enter item name",
+                                fontFamily = Kudryashev_Display_Sans_Regular,
+                                fontWeight = FontWeight.Bold
+                            )
+                        },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = LightPeachFuzz,
+                            unfocusedContainerColor = LightPeachFuzz,
+                            disabledContainerColor = LightPeachFuzz.copy(alpha = 0.7f)
+                        ),
+                        textStyle = TextStyle(
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold
+                        )
                     )
                 },
                 onDismissRequest = { showSearchDialog = false },
@@ -359,9 +414,14 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         closetViewModel.applyFilters()
                         showSearchDialog = false
                     }) {
-                        Text(text = "Search")
+                        Text(
+                            text = "Search",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold
+                        )
                     }
-                }
+                },
+                containerColor = FloralWhite
             )
         }
 
@@ -385,23 +445,28 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             ) {
                 Text(
                     "Tags",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Black
+                    style = TextStyle(
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Color.Black
+                    )
                 )
 
                 Spacer(modifier = Modifier.width(4.dp))
 
                 Icon(
-                    imageVector = Icons.Default.ArrowDropDown,
-                    contentDescription = "Tag options",
+                    Icons.Outlined.ArrowDropDown,
+                    contentDescription = "Tags",
+                    tint = Color.Black,
                     modifier = Modifier.size(20.dp),
-                    tint = Color.Black
                 )
             }
 
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
+                containerColor = DrySage,
                 modifier = Modifier
                     .height(450.dp)
             ) {
@@ -409,7 +474,13 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     .sortedByDescending { it in closetState.activeTags }
                     .forEach { tag ->
                         DropdownMenuItem(
-                            text = { Text(tag) },
+                            text = {
+                                Text(
+                                    tag,
+                                    fontFamily = Kudryashev_Display_Sans_Regular,
+                                    fontWeight = FontWeight.Bold
+                                )
+                            },
                             onClick = {
                                 if (tag in closetState.activeTags) {
                                     closetViewModel.removeFromActiveTags(tag)
@@ -420,13 +491,17 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                             trailingIcon = {
                                 if (tag in closetState.activeTags) {
                                     Icon(
-                                        imageVector = Icons.Outlined.Clear,
-                                        contentDescription = "Remove tag"
+                                        painter = painterResource(R.drawable.clear),
+                                        contentDescription = "Remove tag",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(15.dp)
                                     )
                                 } else {
                                     Icon(
-                                        imageVector = Icons.Outlined.Add,
-                                        contentDescription = "Add tag"
+                                        painter = painterResource(R.drawable.add),
+                                        contentDescription = "Add tag",
+                                        tint = Color.Black,
+                                        modifier = Modifier.size(15.dp)
                                     )
                                 }
                             },
@@ -439,8 +514,13 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         // Enter deletion candidate state/confirm delete state
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             when (closetState.isDeleteActive) {
@@ -454,7 +534,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         ).show()
                     }) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            painter = painterResource(R.drawable.delete),
                             contentDescription = "Enter deletion candidate state",
                             tint = Color.Black,
                             modifier = Modifier.size(20.dp)
@@ -467,7 +547,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         enabled = closetState.isDeleteActive == DeletionStates.Inactive.name
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            painter = painterResource(R.drawable.delete),
                             contentDescription = "Inactive delete icon during active delete state",
                             tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
@@ -480,7 +560,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                         enabled = closetState.isDeleteActive == DeletionStates.Inactive.name
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.Delete,
+                            painter = painterResource(R.drawable.delete),
                             contentDescription = "Placeholder during alert dialog composition",
                             tint = Color.Gray,
                             modifier = Modifier.size(20.dp)
@@ -493,16 +573,21 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
         // Clear all filters
         Box(
             modifier = Modifier
+                .shadow(
+                    elevation = 6.dp,
+                    shape = MaterialTheme.shapes.medium,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color(0xFFE0E0E0)),
+                .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { closetViewModel.clearFilters() }) {
                 Icon(
-                    imageVector = Icons.Outlined.Clear,
+                    painter = painterResource(R.drawable.clear),
                     contentDescription = "Clear filters",
                     tint = Color.Black,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(17.dp)
                 )
             }
         }
@@ -521,6 +606,9 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
     } else if (closetState.filteredItems.isEmpty()) {
         Text(
             "No items found.",
+            fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
+            fontSize = 20.sp,
             modifier = Modifier
                 .padding(16.dp)
         )
@@ -529,99 +617,107 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
             columns = StaggeredGridCells.Fixed(2),
             modifier = Modifier
                 .fillMaxWidth(),
-            verticalItemSpacing = 8.dp,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+            verticalItemSpacing = 5.dp,
+            horizontalArrangement = Arrangement.spacedBy(15.dp)
         ) {
             items(closetState.filteredItems) { item ->
                 Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(200.dp)
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(Color(0xFFE0E0E0))
-                        .clickable(
-                            enabled =
-                                closetState.isDeleteActive != DeletionStates.Confirmed.name,
-                            onClick = {
-                                if (closetState.isDeleteActive == DeletionStates.Active.name) {
-                                    if (item.isDeletionCandidate) {
-                                        closetViewModel.removeDeletionCandidate(item)
-                                    } else {
-                                        closetViewModel.setDeletionCandidates(item)
-                                    }
-                                } else {
-                                    closetViewModel.updateItemToShow(item.itemId)
-                                }
-                            }
-                        ),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Row(
-                            modifier = Modifier
-                                .padding(6.dp)
-                                .fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                item.itemName,
-                                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier
-                                    .padding(horizontal = 4.dp)
-                                    .weight(1f)
+                    modifier = Modifier.padding(bottom = 10.dp)
+                ){
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(200.dp)
+                            .shadow(
+                                elevation = 3.dp,
+                                shape = MaterialTheme.shapes.medium,
+                                clip = false
                             )
-
-                            // Favorite item button (if not in delete state)
-                            if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
-                                IconButton(
-                                    onClick = { closetViewModel.toggleFavoritesProperty(item) },
-                                    modifier = Modifier.size(28.dp)
-                                ) {
-                                    Icon(
-                                        imageVector = if (item.isFavorite) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                                        contentDescription = if (item.isFavorite) "Remove item from favorites" else "Add item to favorites",
-                                        tint = if (item.isFavorite) Color.Red else Color.Black
-                                    )
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(LightPeachFuzz)
+                            .clickable(
+                                enabled =
+                                    closetState.isDeleteActive != DeletionStates.Confirmed.name,
+                                onClick = {
+                                    if (closetState.isDeleteActive == DeletionStates.Active.name) {
+                                        if (item.isDeletionCandidate) {
+                                            closetViewModel.removeDeletionCandidate(item)
+                                        } else {
+                                            closetViewModel.setDeletionCandidates(item)
+                                        }
+                                    } else {
+                                        closetViewModel.updateItemToShow(item.itemId)
+                                    }
                                 }
-                            }
-
-                            // Toggle deletion candidate icon (if in delete state)
-                            if (closetState.isDeleteActive == DeletionStates.Active.name) {
-                                Icon(
-                                    imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                                    contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(modifier = Modifier.fillMaxSize()) {
+                            Row(
+                                modifier = Modifier
+                                    .padding(6.dp)
+                                    .fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Text(
+                                    item.itemName,
+                                    fontFamily = Kudryashev_Display_Sans_Regular,
+                                    fontWeight = FontWeight.Bold,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier
+                                        .padding(horizontal = 4.dp)
+                                        .weight(1f)
                                 )
 
-                            }
-                        }
+                                // Favorite item button (if not in delete state)
+                                if (closetState.isDeleteActive == DeletionStates.Inactive.name) {
+                                    IconButton(
+                                        onClick = { closetViewModel.toggleFavoritesProperty(item) },
+                                        modifier = Modifier.size(28.dp)
+                                    ) {
+                                        Box(modifier = Modifier.padding(5.dp)){
 
-                        // Item image
-                        if (item.itemPhotoUri.isNotEmpty()) {
-                            AsyncImage(
-                                model = item.itemPhotoUri,
-                                contentDescription = item.itemName,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .aspectRatio(aspectRatio),
-                                contentScale = ContentScale.Fit,
-                                onSuccess = {
-                                    val w = it.result.drawable.intrinsicWidth
-                                    val h = it.result.drawable.intrinsicHeight
-                                    if (w > 0 && h > 0) {
-                                        val r = w.toFloat() / h.toFloat()
-                                        aspectRatio = maxOf(r, 0.55f)
+                                        }
                                     }
                                 }
-                            )
-                        } else {
-                            Image(
-                                painter = painterResource(R.drawable.hanger),
-                                contentDescription = "Item photo",
-                                modifier = Modifier
-                                    .size(180.dp)
-                            )
+
+                                // Toggle deletion candidate icon (if in delete state)
+                                if (closetState.isDeleteActive == DeletionStates.Active.name) {
+                                    Icon(
+                                        imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
+                                        contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
+                                    )
+
+                                }
+                            }
+
+                            // Item image
+                            if (item.itemPhotoUri.isNotEmpty()) {
+                                AsyncImage(
+                                    model = item.itemPhotoUri,
+                                    contentDescription = item.itemName,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .aspectRatio(aspectRatio),
+                                    contentScale = ContentScale.Fit,
+                                    onSuccess = {
+                                        val w = it.result.drawable.intrinsicWidth
+                                        val h = it.result.drawable.intrinsicHeight
+                                        if (w > 0 && h > 0) {
+                                            val r = w.toFloat() / h.toFloat()
+                                            aspectRatio = maxOf(r, 0.55f)
+                                        }
+                                    }
+                                )
+                            } else {
+                                Image(
+                                    painter = painterResource(R.drawable.hanger),
+                                    contentDescription = "Item photo",
+                                    modifier = Modifier
+                                        .size(180.dp)
+                                )
+                            }
                         }
                     }
                 }
