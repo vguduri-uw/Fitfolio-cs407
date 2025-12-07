@@ -30,7 +30,8 @@ data class User(
     val userUID: String,
     val username: String,
     val email: String,
-    val avatarUri: String = ""
+    val avatarUri: String = "",
+    val newUser: Boolean
 )
 
 // Item table
@@ -78,6 +79,14 @@ data class ItemType(
 data class OutfitTag(
     @PrimaryKey(autoGenerate = true) val tagId: Int = 0,
     val outfitTag: String
+)
+@Entity(tableName = "blocked_combinations")
+data class BlockedCombination(
+    @PrimaryKey(autoGenerate = true) val id: Int = 0,
+    val accessoryId: Int?,
+    val topwearId: Int?,
+    val bottomwearId: Int?,
+    val shoesId: Int?
 )
 
 // Converter for storing List<String> in Room
@@ -262,6 +271,9 @@ interface UserDao {
 
     @Query("UPDATE user SET username = :username, email = :email WHERE userId = :id")
     suspend fun updateUser(id: Int, username: String, email: String)
+
+    @Query("UPDATE user SET newUser = :newUser WHERE userId = :id")
+    suspend fun updateUserFlag(id: Int, newUser: Boolean)
 
     @Query("UPDATE user SET avatarUri = :avatarUri WHERE userId = :id")
     suspend fun updateAvatar(id: Int, avatarUri: String)
@@ -465,6 +477,16 @@ interface OutfitDao {
     suspend fun getDatesForOutfit(outfitId: Int): List<Long>
 }
 
+//remove combinations
+@Dao
+interface BlockedCombinationDao {
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertCombination(combination: BlockedCombination)
+
+    @Query("SELECT * FROM blocked_combinations")
+    suspend fun getAllBlockedCombinations(): List<BlockedCombination>
+}
+
 // Delete queries
 @Dao
 interface DeleteDao {
@@ -534,9 +556,10 @@ interface DeleteDao {
         OutfitTag::class,
         UserItemTypeRelation::class,
         UserItemTagsRelation::class,
-        UserOutfitsTagsRelation::class
+        UserOutfitsTagsRelation::class,
+        BlockedCombination::class
     ],
-    version = 5
+    version = 9
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
@@ -544,6 +567,8 @@ abstract class FitfolioDatabase : RoomDatabase() {
     abstract fun itemDao(): ItemDao
     abstract fun outfitDao(): OutfitDao
     abstract fun deleteDao(): DeleteDao
+
+    abstract fun blockedCombinationDao(): BlockedCombinationDao
 
     companion object {
         @Volatile

@@ -224,7 +224,12 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit,onNavigateToAppNav: () -> U
                                 // Check if user exists in local DB
                                 var localUser = db.userDao().getByUID(firebaseUser.uid)
                                 if (localUser == null) {
-                                    val newUser = User(userUID = firebaseUser.uid, username = name, email = email)
+                                    val newUser = User(
+                                        userUID = firebaseUser.uid,
+                                        username = name,
+                                        email = email,
+                                        newUser = true
+                                    )
                                     db.userDao().insert(newUser)
                                     localUser = db.userDao().getByUID(firebaseUser.uid)
                                 }
@@ -234,7 +239,8 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit,onNavigateToAppNav: () -> U
                                         UserState(
                                             id = localUser.userId,
                                             name = localUser.username,
-                                            uid = firebaseUser.uid
+                                            uid = firebaseUser.uid,
+                                            newUser = true
                                         )
                                     )
                                     onNavigateToAppNav()

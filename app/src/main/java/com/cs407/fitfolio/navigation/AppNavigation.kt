@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -38,20 +37,17 @@ import com.cs407.fitfolio.ui.screens.AddScreen
 import com.cs407.fitfolio.ui.screens.CalendarScreen
 import com.cs407.fitfolio.ui.screens.MyClosetScreen
 import com.cs407.fitfolio.ui.screens.MyOutfitsScreen
-import com.cs407.fitfolio.ui.screens.MyWardrobeScreen
-import com.cs407.fitfolio.ui.theme.ChocolateBrown
-import com.cs407.fitfolio.ui.theme.FloralWhite
+import com.cs407.fitfolio.ui.screens.CarouselScreen
 import com.cs407.fitfolio.ui.theme.GoldenApricot
-import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
-import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
-import com.cs407.fitfolio.ui.theme.RustBrown
 import com.cs407.fitfolio.ui.theme.TrueBlack
 import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.ClosetViewModelFactory
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModelFactory
 import com.cs407.fitfolio.viewModels.UserViewModel
+import com.cs407.fitfolio.viewModels.CarouselViewModel
+import com.cs407.fitfolio.viewModels.CarouselViewModelFactory
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 
 // Composable function responsible for the main app navigation
@@ -73,6 +69,9 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
     )
     val weatherViewModel: WeatherViewModel = viewModel()
 
+    val carouselViewModel: CarouselViewModel = viewModel(
+        factory = CarouselViewModelFactory(db, userViewModel)
+    )
     //Veda: location permission
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
@@ -103,7 +102,7 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { navController.navigate("wardrobe") },
+                onClick = { navController.navigate("carousel") },
                 shape = CircleShape,
                 containerColor = GoldenApricot,
                 contentColor = TrueBlack,
@@ -117,7 +116,7 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                 ) {
                     Icon(
                         painter = painterResource(R.drawable.carousel),
-                        contentDescription = "Wardrobe",
+                        contentDescription = "Carousel",
                         modifier = Modifier.size(40.dp),
                     )
                     Text(
@@ -145,14 +144,14 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     weatherViewModel = weatherViewModel,
                     onSignOut = onSignOut,
                     closetViewModel = closetViewModel,
-                    userViewModel = userViewModel,
-                    )
+                    userViewModel = userViewModel
+                )
             }
             // Defines the "calendar" route and what UI to display there
             composable("calendar") {
                 CalendarScreen(
                     onNavigateToOutfitsScreen = { navController.navigate("outfits") },
-                    onNavigateToWardrobeScreen = { navController.navigate("wardrobe") },
+                    onNavigateToCarouselScreen = { navController.navigate("carousel") },
                     onNavigateToAddScreen = { navController.navigate("add") },
                     onNavigateToClosetScreen = { navController.navigate("closet") },
                     onNavigateToSignInScreen = {navController.navigate("sign_in")},
@@ -160,13 +159,12 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     outfitsViewModel = outfitsViewModel,
                     closetViewModel = closetViewModel,
                     userViewModel = userViewModel,
-                    onSignOut = onSignOut,
-
-                    )
+                    onSignOut = onSignOut
+                )
             }
-            // Defines the "wardrobe" route and what UI to display there
-            composable(route = "wardrobe") {
-                MyWardrobeScreen(
+            // Defines the "carousel" route and what UI to display there
+            composable(route = "carousel") {
+                CarouselScreen(
                     onNavigateToOutfitsScreen = { navController.navigate("outfits") },
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
                     onNavigateToAddScreen = { navController.navigate("add") },
@@ -175,7 +173,8 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     closetViewModel = closetViewModel,
                     weatherViewModel = weatherViewModel,
                     userViewModel = userViewModel,
-                    outfitsViewModel = outfitsViewModel
+                    outfitsViewModel = outfitsViewModel,
+                    carouselViewModel = carouselViewModel
                 )
             }
             // Defines the "add" route and what UI to display there
@@ -194,10 +193,8 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     closetViewModel = closetViewModel,
                     outfitsViewModel = outfitsViewModel,
                     userViewModel = userViewModel,
-                    onSignOut = onSignOut,
-
-
-                    )
+                    onSignOut = onSignOut
+                )
             }
         }
     }

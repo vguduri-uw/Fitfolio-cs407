@@ -53,21 +53,6 @@ class ClosetViewModel(
     // Publicly exposed immutable StateFlow for the UI layer to observe changes safely
     val closetState = _closetState.asStateFlow()
 
-    // Track selected items by category
-    private val _selectedItems = MutableStateFlow<Map<CarouselTypes, ItemEntry?>>(
-        mapOf(
-            CarouselTypes.HEADWEAR to null,
-            CarouselTypes.TOPWEAR to null,
-            CarouselTypes.BOTTOMWEAR to null,
-            CarouselTypes.FOOTWEAR to null
-        )
-    )
-    val selectedItems: StateFlow<Map<CarouselTypes, ItemEntry?>> = _selectedItems
-
-    fun selectItem(category: CarouselTypes, item: ItemEntry) {
-        _selectedItems.value = _selectedItems.value.toMutableMap().also { it[category] = item }
-    }
-
     // Initialize closet state items and filtered items with data from db
     init {
         viewModelScope.launch(Dispatchers.IO) {

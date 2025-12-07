@@ -63,6 +63,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.shadow
 import com.cs407.fitfolio.ui.components.DeleteOutfitDialog
 import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.GoldenApricot
@@ -360,12 +361,22 @@ private fun TagChipSelectable(
     val chipModifier =
         if (editing) {
             Modifier
+                .shadow(
+                    elevation = 3.dp,
+                    shape = MaterialTheme.shapes.small,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.small)
                 .background(backgroundColor)
                 .clickable { onToggleForOutfit() }
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         } else {
             Modifier
+                .shadow(
+                    elevation = 3.dp,
+                    shape = MaterialTheme.shapes.small,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.small)
                 .background(backgroundColor)
                 .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -580,7 +591,7 @@ fun OutfitHeaderBox(
                 fontFamily = Kudryashev_Display_Sans_Regular,
                 fontWeight = FontWeight.Bold,
                 fontSize = 25.sp,
-                textAlign = TextAlign.Center,
+                textAlign = TextAlign.Start,
                 color = Color.Black
             ),
             colors = TextFieldDefaults.colors(
@@ -598,7 +609,7 @@ fun OutfitHeaderBox(
         )
 
         IconButton(
-            modifier = Modifier.align(Alignment.BottomEnd),
+            modifier = Modifier.align(Alignment.CenterEnd),
             onClick = {
                 if (localIsEditing) {
                     // leaving edit mode → save
@@ -844,6 +855,7 @@ private fun DescriptionCard(
                 textStyle = TextStyle(
                     fontFamily = Kudryashev_Display_Sans_Regular,
                     fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
                     textAlign = TextAlign.Left,
                     color = Color.Black
                 ),
@@ -999,6 +1011,11 @@ private fun ItemsInOutfitCard(
 
                         Box(
                             modifier = Modifier
+                                .shadow(
+                                    elevation = 3.dp,
+                                    shape = MaterialTheme.shapes.medium,
+                                    clip = false
+                                )
                                 .clip(MaterialTheme.shapes.medium)
                                 .background(FloralWhite)
                                 .clickable(enabled = localEditing) {

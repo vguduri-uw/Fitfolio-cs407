@@ -49,6 +49,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpOffset
@@ -64,6 +65,7 @@ import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.ui.components.WeatherCarousel
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.modals.SettingsModal
+import com.cs407.fitfolio.ui.theme.DrySage
 import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
@@ -140,6 +142,8 @@ fun MyOutfitsScreen(
             // vertically scrollable outfits grid
             OutfitGrid(outfitsState, outfitsViewModel)
         }
+
+        Spacer(modifier = Modifier.size(10.dp))
 
         // settings button
         IconButton(
@@ -346,6 +350,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
     // tracks whether tags dropdown is expanded
     var expanded by remember { mutableStateOf(false) }
 
+    // tracks whether search dialog is visible or not
+    var showSearchDialog by remember { mutableStateOf(false) }
+
     val context = LocalContext.current
 
     Row(
@@ -416,7 +423,10 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(onClick = { outfitsViewModel.toggleSearchState(true) }) {
+            IconButton(onClick = {
+                outfitsViewModel.toggleSearchState(true)
+                showSearchDialog = true
+            }) {
                 Icon(
                     painter = painterResource(R.drawable.loupe),
                     contentDescription = "search",
@@ -427,33 +437,34 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
         }
 
         // search bar dialog
-        if (outfitsState.isSearchActive) {
+        if (showSearchDialog) {
             AlertDialog(
                 title = {
-                    Text(text = "Search for an item", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
+                    Text(text = "Search for an outfit", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                 },
                 text = {
                     TextField(
                         value = outfitsState.searchQuery,
                         onValueChange = { it -> outfitsViewModel.updateSearchQuery(it) },
-                        placeholder = { Text("Enter item name", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
+                        placeholder = { Text("Enter outfit name", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = LightPeachFuzz,
                             unfocusedContainerColor = LightPeachFuzz,
                             disabledContainerColor = LightPeachFuzz.copy(alpha = 0.7f)
-                        )
+                        ),
+                        textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                     )
                 },
-                onDismissRequest = { outfitsViewModel.toggleSearchState(false) },
+                onDismissRequest = { showSearchDialog = false },
                 confirmButton = {
                     Button(onClick = {
-                        outfitsViewModel.toggleSearchState(false)
                         outfitsViewModel.applyFilters()
+                        showSearchDialog = false
                     }) {
                         Text(text = "Search", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
                     }
                 },
-                containerColor = FloralWhite
+                containerColor = FloralWhite,
             )
         }
 
@@ -467,7 +478,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz)
-                .padding(horizontal = 15.dp, vertical = 14.dp),
+                .padding(horizontal = 15.dp, vertical = 12.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -479,7 +490,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     text = "Tags",
                     fontFamily = Kudryashev_Display_Sans_Regular,
                     fontWeight = FontWeight.Bold,
-                    fontSize = 12.sp,
+                    fontSize = 15.sp,
                     color = Color.Black,
                 )
 
@@ -487,7 +498,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
 
                 Icon(
                     Icons.Outlined.ArrowDropDown,
-                    contentDescription = "Favorites",
+                    contentDescription = "Tags",
                     tint = Color.Black,
                     modifier = Modifier.size(20.dp),
                 )
@@ -496,7 +507,7 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             DropdownMenu(
                 expanded = expanded,
                 onDismissRequest = { expanded = false },
-                containerColor = GoldenApricot,
+                containerColor = DrySage,
                 modifier = Modifier
                     .height(450.dp)
             ) {

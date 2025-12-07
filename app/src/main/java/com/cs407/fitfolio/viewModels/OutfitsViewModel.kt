@@ -151,7 +151,7 @@ class OutfitsViewModel(
         }
     }
 
-    // SETTERS FOR OUTFIT PROPERTIES (for use in wardrobe screen and outfit modal)
+    // SETTERS FOR OUTFIT PROPERTIES (for use in carousel screen and outfit modal)
     // call this function to upsert the outfit's photo uri
     fun editOutfitPhoto(outfit: OutfitEntry, photoUri: String) {
         viewModelScope.launch {
@@ -279,7 +279,7 @@ class OutfitsViewModel(
                                             OUTFITS FUNCTIONS
        ========================================================================================== */
     
-    // apply all tag filters at once
+    // Applies filters to the outfits shown in the outfits screen (favorites, search queries, tags)
     fun applyFilters() {
         viewModelScope.launch(Dispatchers.Default) {
             // Begin filtering
@@ -293,7 +293,6 @@ class OutfitsViewModel(
                     if (!outfit.isFavorite) passesAllFilters = false
                 }
 
-
                 // Filter with search query
                 if (_outfitsState.value.isSearchActive) {
                     val query = _outfitsState.value.searchQuery.lowercase()
@@ -305,7 +304,6 @@ class OutfitsViewModel(
                 }
 
                 // Filter through active tags
-                // TODO: decide if this should be inclusive (1 matching tag means its valid, how it currently is rn), or if it must match all tags
                 if (_outfitsState.value.activeTags.isNotEmpty()) {
                     val hasMatchingTag = outfit.outfitTags.any { it in _outfitsState.value.activeTags }
                     if (!hasMatchingTag) {

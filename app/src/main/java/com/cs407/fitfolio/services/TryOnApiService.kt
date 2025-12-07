@@ -15,7 +15,7 @@ import retrofit2.http.Path
 // data being sent to the api
 data class FashnRunRequest(
     val model_name: String,            // name of the model we are making the request to (e.g., background-remove)
-    val inputs: Map<String, String>    // list of all the image urls we want to upload
+    val inputs: Map<String, Any>    // list of all the image urls we want to upload
 )
 
 // response returned right after /run (only returns a prediction id for status polling)

@@ -6,27 +6,22 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
+import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -51,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
@@ -62,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.viewModels.ClosetViewModel
@@ -69,7 +66,10 @@ import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.data.OutfitEntry
 import java.time.LocalDate
 import com.cs407.fitfolio.enums.DefaultItemTypes
+import com.cs407.fitfolio.ui.theme.FloralWhite
+import com.cs407.fitfolio.ui.theme.GoldenApricot
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import kotlinx.coroutines.launch
 
 @Composable
@@ -90,10 +90,10 @@ fun ItemModal(
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
-        containerColor = Color(0xFFE0E0E0),
+        containerColor = FloralWhite,
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 40.dp)
+            .padding(top = 45.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -161,7 +161,7 @@ fun IconBox (
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color.White)
+                .background(LightPeachFuzz)
                 .fillMaxWidth()
         ) {
             Row(
@@ -177,7 +177,8 @@ fun IconBox (
                     onValueChange = { name = it },
                     enabled = isEditingName,
                     textStyle = TextStyle(
-                        fontWeight = FontWeight.SemiBold,
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
                         fontSize = 24.sp,
                         color = Color.Black
                     ),
@@ -205,7 +206,11 @@ fun IconBox (
                     }
                 ) {
                     Icon(
-                        imageVector = if (isEditingName) Icons.Filled.Check else Icons.Outlined.Edit,
+                        painter = if (isEditingName) {
+                            painterResource(R.drawable.check)
+                        } else {
+                            painterResource(R.drawable.edit)
+                        },
                         contentDescription = "Edit title",
                         modifier = Modifier.size(24.dp)
                     )
@@ -216,7 +221,7 @@ fun IconBox (
                     Row(
                         modifier = Modifier
                             .clip(MaterialTheme.shapes.small)
-                            .background(Color(0xFFF7F7F7))
+                            .background(FloralWhite)
                             .clickable { expanded = true }
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                         verticalAlignment = Alignment.CenterVertically
@@ -227,7 +232,9 @@ fun IconBox (
                             maxLines = 3,
                             modifier = Modifier.widthIn(max = 100.dp),
                             overflow = TextOverflow.Ellipsis,
-                            )
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold
+                        )
                         Icon(
                             imageVector = Icons.Filled.ArrowDropDown,
                             contentDescription = "Item type dropdown",
@@ -254,12 +261,14 @@ fun IconBox (
                                 ) {
                                     Text(
                                         "Add Item Type",
-                                        color = Color(0xFF2E7D32)
+                                        color = GoldenApricot,
+                                        fontFamily = Kudryashev_Display_Sans_Regular,
+                                        fontWeight = FontWeight.Bold
                                     )
                                     Icon(
-                                        imageVector = Icons.Outlined.Add,
+                                        painter = painterResource(R.drawable.add),
                                         contentDescription = "Add an item type",
-                                        tint = Color(0xFF2E7D32),
+                                        tint = GoldenApricot,
                                         modifier = Modifier
                                             .padding(start = 6.dp)
                                             .size(16.dp)
@@ -284,13 +293,15 @@ fun IconBox (
                                             modifier = Modifier.weight(1f),
                                             softWrap = true,
                                             maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
+                                            overflow = TextOverflow.Ellipsis,
+                                            fontFamily = Kudryashev_Display_Sans_Regular,
+                                            fontWeight = FontWeight.Bold
                                         )
                                         if (option == selectedItemType) {
                                             Icon(
-                                                imageVector = Icons.Filled.Check,
+                                                painter = painterResource(R.drawable.check),
                                                 contentDescription = "Selected item type",
-                                                tint = Color(0xFF2E7D32),
+                                                tint = GoldenApricot,
                                                 modifier = Modifier
                                                     .padding(start = 6.dp)
                                                     .size(16.dp)
@@ -298,7 +309,7 @@ fun IconBox (
                                         }
                                         // Delete item type
                                         Icon(
-                                            imageVector = Icons.Outlined.Delete,
+                                            painter = painterResource(R.drawable.delete_filled_red),
                                             contentDescription = "Delete item type",
                                             modifier = Modifier
                                                 .padding(start = 6.dp)
@@ -355,7 +366,7 @@ fun IconBox (
         Box(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.medium)
-                .background(Color.White)
+                .background(LightPeachFuzz)
                 .fillMaxWidth()
         ) {
             // Item photo
@@ -365,6 +376,9 @@ fun IconBox (
                     contentDescription = item.itemName,
                     modifier = Modifier
                         .fillMaxWidth()
+                        .padding(16.dp)
+                        .heightIn(max = 350.dp)
+                        .clip(MaterialTheme.shapes.medium)
                         .aspectRatio(aspectRatio),
                     contentScale = ContentScale.Fit,
                     onSuccess = {
@@ -376,13 +390,21 @@ fun IconBox (
                     }
                 )
             } else {
-                Image(
-                    painter = painterResource(R.drawable.hanger),
-                    contentDescription = "Item photo",
+                Box(
                     modifier = Modifier
-                        .size(180.dp)
-                        .align(Alignment.Center)
-                )
+                        .fillMaxWidth()
+                        .padding(16.dp)
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(FloralWhite),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Image(
+                        painter = painterResource(R.drawable.hanger),
+                        contentDescription = "Item photo",
+                        modifier = Modifier
+                            .size(96.dp)
+                    )
+                }
             }
         }
 
@@ -397,68 +419,64 @@ fun IconBox (
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    modifier = Modifier.align(Alignment.TopStart),
-                    onClick = { // Veda
+                    .background(LightPeachFuzz)
+                    .clickable { // Veda
                         showWearHistoryModal = true
                     }
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.schedule),
-                        contentDescription = "Calendar",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                    .padding(10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.schedule),
+                    contentDescription = "Calendar",
+                    modifier = Modifier.size(28.dp)
+                )
             }
 
             // Delete icon button
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(Color.White),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = {
+                    .background(LightPeachFuzz)
+                    .clickable {
                         showDeleteDialog = true
                     }
-                ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Delete,
-                        contentDescription = "Delete item",
-                        modifier = Modifier.size(28.dp)
-                    )
-                }
+                    .padding(10.dp),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.delete),
+                    contentDescription = "Delete item",
+                    modifier = Modifier.size(28.dp),
+                    tint = Color.Black
+                )
             }
 
             // Favorite icon button
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(Color.White),
+                    .background(LightPeachFuzz)
+                    .clickable {
+                        closetViewModel.toggleFavoritesProperty(item)
+                    }
+                    .padding(10.dp),
                 contentAlignment = Alignment.Center
             ) {
-                IconButton(
-                    onClick = { closetViewModel.toggleFavoritesProperty(item) },
-                ) {
-                    if (item.isFavorite) {
-                        Icon(
-                            imageVector = Icons.Filled.Favorite,
-                            contentDescription = "Unfavorite item",
-                            modifier = Modifier.size(28.dp),
-                            tint = Color.Red
-                        )
-                    } else {
-                        Icon(
-                            imageVector = Icons.Outlined.FavoriteBorder,
-                            contentDescription = "Favorite item",
-                            modifier = Modifier.size(28.dp),
-                            tint = Color.Black
-                        )
-                    }
+                if (item.isFavorite) {
+                    Icon(
+                        painter = painterResource(R.drawable.heart_filled_red),
+                        contentDescription = "Unfavorite item",
+                        modifier = Modifier.size(28.dp),
+                        tint = Color.Red
+                    )
+                } else {
+                    Icon(
+                        painter = painterResource(R.drawable.heart_outline),
+                        contentDescription = "Favorite item",
+                        modifier = Modifier.size(28.dp),
+                        tint = Color.Black
+                    )
                 }
             }
         }
@@ -519,7 +537,7 @@ fun ItemInformation(
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(Color.White)
+                    .background(LightPeachFuzz)
                     .fillMaxWidth()
             ) {
                 Column {
@@ -532,11 +550,13 @@ fun ItemInformation(
                     ) {
                         Text(
                             text = "Description",
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold),
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp
                         )
                         if (isEditingDescription) {
                             Icon(
-                                imageVector = Icons.Filled.Check,
+                                painter = painterResource(R.drawable.check),
                                 contentDescription = "Save edits",
                                 modifier = Modifier
                                     .size(28.dp)
@@ -549,7 +569,7 @@ fun ItemInformation(
                             )
                         } else {
                             Icon(
-                                imageVector = Icons.Outlined.Edit,
+                                painter = painterResource(R.drawable.edit),
                                 contentDescription = "Edit description",
                                 modifier = Modifier
                                     .size(28.dp)
@@ -564,6 +584,9 @@ fun ItemInformation(
                         onValueChange = { description = it },
                         enabled = isEditingDescription,
                         textStyle = TextStyle(
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold,
                             color = Color.Black
                         ),
                         modifier = Modifier
@@ -586,7 +609,7 @@ fun ItemInformation(
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(Color.White)
+                    .background(LightPeachFuzz)
                     .fillMaxWidth()
             ) {
                 Column(
@@ -595,7 +618,9 @@ fun ItemInformation(
                 ) {
                     Text(
                         text = "Outfits featuring this item",
-                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp
                     )
                     if (outfitList.isNotEmpty()) {
                         LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -606,7 +631,7 @@ fun ItemInformation(
                                     outfitId = outfit.outfitId,
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                                    imageRes = R.drawable.shirt, // swap to outfit.outfitPhotoUri when ready
+                                    imageRes = outfit.outfitPhotoUri, // swap to outfit.outfitPhotoUri when ready
                                     closetViewModel = closetViewModel
                                 )
                             }
@@ -639,28 +664,49 @@ private fun OutfitsCard(
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
-    imageRes: Int,
+    imageRes: String,
 ) {
     var showOutfitModal by remember { mutableStateOf(false) }
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(6.dp),
         modifier = Modifier
+            .shadow(
+                elevation = 3.dp,
+                shape = MaterialTheme.shapes.medium,
+                clip = false
+            )
             .clip(MaterialTheme.shapes.medium)
-            .background(Color(0xFFF7F7F7))
+            .background(FloralWhite)
             .padding(10.dp)
             .fillMaxSize()
             .clickable { showOutfitModal = true }
     ) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = "$outfitName image",
-            modifier = Modifier.size(72.dp)
-        )
+        val hasPhoto = imageRes.isNotBlank()
+        if (hasPhoto) {
+            Image(
+                painter = rememberAsyncImagePainter(imageRes),
+                contentDescription = "$outfitName image",
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .size(120.dp)
+            )
+        } else {
+            Image(
+                painter = painterResource(R.drawable.hanger),
+                contentDescription = "Placeholder image for $outfitName",
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .size(120.dp)
+            )
+        }
         Text(
             text = outfitName,
-            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium),
+            fontFamily = Kudryashev_Display_Sans_Regular,
+            fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
     }
@@ -698,14 +744,11 @@ private fun TagsEditableCard(
     Box(
         modifier = Modifier
             .clip(MaterialTheme.shapes.medium)
-            .background(Color.White)
+            .background(LightPeachFuzz)
+            .padding(15.dp)
             .fillMaxWidth()
     ) {
-        Column(
-            modifier = Modifier
-                .padding(horizontal = 15.dp)
-                .padding(bottom = 15.dp)
-        ) {
+        Column {
             // header row: title + actions
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -714,7 +757,10 @@ private fun TagsEditableCard(
             ) {
                 Text(
                     text = "Tags",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold)
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    modifier = Modifier.padding(bottom = 10.dp)
                 )
 
                 if (editMode) {
@@ -723,43 +769,65 @@ private fun TagsEditableCard(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         // add tag
-                        IconButton(
-                            onClick = { showAddDialog = true },
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable(
+                                    onClick = { showAddDialog = true }
+                                )
                         ) {
-                            Icon(Icons.Outlined.Add, contentDescription = "Add tag")
+                            Icon(
+                                painter = painterResource(R.drawable.add),
+                                contentDescription = "Add tag",
+                                modifier = Modifier.size(18.dp)
+                            )
                         }
                         // save changes
-                        IconButton(
-                            onClick = {
-                                val current = item.itemTags.toSet()
-                                val toAdd = selectedTags - current
-                                val toRemove = current - selectedTags
-                                toAdd.forEach { t ->
-                                    closetViewModel.editItemTags(
-                                        item,
-                                        t,
-                                        isRemoving = false
-                                    )
-                                }
-                                toRemove.forEach { t ->
-                                    closetViewModel.editItemTags(
-                                        item,
-                                        t,
-                                        isRemoving = true
-                                    )
-                                }
-                                editMode = false
-                            },
+                        Box(
+                            modifier = Modifier
+                                .size(20.dp)
+                                .clickable(
+                                    onClick = {
+                                        val current = item.itemTags.toSet()
+                                        val toAdd = selectedTags - current
+                                        val toRemove = current - selectedTags
+                                        toAdd.forEach { t ->
+                                            closetViewModel.editItemTags(
+                                                item,
+                                                t,
+                                                isRemoving = false
+                                            )
+                                        }
+                                        toRemove.forEach { t ->
+                                            closetViewModel.editItemTags(
+                                                item,
+                                                t,
+                                                isRemoving = true
+                                            )
+                                        }
+                                        editMode = false
+                                    }
+                                )
                         ) {
-                            Icon(Icons.Filled.Check, contentDescription = "Save changes")
+                            Icon(
+                                painter = painterResource(R.drawable.check),
+                                contentDescription = "Save changes",
+                                modifier = Modifier.size(20.dp)
+                            )
                         }
                     }
                 } else {
                     // edit mode
-                    IconButton (
-                        onClick = { editMode = true }
+                    Box (
+                        modifier = Modifier
+                            .size(20.dp)
+                            .clickable(onClick = { editMode = true })
                     ) {
-                        Icon(Icons.Outlined.Edit, contentDescription = "Edit tags")
+                        Icon(
+                            painter = painterResource(R.drawable.edit),
+                            contentDescription = "Edit tags",
+                            modifier = Modifier.size(20.dp)
+                        )
                     }
                 }
             }
@@ -833,21 +901,31 @@ private fun TagChipSelectable(
 ) {
     // Your chosen colors
     val backgroundColor = when {
-        selected && editing -> Color(0xFFB8B8B8) // darker gray (when selected + editing)
-        selected -> Color(0xFFD0D0D0)            // medium gray (when selected)
-        else -> Color(0xFFF2F2F2)                // light gray (default)
+        selected && editing -> GoldenApricot
+        selected -> GoldenApricot
+        else -> FloralWhite
     }
 
     // if not editing, no clickable modifier
     val chipModifier =
         if (editing) {
             Modifier
+                .shadow(
+                    elevation = 3.dp,
+                    shape = MaterialTheme.shapes.small,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.small)
                 .background(backgroundColor)
                 .clickable { onToggleForItem() }
                 .padding(horizontal = 12.dp, vertical = 8.dp)
         } else {
             Modifier
+                .shadow(
+                    elevation = 3.dp,
+                    shape = MaterialTheme.shapes.small,
+                    clip = false
+                )
                 .clip(MaterialTheme.shapes.small)
                 .background(backgroundColor)
                 .padding(horizontal = 12.dp, vertical = 8.dp)
@@ -860,16 +938,16 @@ private fun TagChipSelectable(
     ) {
         Text(
             text = text,
-            style = MaterialTheme.typography.bodySmall.copy(
-                fontWeight = if (selected) FontWeight.Medium else FontWeight.Normal,
-                color = Color.Black
-            )
+            fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
+            fontSize = 15.sp,
+            color = Color.Black
         )
 
         // show small delete icon ONLY when editing
         if (editing) {
             Icon(
-                imageVector = Icons.Outlined.Delete,
+                painter = painterResource(R.drawable.delete_filled_red),
                 contentDescription = "Delete tag",
                 tint = Color.Red.copy(alpha = 0.85f),
                 modifier = Modifier
@@ -891,23 +969,23 @@ private fun AddDialog(
     var text by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { Text(title, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
-                label = { Text(label) },
+                label = { Text(label, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
                 singleLine = true
             )
         },
         confirmButton = {
             TextButton(onClick = { onConfirm(text) }) {
-                Text("Add")
+                Text("Add", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
             }
         }
     )
@@ -925,16 +1003,16 @@ private fun DeleteDialog(
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = { Text(message) },
+        title = { Text(title, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
+        text = { Text(message, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
         confirmButton = {
             TextButton(onClick = onConfirm) {
-                Text("Delete")
+                Text("Delete", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
             }
         }
     )
@@ -966,7 +1044,10 @@ private fun WearHistoryModal(
             ) {
                 Text(
                     text = "Wear History",
-                    style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.SemiBold)
+                    style = MaterialTheme.typography.titleLarge.copy(
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = Kudryashev_Display_Sans_Regular
+                    )
                 )
                 Text(
                     text = when (modalColor) {
@@ -975,7 +1056,10 @@ private fun WearHistoryModal(
                         Color(0xFFFFFFCC) -> "6-12 months"
                         else -> "> 1 year"
                     },
-                    style = MaterialTheme.typography.bodySmall,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold
+                    ),
                     color = Color.Black
                 )
             }
@@ -989,26 +1073,41 @@ private fun WearHistoryModal(
                     items(wearHistory.size) { index ->
                         val (dateMillis, outfitName) = wearHistory[index]
                         val localDate = LocalDate.ofEpochDay(dateMillis / (24 * 60 * 60 * 1000))
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(MaterialTheme.shapes.small)
-                                .background(Color.White)
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Column {
-                                Text(
-                                    text = localDate.format(
-                                        java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy")
-                                    ),
-                                    style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Medium)
-                                )
-                                Text(
-                                    text = "In outfit: $outfitName",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = Color.Gray
-                                )
+
+                        Box(
+                            modifier = Modifier.padding(bottom = 10.dp)
+                        ){
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .shadow(
+                                        elevation = 3.dp,
+                                        shape = MaterialTheme.shapes.small,
+                                        clip = false
+                                    )
+                                    .clip(MaterialTheme.shapes.small)
+                                    .background(FloralWhite)
+                                    .padding(12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Column {
+                                    Text(
+                                        text = localDate.format(
+                                            java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM dd, yyyy")
+                                        ),
+                                        style = MaterialTheme.typography.bodyLarge.copy(
+                                            fontWeight = FontWeight.Bold,
+                                            fontFamily = Kudryashev_Display_Sans_Regular
+                                        )
+                                    )
+                                    Text(
+                                        text = "In outfit: $outfitName",
+                                        style = MaterialTheme.typography.bodyMedium.copy(
+                                            fontFamily = Kudryashev_Display_Sans_Regular
+                                        ),
+                                        color = Color.DarkGray
+                                    )
+                                }
                             }
                         }
                     }
@@ -1022,15 +1121,18 @@ private fun WearHistoryModal(
                 ) {
                     Text(
                         text = "This item hasn't been worn yet.",
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
+                        style = MaterialTheme.typography.bodyLarge.copy(
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        color = Color.DarkGray
                     )
                 }
             }
         },
         confirmButton = {
-            TextButton(onClick = onDismiss) {
-                Text("Close")
+            Button(onClick = onDismiss) {
+                Text("Close", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold)
             }
         },
         containerColor = modalColor

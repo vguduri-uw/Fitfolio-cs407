@@ -3,7 +3,6 @@ package com.cs407.fitfolio.ui.modals
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -68,6 +67,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import android.util.Base64
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Spacer
 import java.io.ByteArrayOutputStream
 import kotlin.math.sqrt
 
@@ -596,33 +597,45 @@ fun AvatarDialog(
             }
         },
         confirmButton = {
-            Button(
-                onClick = {
-                    val finalUrl = processedAvatarUrl
-                    if (finalUrl == null) {
-                        Toast.makeText(
-                            context,
-                            "Please process an image before saving.",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                        return@Button
-                    }
-
-                    // Save avatar URL to Room, then update ViewModel
-                    scope.launch {
-                        db.userDao().updateAvatar(userId, finalUrl)
-                        onAvatarSaved(finalUrl)
-                        Toast.makeText(context, "Avatar saved.", Toast.LENGTH_SHORT).show()
-                    }
-                },
-                enabled = processedAvatarUrl != null && !isProcessing
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text("Save Avatar", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
-            }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Cancel", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                // Cancel button
+                Button(
+                    onClick = onDismiss,
+                    modifier = Modifier.weight(0.5f)
+                ) {
+                    Text("Cancel", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                }
+
+                Spacer(modifier = Modifier.size(8.dp))
+
+                // Save avatar button
+                Button(
+                    onClick = {
+                        val finalUrl = processedAvatarUrl
+                        if (finalUrl == null) {
+                            Toast.makeText(
+                                context,
+                                "Please process an image before saving.",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                            return@Button
+                        }
+
+                        // Save avatar URL to Room, then update ViewModel
+                        scope.launch {
+                            db.userDao().updateAvatar(userId, finalUrl)
+                            onAvatarSaved(finalUrl)
+                            Toast.makeText(context, "Avatar saved.", Toast.LENGTH_SHORT).show()
+                        }
+                    },
+                    enabled = processedAvatarUrl != null && !isProcessing,
+                    modifier = Modifier.weight(0.5f)
+                ) {
+                    Text("Save Avatar", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                }
             }
         }
     )
