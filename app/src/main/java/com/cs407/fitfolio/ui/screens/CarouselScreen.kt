@@ -4,7 +4,6 @@ import android.content.Context
 import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -48,6 +47,7 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.material3.CircularProgressIndicator
@@ -60,6 +60,8 @@ import coil.compose.AsyncImage
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.OutfitModal
+import com.cs407.fitfolio.ui.theme.LightChocolate
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
@@ -235,7 +237,7 @@ fun ActionButtonsRow(
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f)),
+                .background(LightChocolate),
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator(color = Color.White)
@@ -245,20 +247,111 @@ fun ActionButtonsRow(
             modifier = Modifier.fillMaxWidth().padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Add / Save Outfit button
+            Row(
+                horizontalArrangement = Arrangement.Start
+            ) {
+                // Shuffle button using carouselType
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(LightPeachFuzz),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = {
+                            carouselViewModel.shuffleItems(
+                                accessoriesList = closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
+                                topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                                bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                                shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                            )
+                        }
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.shuffle),
+                            contentDescription = "shuffle",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Filter by favorites button
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(LightPeachFuzz),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = { carouselViewModel.toggleFavorites() }
+                    ) {
+                        Icon(
+                            painter = if (carouselState.isFavoritesActive) painterResource(R.drawable.heart_filled_red) else painterResource(R.drawable.heart_outline),
+                            contentDescription = "Filter by favorites",
+                            tint = Color.Unspecified,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
+
+
+                // TODO: decide if we want remove button or not
+                 Spacer(modifier = Modifier.width(12.dp))
+
+            // Remove combination button
             Box(
                 modifier = Modifier
                     .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
+                    .background(LightPeachFuzz),
                 contentAlignment = Alignment.Center
             ) {
                 IconButton(
                     onClick = {
+                        val allItemsByCategory = mapOf(
+                            CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
+                            CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                            CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                            CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                        )
+
+                        carouselViewModel.removeCurrentCombination(allItemsByCategory)
+                        Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
+                    },
+                    enabled = itemsToAdd.isNotEmpty()
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.minus),
+                        contentDescription = "Remove combination",
+                        tint = Color.Black,
+                        modifier = Modifier.size(20.dp)
+                    )
+                }
+            }
+            }
+            Spacer(modifier = Modifier.weight(1f))
+
+            // Add / Save Outfit / Dress me button
+            Row(horizontalArrangement = Arrangement.End) {
+                Button(
+                    onClick = {
                         scope.launch {
+                            // Verify that there are items to add
                             if (itemsToAdd.isEmpty()) {
                                 Toast.makeText(
                                     context,
-                                    "Select at least one item to save an outfit",
+                                    "Select at least one item to save an outfit.",
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                                return@launch
+                            }
+
+                            // Verify that an avatar exists
+                            if (userState.avatarUri.isNullOrEmpty()) {
+                                Toast.makeText(
+                                    context,
+                                    " Please upload your personal avatar in settings before you can save an outfit.",
                                     Toast.LENGTH_SHORT
                                 ).show()
                                 return@launch
@@ -310,94 +403,9 @@ fun ActionButtonsRow(
                     },
                     enabled = itemsToAdd.isNotEmpty()
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.add),
-                        contentDescription = "save outfit",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    Text("Dress me ✨")
                 }
             }
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Shuffle button using carouselType
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = {
-                        carouselViewModel.shuffleItems(
-                            accessoriesList = closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-                            topwearList = closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                            bottomwearList = closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                            shoesList = closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-                        )
-                    }
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.shuffle),
-                        contentDescription = "shuffle",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.width(12.dp))
-
-            // Filter by favorites button
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(Color(0xFFE0E0E0)),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = { carouselViewModel.toggleFavorites() }
-                ) {
-                    Icon(
-                        painter = if (carouselState.isFavoritesActive) painterResource(R.drawable.heart_filled_red) else painterResource(R.drawable.heart_outline),
-                        contentDescription = "Filter by favorites",
-                        tint = Color.Unspecified,
-                        modifier = Modifier.size(20.dp)
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-
-            // TODO: decide if we want remove button or not
-//            Spacer(modifier = Modifier.width(12.dp))
-//            // Remove combination button
-//            Box(
-//                modifier = Modifier
-//                    .clip(MaterialTheme.shapes.medium)
-//                    .background(Color(0xFFE0E0E0)),
-//                contentAlignment = Alignment.Center
-//            ) {
-//                IconButton(
-//                    onClick = {
-//                        val allItemsByCategory = mapOf(
-//                            CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-//                            CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-//                            CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-//                            CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-//                        )
-//
-//                        carouselViewModel.removeCurrentCombination(allItemsByCategory)
-//                        Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
-//                    },
-//                    enabled = itemsToAdd.isNotEmpty()
-//                ) {
-//                    Icon(
-//                        painter = painterResource(R.drawable.minus),
-//                        contentDescription = "Remove combination",
-//                        tint = Color.Black,
-//                        modifier = Modifier.size(20.dp)
-//                    )
-//                }
-//            }
         }
     }
 }
