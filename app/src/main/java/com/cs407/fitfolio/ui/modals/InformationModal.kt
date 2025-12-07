@@ -22,6 +22,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 
@@ -34,6 +35,7 @@ fun InformationModal (onDismiss: () -> Unit, screen: String) {
     )
 
     ModalBottomSheet(
+        containerColor = FloralWhite,
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
