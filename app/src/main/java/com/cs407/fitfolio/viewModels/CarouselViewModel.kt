@@ -115,25 +115,35 @@ class CarouselViewModel(
     /** UPDATE CENTERED ITEM */
     fun updateCenteredItem(category: CarouselTypes, item: ItemEntry?) {
         val current = _carouselState.value
-        val newState = when(category) {
+
+        val newState = when (category) {
+
             CarouselTypes.ONE_PIECES ->
-                current.copy(centeredTopwear = item, centeredBottomwear = null) // CLEAR PANTS
+                current.copy(
+                    centeredTopwear = item,
+                    centeredBottomwear = null
+                )
 
             CarouselTypes.TOPWEAR ->
-                current.copy(centeredTopwear = item, centeredBottomwear = current.centeredBottomwear)
+                current.copy(centeredTopwear = item)
 
             CarouselTypes.BOTTOMWEAR ->
                 if (current.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES)
-                    current // ignore bottom picks if dress is showing
+                    current
                 else
                     current.copy(centeredBottomwear = item)
+
+            CarouselTypes.FOOTWEAR ->
+                current.copy(centeredShoes = item)
+
+            CarouselTypes.ACCESSORIES ->
+                current.copy(centeredAccessory = item)
 
             else -> current
         }
 
         _carouselState.value = newState
     }
-
 
     /** GET VALID ITEMS FOR A CATEGORY (FILTER BLOCKED) */
     fun getValidItemsForCategory(category: CarouselTypes, allItems: List<ItemEntry>): List<ItemEntry> {
