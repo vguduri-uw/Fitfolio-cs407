@@ -55,6 +55,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.cs407.fitfolio.data.ItemEntry
@@ -62,6 +64,7 @@ import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
@@ -111,13 +114,19 @@ fun CarouselScreen(
 
     Column(modifier = Modifier.fillMaxSize().padding(vertical = 8.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SimpleHeader("Outfit Carousel")
-            Spacer(modifier = Modifier.weight(1f))
+            SimpleHeader(
+                title = "Outfit Carousel",
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             WeatherDataChip(weatherData = weatherState.weatherData)
         }
+
 
         categories.forEach { category ->
             val filteredItems = allItems.filter { it.carouselType == category }
@@ -143,7 +152,11 @@ fun CarouselScreen(
                     modifier = Modifier.fillMaxWidth().height(150.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No ${category.carouselType.lowercase()} items found")
+                    Text(
+                        "No ${category.carouselType.lowercase()} found",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 18.sp
+                    )
                 }
             } else {
                 ClothingScroll(
@@ -516,8 +529,7 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
     Box(
         modifier = Modifier
             .size(150.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(if (isBlocked) Color.Gray.copy(alpha = 0.3f) else Color(0xFFE0E0E0).copy(alpha = 0.2f)),
+            .clip(MaterialTheme.shapes.medium),
         contentAlignment = Alignment.Center
     ) {
         if (item.itemPhotoUri.isNotBlank()) {
