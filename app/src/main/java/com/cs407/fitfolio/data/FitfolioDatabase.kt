@@ -31,6 +31,7 @@ data class User(
     val username: String,
     val email: String,
     val avatarUri: String = "",
+    val profilePictureUri: String = "",
     val newUser: Boolean
 )
 
@@ -322,6 +323,10 @@ interface UserDao {
               ORDER BY OutfitTag.outfitTag ASC"""
     )
     suspend fun getOutfitsTagsByUserId(id: Int): List<OutfitTag>
+
+    //Veda for profile pic
+    @Query("UPDATE user SET profilePictureUri = :profilePictureUri WHERE userId = :userId")
+    suspend fun updateProfilePicture(userId: Int, profilePictureUri: String)
 }
 
 // Item queries

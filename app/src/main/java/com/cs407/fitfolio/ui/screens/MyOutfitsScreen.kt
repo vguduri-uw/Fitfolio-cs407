@@ -122,7 +122,7 @@ fun MyOutfitsScreen(
                 .padding(start = 12.dp, end = 12.dp)
         ) {
             // profile image, my outfits title, information icon
-            TopHeader("My Outfits")
+            TopHeader("My Outfits", userViewModel = userViewModel )
 
             Spacer(modifier = Modifier.size(10.dp))
 
