@@ -27,16 +27,14 @@ private val DarkColorScheme = darkColorScheme(
 )
 
 private val LightColorScheme = lightColorScheme(
-    primary = LightPeachFuzz,
-    onPrimary = TrueBlack,
-    secondary = LightChocolate,
+    primary = ChocolateBrown,
+    onPrimary = FloralWhite,
+    secondary = GoldenApricot,
     onSecondary = FloralWhite,
-    tertiary = ChocolateBrown,
+    tertiary = RustBrown,
     onTertiary = FloralWhite,
     background = FloralWhite,
     onBackground = TrueBlack,
-    surface = FloralWhite,
-    onSurface = TrueBlack
 )
 
 // android's color schemes
