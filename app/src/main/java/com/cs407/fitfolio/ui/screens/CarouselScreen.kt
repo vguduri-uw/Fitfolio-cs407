@@ -47,6 +47,7 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
@@ -484,9 +485,25 @@ fun ClothingScroll(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     ) {
-        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex - 1) } }) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous")
+        Box(
+            modifier = Modifier
+                .clickable(
+                    onClick = {
+                        scope.launch {
+                            listState.animateScrollToItem(listState.firstVisibleItemIndex - 1)
+                        }
+                    }
+                )
+                .padding(end = 20.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.left_chevron),
+                contentDescription = "Previous",
+                modifier = Modifier
+                    .size(25.dp)
+            )
         }
+
         val flingBehavior = rememberSnapFlingBehavior(listState)
         LazyRow(
             state = listState,
@@ -501,8 +518,23 @@ fun ClothingScroll(
             }
         }
 
-        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex + 1) } }) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next")
+        Box(
+            modifier = Modifier
+                .clickable(
+                    onClick = {
+                        scope.launch {
+                            listState.animateScrollToItem(listState.firstVisibleItemIndex + 1)
+                        }
+                    }
+                )
+                .padding(start = 20.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.right_chevron),
+                contentDescription = "Next",
+                modifier = Modifier
+                    .size(25.dp)
+            )
         }
     }
 
