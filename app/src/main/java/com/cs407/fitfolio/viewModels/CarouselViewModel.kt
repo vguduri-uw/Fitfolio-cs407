@@ -19,11 +19,15 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 
 data class CarouselState(
-    val centeredAccessories: ItemEntry? = null,
+    val centeredAccessory: ItemEntry? = null,
     val centeredTopwear: ItemEntry? = null,
     val centeredBottomwear: ItemEntry? = null,
     val centeredShoes: ItemEntry? = null,
-    val isFavoritesActive: Boolean = false
+    val isFavoritesActive: Boolean = false,
+    val placeholderTopwear: ItemEntry = ItemEntry(-1, "No Topwear", "", CarouselTypes.TOPWEAR, "", emptyList(), false, false, ""),
+    val placeholderBottomwear: ItemEntry = ItemEntry(-1, "No Bottomwear", "", CarouselTypes.BOTTOMWEAR, "", emptyList(), false, false, ""),
+    val placeholderShoes: ItemEntry = ItemEntry(-1, "No Footwear", "", CarouselTypes.FOOTWEAR, "", emptyList(), false, false, ""),
+    val placeholderAccessory: ItemEntry = ItemEntry(-1, "No Accessories", "", CarouselTypes.ACCESSORIES, "", emptyList(), false, false, ""),
 )
 
 class CarouselViewModel(
@@ -42,11 +46,21 @@ class CarouselViewModel(
         viewModelScope.launch { loadBlockedCombinations() }
     }
 
+    // Gets the place holder card for carousel types
+    fun getPlaceholder(category: CarouselTypes): ItemEntry =
+        when(category) {
+            CarouselTypes.TOPWEAR -> _carouselState.value.placeholderTopwear
+            CarouselTypes.BOTTOMWEAR -> _carouselState.value.placeholderBottomwear
+            CarouselTypes.FOOTWEAR -> _carouselState.value.placeholderShoes
+            CarouselTypes.ACCESSORIES -> _carouselState.value.placeholderAccessory
+            else -> throw IllegalArgumentException("Invalid category")
+        }
+
     /** BLOCK CURRENT COMBINATION */
     fun blockCurrentCombination() {
         val current = _carouselState.value
         val ids = listOfNotNull(
-            current.centeredAccessories?.itemId,
+            current.centeredAccessory?.itemId,
             current.centeredTopwear?.itemId,
             current.centeredBottomwear?.itemId,
             current.centeredShoes?.itemId
@@ -59,7 +73,7 @@ class CarouselViewModel(
         viewModelScope.launch(Dispatchers.IO) {
             db.blockedCombinationDao().insertCombination(
                 BlockedCombination(
-                    accessoryId = current.centeredAccessories?.itemId,
+                    accessoryId = current.centeredAccessory?.itemId,
                     topwearId = current.centeredTopwear?.itemId,
                     bottomwearId = current.centeredBottomwear?.itemId,
                     shoesId = current.centeredShoes?.itemId
@@ -101,7 +115,7 @@ class CarouselViewModel(
     fun updateCenteredItem(category: CarouselTypes, item: ItemEntry?) {
         val current = _carouselState.value
         val newState = when (category) {
-            CarouselTypes.ACCESSORIES -> current.copy(centeredAccessories = item)
+            CarouselTypes.ACCESSORIES -> current.copy(centeredAccessory = item)
             CarouselTypes.TOPWEAR -> current.copy(centeredTopwear = item)
             CarouselTypes.BOTTOMWEAR -> current.copy(centeredBottomwear = item)
             CarouselTypes.FOOTWEAR -> current.copy(centeredShoes = item)
@@ -109,7 +123,7 @@ class CarouselViewModel(
         }
         if (item == null || !isComboBlocked(
                 listOf(
-                    newState.centeredAccessories,
+                    newState.centeredAccessory,
                     newState.centeredTopwear,
                     newState.centeredBottomwear,
                     newState.centeredShoes
@@ -132,19 +146,19 @@ class CarouselViewModel(
                     current.centeredShoes?.itemId
                 ).filterNotNull().toSet()
                 CarouselTypes.TOPWEAR -> setOf(
-                    current.centeredAccessories?.itemId,
+                    current.centeredAccessory?.itemId,
                     item.itemId,
                     current.centeredBottomwear?.itemId,
                     current.centeredShoes?.itemId
                 ).filterNotNull().toSet()
                 CarouselTypes.BOTTOMWEAR -> setOf(
-                    current.centeredAccessories?.itemId,
+                    current.centeredAccessory?.itemId,
                     current.centeredTopwear?.itemId,
                     item.itemId,
                     current.centeredShoes?.itemId
                 ).filterNotNull().toSet()
                 CarouselTypes.FOOTWEAR -> setOf(
-                    current.centeredAccessories?.itemId,
+                    current.centeredAccessory?.itemId,
                     current.centeredTopwear?.itemId,
                     current.centeredBottomwear?.itemId,
                     item.itemId
@@ -163,7 +177,7 @@ class CarouselViewModel(
         shoes: List<ItemEntry>
     ) {
         val newState = CarouselState(
-            centeredAccessories = accessories.firstOrNull { hw -> _blockedCombos.none { it.contains(hw.itemId) } },
+            centeredAccessory = accessories.firstOrNull { hw -> _blockedCombos.none { it.contains(hw.itemId) } },
             centeredTopwear = topwear.firstOrNull { tw -> _blockedCombos.none { it.contains(tw.itemId) } },
             centeredBottomwear = bottomwear.firstOrNull { bw -> _blockedCombos.none { it.contains(bw.itemId) } },
             centeredShoes = shoes.firstOrNull { s -> _blockedCombos.none { it.contains(s.itemId) } }

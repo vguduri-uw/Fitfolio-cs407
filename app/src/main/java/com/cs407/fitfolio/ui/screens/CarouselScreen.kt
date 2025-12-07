@@ -51,6 +51,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material.icons.outlined.LayersClear
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
@@ -131,22 +132,11 @@ fun CarouselScreen(
 
         categories.forEach { category ->
             val filteredItems = allItems.filter { it.carouselType == category }
+            val placeholder = carouselViewModel.getPlaceholder(category)
 
-            val itemsWithPlaceholder = if (category == CarouselTypes.ACCESSORIES && filteredItems.isNotEmpty()) {
-                listOf(
-                    ItemEntry(
-                        itemId = -1,
-                        itemName = "No Accessories",
-                        itemType = "",
-                        carouselType = category,
-                        itemDescription = "",
-                        itemTags = emptyList(),
-                        isFavorite = false,
-                        isDeletionCandidate = false,
-                        itemPhotoUri = ""
-                    )
-                ) + filteredItems
-            } else filteredItems
+            val itemsWithPlaceholder =
+                if (filteredItems.isNotEmpty()) listOf(placeholder) + filteredItems
+                else filteredItems
 
             if (itemsWithPlaceholder.isEmpty()) {
                 Box(
@@ -162,7 +152,7 @@ fun CarouselScreen(
             } else {
                 ClothingScroll(
                     selectedItem = when (category) {
-                        CarouselTypes.ACCESSORIES -> carouselState.centeredAccessories
+                        CarouselTypes.ACCESSORIES -> carouselState.centeredAccessory
                         CarouselTypes.TOPWEAR -> carouselState.centeredTopwear
                         CarouselTypes.BOTTOMWEAR -> carouselState.centeredBottomwear
                         CarouselTypes.FOOTWEAR -> carouselState.centeredShoes
@@ -239,7 +229,7 @@ fun ActionButtonsRow(
     val itemsToAdd by remember(carouselState) {
         derivedStateOf {
             listOfNotNull(
-                carouselState.centeredAccessories,
+                carouselState.centeredAccessory,
                 carouselState.centeredTopwear,
                 carouselState.centeredBottomwear,
                 carouselState.centeredShoes
@@ -302,47 +292,74 @@ fun ActionButtonsRow(
                         onClick = { carouselViewModel.toggleFavorites() }
                     ) {
                         Icon(
-                            painter = if (carouselState.isFavoritesActive) painterResource(R.drawable.heart_filled_red) else painterResource(R.drawable.heart_outline),
+                            painter = if (carouselState.isFavoritesActive) painterResource(R.drawable.heart_filled_red) else painterResource(
+                                R.drawable.heart_outline
+                            ),
                             contentDescription = "Filter by favorites",
                             tint = Color.Unspecified,
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
-
+                Spacer(modifier = Modifier.width(12.dp))
 
                 // TODO: decide if we want remove button or not
-                 Spacer(modifier = Modifier.width(12.dp))
-
-            // Remove combination button
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(LightPeachFuzz),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = {
-                        val allItemsByCategory = mapOf(
-                            CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-                            CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                            CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                            CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-                        )
-
-                        carouselViewModel.removeCurrentCombination(allItemsByCategory)
-                        Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
-                    },
-                    enabled = itemsToAdd.isNotEmpty()
+                // Remove combination button
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(LightPeachFuzz),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.minus),
-                        contentDescription = "Remove combination",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    IconButton(
+                        onClick = {
+                            val allItemsByCategory = mapOf(
+                                CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
+                                CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                                CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                                CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                            )
+
+                            carouselViewModel.removeCurrentCombination(allItemsByCategory)
+                            Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT)
+                                .show()
+                        },
+                        enabled = itemsToAdd.isNotEmpty()
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.minus),
+                            contentDescription = "Remove combination",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-            }
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Reset button
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(LightPeachFuzz),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = {
+                            carouselViewModel.updateCenteredItem(CarouselTypes.TOPWEAR, carouselState.placeholderTopwear)
+                            carouselViewModel.updateCenteredItem(CarouselTypes.BOTTOMWEAR, carouselState.placeholderBottomwear)
+                            carouselViewModel.updateCenteredItem(CarouselTypes.FOOTWEAR, carouselState.placeholderShoes)
+                            carouselViewModel.updateCenteredItem(CarouselTypes.ACCESSORIES, carouselState.placeholderAccessory)
+                        },
+                        enabled = itemsToAdd.isNotEmpty()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.LayersClear,
+                            contentDescription = "Set placeholder item",
+                            tint = Color.Black,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.weight(1f))
 
@@ -443,7 +460,7 @@ fun ClothingScroll(
                     (!currentState.isFavoritesActive || item.isFavorite) &&
                             carouselViewModel.blockedCombos.none { combo ->
                                 combo == listOfNotNull(
-                                    currentState.centeredAccessories.takeIf { category == CarouselTypes.ACCESSORIES },
+                                    currentState.centeredAccessory.takeIf { category == CarouselTypes.ACCESSORIES },
                                     currentState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
                                     currentState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
                                     currentState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
@@ -579,7 +596,7 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
             )
         } else {
             // fallback if no image is available
-            if (item.itemId != -1) { // do not show icon for optional slot
+            if (item.itemId != -1) { // do not show icon for placeholder slot
                 Icon(
                     painter = painterResource(R.drawable.hanger),
                     contentDescription = "No item image found"
