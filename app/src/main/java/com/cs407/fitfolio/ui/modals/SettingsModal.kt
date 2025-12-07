@@ -71,6 +71,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
+import com.cs407.fitfolio.ui.components.TopHeader
 import java.io.ByteArrayOutputStream
 import kotlin.math.sqrt
 
@@ -132,7 +133,7 @@ fun SettingsModal (
                 .fillMaxWidth()
                 .padding(top = 24.dp, bottom = 48.dp, start = 24.dp, end = 24.dp)
         ) {
-            SettingsHeader() // TODO: allow update profile image??
+            SettingsHeader(userViewModel=userViewModel) // TODO: allow update profile image??
 
             // avatar button
             val avatarButtonLabel =
@@ -295,18 +296,8 @@ fun SettingsModal (
 
 // Simple header section for the settings sheet - user profile icon, app name, modal name
 @Composable
-fun SettingsHeader () {
-    Image(
-        // TODO: replace with actual profile image
-        painter = painterResource(id = R.drawable.user),
-        contentDescription = "User profile image",
-        contentScale = ContentScale.Fit,
-        modifier = Modifier
-            .size(100.dp)
-            .clip(CircleShape)
-            .background(MaterialTheme.colorScheme.surfaceVariant),
-        alignment = Alignment.Center
-    )
+fun SettingsHeader (userViewModel: UserViewModel) {
+    TopHeader(userViewModel = userViewModel)
 
     Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp, fontWeight = FontWeight.Bold)
     Spacer(modifier = Modifier.size(5.dp))

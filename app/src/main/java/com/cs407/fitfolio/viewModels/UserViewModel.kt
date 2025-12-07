@@ -18,6 +18,7 @@ data class UserState(
     val uid: String = "",
     val email: String = "",
     val avatarUri: String = "",
+    val profilePictureUri: String = "",
     val isLoggedOut: Boolean = false,
     val newUser: Boolean = false
 )
@@ -67,6 +68,7 @@ class UserViewModel : ViewModel() {
                         uid = localUser.userUID,
                         email = localUser.email,
                         avatarUri = localUser.avatarUri,
+                        profilePictureUri = localUser.profilePictureUri,
                         newUser = localUser.newUser
                     )
                 )
@@ -78,6 +80,7 @@ class UserViewModel : ViewModel() {
                         username = firebaseUser.displayName ?: "",
                         email = firebaseUser.email ?: "",
                         avatarUri = "",
+                        profilePictureUri = "",
                         newUser = false
                     )
                 )
@@ -87,7 +90,8 @@ class UserViewModel : ViewModel() {
                         name = firebaseUser.displayName ?: "",
                         uid = firebaseUser.uid,
                         email = firebaseUser.email ?: "",
-                        avatarUri = ""
+                        avatarUri = "",
+                        profilePictureUri = "",
                     )
                 )
             }

@@ -108,7 +108,7 @@ fun MyClosetScreen(
                 .fillMaxWidth()
                 .padding(start = 12.dp, end = 12.dp)
         ) {
-            TopHeader(title = stringResource(R.string.closet_title))
+            TopHeader(title = stringResource(R.string.closet_title), userViewModel = userViewModel )
 
             Spacer(modifier = Modifier.size(10.dp))
 
