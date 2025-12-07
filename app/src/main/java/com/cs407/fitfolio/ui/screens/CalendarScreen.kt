@@ -468,19 +468,24 @@ fun OutfitDateModal(
     }
 
     if (selectedOutfitId != null) {
-        OutfitModal(
-            outfitsViewModel = outfitsViewModel,
-            closetViewModel = closetViewModel,
-            outfitId = selectedOutfitId!!,
-            onDismiss = {
-                selectedOutfitId = null
-                scope.launch {
-                    val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-                    scheduledOutfits = outfitsViewModel.getOutfitsForDate(timestamp)
-                }
-            },
-            onNavigateToCalendarScreen = { }
-        )
+        val outfitsState by outfitsViewModel.outfitsState.collectAsStateWithLifecycle()
+        val currentOutfit = outfitsState.outfits.find { it.outfitId == selectedOutfitId }
+
+        if (currentOutfit != null) {
+            OutfitModal(
+                outfitsViewModel = outfitsViewModel,
+                closetViewModel = closetViewModel,
+                outfitId = selectedOutfitId!!,
+                onDismiss = {
+                    selectedOutfitId = null
+                    scope.launch {
+                        val timestamp = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                        scheduledOutfits = outfitsViewModel.getOutfitsForDate(timestamp)
+                    }
+                },
+                onNavigateToCalendarScreen = { }
+            )
+        }
     } else {
         Dialog(onDismissRequest = onDismiss) {
             Card(
