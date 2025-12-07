@@ -64,6 +64,7 @@ import androidx.core.content.ContextCompat
 import com.cs407.fitfolio.BuildConfig
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.ItemModal
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
@@ -116,6 +117,7 @@ fun ItemTypeDropdown(
                     fontFamily = Kudryashev_Display_Sans_Regular,
                     fontWeight = FontWeight.Bold
                 )},
+            textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold),
             modifier = Modifier
                 .menuAnchor()
         )
@@ -263,7 +265,13 @@ fun AddScreen(
                 .background(LightChocolate),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = Color.White)
+            CircularProgressIndicator(color = FloralWhite)
+
+            Toast.makeText(
+                context,
+                "Please do not leave the screen during image processing.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     } else {
         Column(
