@@ -306,7 +306,7 @@ private fun PreviewSquare(
                     contentDescription = item.itemName,
                     modifier = Modifier
                         .fillMaxSize(),
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
             }
 

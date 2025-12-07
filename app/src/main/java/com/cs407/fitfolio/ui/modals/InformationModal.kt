@@ -105,8 +105,9 @@ fun InformationHeader() {
     )
 
     Spacer(modifier = Modifier.size(25.dp))
-    Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, color = Color.White, fontSize = 20.sp)
-    Text(text = "Information", fontFamily = Kudryashev_Display_Sans_Regular, color = Color.White , fontSize = 15.sp)
+    Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp)
+    Spacer(modifier = Modifier.size(15.dp))
+    Text(text = "Information", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 25.sp)
     Spacer(modifier = Modifier.size(10.dp))
 }
 

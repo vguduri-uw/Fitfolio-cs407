@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -47,21 +45,27 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.material.icons.outlined.LayersClear
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.max
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.OutfitModal
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
@@ -72,11 +76,7 @@ import kotlin.math.abs
 
 @Composable
 fun CarouselScreen(
-    onNavigateToOutfitsScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToAddScreen: () -> Unit,
-    onNavigateToClosetScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
     weatherViewModel: WeatherViewModel,
     outfitsViewModel: OutfitsViewModel,
@@ -94,16 +94,19 @@ fun CarouselScreen(
     var createdOutfitId by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
 
-    val categories = CarouselTypes.entries.filter { it != CarouselTypes.DEFAULT }
-
+    val categories = CarouselTypes.entries.filter {
+        it != CarouselTypes.DEFAULT && it != CarouselTypes.ONE_PIECES
+    }
     // Use filteredItems if available, else fallback to full item list
-    val allItems = closetState.filteredItems.takeIf { !it.isNullOrEmpty() } ?: closetState.items
+    val allItems = closetState.filteredItems.takeIf { it.isNotEmpty() } ?: closetState.items
 
     // Load carousel items by carouselType
     LaunchedEffect(Unit) {
         carouselViewModel.loadCarousel(
             accessories = allItems.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-            topwear = allItems.filter { it.carouselType == CarouselTypes.TOPWEAR },
+            topwear = allItems.filter {
+                it.carouselType == CarouselTypes.TOPWEAR || it.carouselType == CarouselTypes.ONE_PIECES
+            },
             bottomwear = allItems.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
             shoes = allItems.filter { it.carouselType == CarouselTypes.FOOTWEAR }
         )
@@ -111,44 +114,51 @@ fun CarouselScreen(
 
     Column(modifier = Modifier.fillMaxSize().padding(vertical = 8.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SimpleHeader("Outfit Carousel")
-            Spacer(modifier = Modifier.weight(1f))
+            SimpleHeader(
+                title = "Outfit Carousel",
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             WeatherDataChip(weatherData = weatherState.weatherData)
         }
 
         categories.forEach { category ->
-            val filteredItems = allItems.filter { it.carouselType == category }
+            val filteredItems =
+                when(category) {
+                    CarouselTypes.TOPWEAR ->
+                        allItems.filter {
+                            it.carouselType == CarouselTypes.TOPWEAR ||
+                                    it.carouselType == CarouselTypes.ONE_PIECES
+                        }
 
-            val itemsWithPlaceholder = if (category == CarouselTypes.ACCESSORIES && filteredItems.isNotEmpty()) {
-                listOf(
-                    ItemEntry(
-                        itemId = -1,
-                        itemName = "No Accessories",
-                        itemType = "",
-                        carouselType = category,
-                        itemDescription = "",
-                        itemTags = emptyList(),
-                        isFavorite = false,
-                        isDeletionCandidate = false,
-                        itemPhotoUri = ""
-                    )
-                ) + filteredItems
-            } else filteredItems
+                    else -> allItems.filter { it.carouselType == category }
+                }
+            val placeholder = carouselViewModel.getPlaceholder(category)
+
+            val itemsWithPlaceholder =
+                if (filteredItems.isNotEmpty()) listOf(placeholder) + filteredItems
+                else filteredItems
 
             if (itemsWithPlaceholder.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxWidth().height(150.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No ${category.carouselType.lowercase()} items found")
+                    Text(
+                        "No ${category.carouselType.lowercase()} found",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 18.sp
+                    )
                 }
             } else {
                 ClothingScroll(
                     selectedItem = when (category) {
-                        CarouselTypes.ACCESSORIES -> carouselState.centeredAccessories
+                        CarouselTypes.ACCESSORIES -> carouselState.centeredAccessory
                         CarouselTypes.TOPWEAR -> carouselState.centeredTopwear
                         CarouselTypes.BOTTOMWEAR -> carouselState.centeredBottomwear
                         CarouselTypes.FOOTWEAR -> carouselState.centeredShoes
@@ -166,14 +176,12 @@ fun CarouselScreen(
 
         ActionButtonsRow(
             closetState = closetState,
-            closetViewModel = closetViewModel,
             carouselState = carouselState,
             carouselViewModel = carouselViewModel,
             outfitsViewModel = outfitsViewModel,
             userViewModel = userViewModel,
             scope = scope,
             context = context,
-            onTryOn = { showTryOnModal = true },
             onOutfitSaved = { id -> createdOutfitId = id; showOutfitModal = true },
             onSaveError = { saveError = true }
         )
@@ -181,13 +189,8 @@ fun CarouselScreen(
 
     if (showTryOnModal) {
         TryOnModal(
-            carouselState = carouselState,
             carouselViewModel = carouselViewModel,
-            outfitsViewModel = outfitsViewModel,
-            userViewModel = userViewModel,
             onDismiss = { showTryOnModal = false },
-            context = context,
-            scope = scope
         )
     }
 
@@ -208,14 +211,12 @@ fun CarouselScreen(
 @Composable
 fun ActionButtonsRow(
     closetState: ClosetState,
-    closetViewModel: ClosetViewModel,
     carouselState: CarouselState,
     carouselViewModel: CarouselViewModel,
     outfitsViewModel: OutfitsViewModel,
     userViewModel: UserViewModel,
     scope: CoroutineScope,
     context: Context,
-    onTryOn: () -> Unit,
     onOutfitSaved: (Int) -> Unit,
     onSaveError: () -> Unit
 ) {
@@ -225,9 +226,11 @@ fun ActionButtonsRow(
     val itemsToAdd by remember(carouselState) {
         derivedStateOf {
             listOfNotNull(
-                carouselState.centeredAccessories,
+                carouselState.centeredAccessory,
                 carouselState.centeredTopwear,
-                carouselState.centeredBottomwear,
+                carouselState.centeredBottomwear.takeIf {
+                    carouselState.centeredTopwear?.carouselType != CarouselTypes.ONE_PIECES
+                },
                 carouselState.centeredShoes
             ).filter { it.itemId > 0 }
         }
@@ -240,7 +243,12 @@ fun ActionButtonsRow(
                 .background(LightChocolate),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = Color.White)
+            CircularProgressIndicator(color = FloralWhite)
+            Toast.makeText(
+                context,
+                "Please do not leave the screen during image processing.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     } else {
         Row(
@@ -288,47 +296,74 @@ fun ActionButtonsRow(
                         onClick = { carouselViewModel.toggleFavorites() }
                     ) {
                         Icon(
-                            painter = if (carouselState.isFavoritesActive) painterResource(R.drawable.heart_filled_red) else painterResource(R.drawable.heart_outline),
+                            painter = if (carouselState.isFavoritesActive) painterResource(R.drawable.heart_filled_red) else painterResource(
+                                R.drawable.heart_outline
+                            ),
                             contentDescription = "Filter by favorites",
                             tint = Color.Unspecified,
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
-
+                Spacer(modifier = Modifier.width(12.dp))
 
                 // TODO: decide if we want remove button or not
-                 Spacer(modifier = Modifier.width(12.dp))
-
-            // Remove combination button
-            Box(
-                modifier = Modifier
-                    .clip(MaterialTheme.shapes.medium)
-                    .background(LightPeachFuzz),
-                contentAlignment = Alignment.Center
-            ) {
-                IconButton(
-                    onClick = {
-                        val allItemsByCategory = mapOf(
-                            CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-                            CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                            CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                            CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-                        )
-
-                        carouselViewModel.removeCurrentCombination(allItemsByCategory)
-                        Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT).show()
-                    },
-                    enabled = itemsToAdd.isNotEmpty()
+                // Remove combination button
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(LightPeachFuzz),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.minus),
-                        contentDescription = "Remove combination",
-                        tint = Color.Black,
-                        modifier = Modifier.size(20.dp)
-                    )
+                    IconButton(
+                        onClick = {
+                            val allItemsByCategory = mapOf(
+                                CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
+                                CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
+                                CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
+                                CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
+                            )
+
+                            carouselViewModel.removeCurrentCombination(allItemsByCategory)
+                            Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT)
+                                .show()
+                        },
+                        enabled = itemsToAdd.isNotEmpty()
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.minus),
+                            contentDescription = "Remove combination",
+                            tint = if (itemsToAdd.isNotEmpty()) Color.Black else Color.Black.copy(alpha = 0.3f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
                 }
-            }
+                Spacer(modifier = Modifier.width(12.dp))
+
+                // Reset placeholder button
+                Box(
+                    modifier = Modifier
+                        .clip(MaterialTheme.shapes.medium)
+                        .background(LightPeachFuzz),
+                    contentAlignment = Alignment.Center
+                ) {
+                    IconButton(
+                        onClick = {
+                            carouselViewModel.updateCenteredItem(CarouselTypes.TOPWEAR, carouselState.placeholderTopwear)
+                            carouselViewModel.updateCenteredItem(CarouselTypes.BOTTOMWEAR, carouselState.placeholderBottomwear)
+                            carouselViewModel.updateCenteredItem(CarouselTypes.FOOTWEAR, carouselState.placeholderShoes)
+                            carouselViewModel.updateCenteredItem(CarouselTypes.ACCESSORIES, carouselState.placeholderAccessory)
+                        },
+                        enabled = itemsToAdd.isNotEmpty()
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.LayersClear,
+                            contentDescription = "Set placeholder item",
+                            tint = if (itemsToAdd.isNotEmpty()) Color.Black else Color.Black.copy(alpha = 0.3f),
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                }
             }
             Spacer(modifier = Modifier.weight(1f))
 
@@ -348,7 +383,7 @@ fun ActionButtonsRow(
                             }
 
                             // Verify that an avatar exists
-                            if (userState.avatarUri.isNullOrEmpty()) {
+                            if (userState.avatarUri.isEmpty()) {
                                 Toast.makeText(
                                     context,
                                     " Please upload your personal avatar in settings before you can save an outfit.",
@@ -395,7 +430,7 @@ fun ActionButtonsRow(
                                     onSaveError()
                                 }
 
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 isUploading = false
                                 onSaveError()
                             }
@@ -418,23 +453,36 @@ fun ClothingScroll(
     carouselViewModel: CarouselViewModel,
     onCenteredItemChange: (ItemEntry?) -> Unit
 ) {
-    val currentState by carouselViewModel.carouselState.collectAsState()
+    val carouselState by carouselViewModel.carouselState.collectAsState()
     val scope = rememberCoroutineScope()
+    val cardHeight =
+        if (category == CarouselTypes.TOPWEAR &&
+            carouselState.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES)
+            320.dp
+        else
+            150.dp
+    val shouldShow = when(category) {
+        CarouselTypes.BOTTOMWEAR ->
+            carouselState.centeredTopwear?.carouselType != CarouselTypes.ONE_PIECES
+
+        else -> true
+    }
+    if (!shouldShow) return
 
     // Dynamically filter items based on currently centered items in other categories
-    val filteredItems by remember(currentState, closetItems) {
+    val filteredItems by remember(carouselState, closetItems) {
         derivedStateOf {
             closetItems
                 .filter { item ->
-                    (!currentState.isFavoritesActive || item.isFavorite) &&
+                    (!carouselState.isFavoritesActive || item.isFavorite) &&
                             carouselViewModel.blockedCombos.none { combo ->
                                 combo == listOfNotNull(
-                                    currentState.centeredAccessories.takeIf { category == CarouselTypes.ACCESSORIES },
-                                    currentState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
-                                    currentState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
-                                    currentState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
+                                    carouselState.centeredAccessory.takeIf { category == CarouselTypes.ACCESSORIES },
+                                    carouselState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
+                                    carouselState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
+                                    carouselState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
                                     item.takeIf { true }
-                                ).mapNotNull { it?.itemId }.toSet()
+                                ).map { it.itemId }.toSet()
                             }
                 }
         }
@@ -471,13 +519,29 @@ fun ClothingScroll(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     ) {
-        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex - 1) } }) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous")
+        Box(
+            modifier = Modifier
+                .clickable(
+                    onClick = {
+                        scope.launch {
+                            listState.animateScrollToItem(listState.firstVisibleItemIndex - 1)
+                        }
+                    }
+                )
+                .padding(end = 20.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.left_chevron),
+                contentDescription = "Previous",
+                modifier = Modifier
+                    .size(25.dp)
+            )
         }
+
         val flingBehavior = rememberSnapFlingBehavior(listState)
         LazyRow(
             state = listState,
-            modifier = Modifier.weight(1f).height(150.dp),
+            modifier = Modifier.weight(1f).height(cardHeight),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(horizontal = 75.dp),
             flingBehavior = flingBehavior
@@ -488,8 +552,23 @@ fun ClothingScroll(
             }
         }
 
-        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex + 1) } }) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next")
+        Box(
+            modifier = Modifier
+                .clickable(
+                    onClick = {
+                        scope.launch {
+                            listState.animateScrollToItem(listState.firstVisibleItemIndex + 1)
+                        }
+                    }
+                )
+                .padding(start = 20.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.right_chevron),
+                contentDescription = "Next",
+                modifier = Modifier
+                    .size(25.dp)
+            )
         }
     }
 
@@ -512,12 +591,17 @@ fun ClothingScroll(
 @Composable
 fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
     var aspectRatio by remember { mutableFloatStateOf(1f) }
+    val cardHeight =
+        if (item.carouselType == CarouselTypes.ONE_PIECES)
+            320.dp // one piece height
+        else
+            150.dp
 
     Box(
         modifier = Modifier
-            .size(150.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(if (isBlocked) Color.Gray.copy(alpha = 0.3f) else Color(0xFFE0E0E0).copy(alpha = 0.2f)),
+            .height( max(150.dp, cardHeight - 40.dp) )
+            .width(150.dp)
+            .clip(MaterialTheme.shapes.medium),
         contentAlignment = Alignment.Center
     ) {
         if (item.itemPhotoUri.isNotBlank()) {
@@ -535,7 +619,7 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
             )
         } else {
             // fallback if no image is available
-            if (item.itemId != -1) { // do not show icon for optional slot
+            if (item.itemId != -1) { // do not show icon for placeholder slot
                 Icon(
                     painter = painterResource(R.drawable.hanger),
                     contentDescription = "No item image found"
@@ -547,13 +631,8 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
 
 @Composable
 fun TryOnModal(
-    carouselState: CarouselState,
     carouselViewModel: CarouselViewModel,
-    outfitsViewModel: OutfitsViewModel,
-    userViewModel: UserViewModel,
     onDismiss: () -> Unit,
-    context: Context,
-    scope: CoroutineScope
 ) {
     val tryOnUrl by carouselViewModel.tryOnPreview.collectAsState()
 

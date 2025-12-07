@@ -66,6 +66,7 @@ import androidx.core.content.ContextCompat
 import com.cs407.fitfolio.BuildConfig
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.ItemModal
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
@@ -77,7 +78,6 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
-import kotlin.enums.EnumEntries
 
 fun createImageUri(context: Context): Uri {
     val contentResolver = context.contentResolver
@@ -119,6 +119,7 @@ fun ItemTypeDropdown(
                     fontFamily = Kudryashev_Display_Sans_Regular,
                     fontWeight = FontWeight.Bold
                 )},
+            textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold),
             modifier = Modifier
                 .menuAnchor()
         )
@@ -265,7 +266,13 @@ fun AddScreen(
                 .background(LightChocolate),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(color = Color.White)
+            CircularProgressIndicator(color = FloralWhite)
+
+            Toast.makeText(
+                context,
+                "Please do not leave the screen during image processing.",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     } else {
         Column(
@@ -506,7 +513,7 @@ fun AddScreen(
 
                         if (itemId > 0) {
                             createdItemId = itemId
-                            Toast.makeText(context, "Item saved to closet.", Toast.LENGTH_SHORT)
+                            Toast.makeText(context, "Item saved to closet", Toast.LENGTH_SHORT)
                                 .show()
                             showItemModal = true
                         } else {
