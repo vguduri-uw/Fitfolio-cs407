@@ -343,14 +343,14 @@ fun ActionButtonsRow(
                         Icon(
                             painter = painterResource(R.drawable.minus),
                             contentDescription = "Remove combination",
-                            tint = Color.Black,
+                            tint = if (itemsToAdd.isNotEmpty()) Color.Black else Color.Black.copy(alpha = 0.3f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
                 }
                 Spacer(modifier = Modifier.width(12.dp))
 
-                // Reset button
+                // Reset placeholder button
                 Box(
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.medium)
@@ -369,7 +369,7 @@ fun ActionButtonsRow(
                         Icon(
                             imageVector = Icons.Outlined.LayersClear,
                             contentDescription = "Set placeholder item",
-                            tint = Color.Black,
+                            tint = if (itemsToAdd.isNotEmpty()) Color.Black else Color.Black.copy(alpha = 0.3f),
                             modifier = Modifier.size(20.dp)
                         )
                     }
