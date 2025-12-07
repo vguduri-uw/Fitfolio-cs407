@@ -611,8 +611,7 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
         modifier = Modifier
             .height( max(150.dp, cardHeight - 40.dp) )
             .width(150.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(if (isBlocked) Color.Gray.copy(alpha = 0.3f) else Color(0xFFE0E0E0).copy(alpha = 0.2f)),
+            .clip(MaterialTheme.shapes.medium),
         contentAlignment = Alignment.Center
     ) {
         if (item.itemPhotoUri.isNotBlank()) {
