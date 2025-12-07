@@ -357,7 +357,7 @@ fun ActionButtonsRow(
                         enabled = itemsToAdd.isNotEmpty()
                     ) {
                         Icon(
-                            imageVector = Icons.Outlined.LayersClear,
+                            painter = painterResource(R.drawable.placeholder_toggle),
                             contentDescription = "Set placeholder item",
                             tint = if (itemsToAdd.isNotEmpty()) Color.Black else Color.Black.copy(alpha = 0.3f),
                             modifier = Modifier.size(20.dp)
