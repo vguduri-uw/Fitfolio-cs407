@@ -6,20 +6,19 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
@@ -59,6 +58,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.ItemEntry
 import com.cs407.fitfolio.viewModels.ClosetViewModel
@@ -70,7 +70,6 @@ import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.GoldenApricot
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
-import com.cs407.fitfolio.ui.theme.TrueWhite
 import kotlinx.coroutines.launch
 
 @Composable
@@ -378,9 +377,10 @@ fun IconBox (
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
+                        .heightIn(max = 350.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .aspectRatio(aspectRatio),
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     onSuccess = {
                         val w = it.result.drawable.intrinsicWidth
                         val h = it.result.drawable.intrinsicHeight
@@ -631,7 +631,7 @@ fun ItemInformation(
                                     outfitId = outfit.outfitId,
                                     outfitsViewModel = outfitsViewModel,
                                     onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                                    imageRes = R.drawable.shirt, // swap to outfit.outfitPhotoUri when ready
+                                    imageRes = outfit.outfitPhotoUri, // swap to outfit.outfitPhotoUri when ready
                                     closetViewModel = closetViewModel
                                 )
                             }
@@ -664,9 +664,10 @@ private fun OutfitsCard(
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
-    imageRes: Int,
+    imageRes: String,
 ) {
     var showOutfitModal by remember { mutableStateOf(false) }
+    var aspectRatio by remember { mutableFloatStateOf(1f) }
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -683,16 +684,29 @@ private fun OutfitsCard(
             .fillMaxSize()
             .clickable { showOutfitModal = true }
     ) {
-        Image(
-            painter = painterResource(imageRes),
-            contentDescription = "$outfitName image",
-            modifier = Modifier.size(72.dp)
-        )
+        val hasPhoto = imageRes.isNotBlank()
+        if (hasPhoto) {
+            Image(
+                painter = rememberAsyncImagePainter(imageRes),
+                contentDescription = "$outfitName image",
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .size(120.dp)
+            )
+        } else {
+            Image(
+                painter = painterResource(R.drawable.hanger),
+                contentDescription = "Placeholder image for $outfitName",
+                modifier = Modifier
+                    .clip(MaterialTheme.shapes.medium)
+                    .size(120.dp)
+            )
+        }
         Text(
             text = outfitName,
             fontFamily = Kudryashev_Display_Sans_Regular,
-            fontWeight = FontWeight.Bold,
             fontSize = 15.sp,
+            fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center
         )
     }
