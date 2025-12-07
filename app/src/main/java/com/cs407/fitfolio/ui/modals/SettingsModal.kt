@@ -61,7 +61,7 @@ import coil.compose.AsyncImage
 import com.cs407.fitfolio.ui.screens.createImageUri
 import com.cs407.fitfolio.services.RetrofitInstance
 import com.cs407.fitfolio.services.FashnRunRequest
-import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -69,6 +69,8 @@ import kotlinx.coroutines.withContext
 import android.util.Base64
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontWeight
 import java.io.ByteArrayOutputStream
 import kotlin.math.sqrt
 
@@ -142,7 +144,7 @@ fun SettingsModal (
                     .offset(y = -10.dp)
                     .width(160.dp)
             ) {
-                Text(text = avatarButtonLabel, fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                Text(text = avatarButtonLabel, fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             }
 
             // Fields for editing user information
@@ -183,7 +185,7 @@ fun SettingsModal (
                     // there should be an alert dialog that requires them to confirm
                 },
                 enabled = saveable,
-                content = { Text("Save", fontFamily = Google_Sans_Flex, fontSize = 15.sp) },
+                content = { Text("Save", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold) },
                 modifier = Modifier.width(125.dp)
             )
 
@@ -194,7 +196,7 @@ fun SettingsModal (
                     showSignOutDialog = true
 
                 },
-                content = { Text("Sign Out", fontFamily = Google_Sans_Flex, fontSize = 15.sp) },
+                content = { Text("Sign Out", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold) },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
@@ -206,7 +208,8 @@ fun SettingsModal (
             // Reset account link
             Text(
                 text = "Reset your account",
-                fontFamily = Google_Sans_Flex,
+                fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold,
                 textDecoration = TextDecoration.Underline,
                 fontSize = 15.sp,
                 modifier = Modifier
@@ -234,12 +237,12 @@ fun SettingsModal (
                         onSignOut()
                     }
                 ) {
-                    Text("Yes", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    Text("Yes", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
             },
             dismissButton = {
                 Button(onClick = { showSignOutDialog = false }) {
-                    Text("Cancel", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -255,7 +258,7 @@ fun SettingsModal (
                     "For best results, take or upload a full-body photo from head to toe, " +
                             "standing straight, wearing a form-fitting black tank top and black shorts if possible. \n\n" +
                             "Make sure you’re in a well lit space and the background is as simple as possible.",
-                    fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
             },
             confirmButton = {
                 Button(
@@ -263,11 +266,11 @@ fun SettingsModal (
                         showAvatarInstructions = false
                         showAvatarDialog = true
                     }
-                ) { Text("Continue", fontFamily = Google_Sans_Flex, fontSize = 15.sp) }
+                ) { Text("Continue", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold) }
             },
             dismissButton = {
                 Button(onClick = { showAvatarInstructions = false }) {
-                    Text("Cancel", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
             }
         )
@@ -305,8 +308,9 @@ fun SettingsHeader () {
         alignment = Alignment.Center
     )
 
-    Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp)
-    Text(text = "Settings", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp, modifier = Modifier.offset(y = -15.dp))
+    Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp, fontWeight = FontWeight.Bold)
+    Spacer(modifier = Modifier.size(5.dp))
+    Text(text = "Settings", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.offset(y = -15.dp))
 }
 
 // Reusable text field used for Name, Email, and Password rows that enables editing and notifies parent when values change
@@ -321,7 +325,7 @@ fun EditableField(
         OutlinedTextField(
             value = value,
             onValueChange = onValueChange,
-            label = { Text(label, fontFamily = Google_Sans_Flex) },
+            label = { Text(label, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
             modifier = Modifier.fillMaxWidth(),
             visualTransformation = if (isPassword) PasswordVisualTransformation() else VisualTransformation.None
         )
@@ -449,7 +453,7 @@ fun AvatarDialog(
                             )
                         }
                         else -> {
-                            Text("No photo selected yet", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                            Text("No photo selected yet", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -463,7 +467,7 @@ fun AvatarDialog(
                         onClick = { galleryLauncher.launch("image/*") },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Upload", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                        Text("Upload", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     }
 
                     Button(
@@ -482,7 +486,7 @@ fun AvatarDialog(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Take Photo", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                        Text("Take Photo", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -583,15 +587,16 @@ fun AvatarDialog(
                 ) {
                     Text(
                         if (isProcessing) "Processing..." else "Remove Background",
-                        fontFamily = Google_Sans_Flex,
-                        fontSize = 15.sp
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
                     )
                 }
 
                 if (processedAvatarUrl != null) {
                     Text(
                         "Looks good? You can save this as your avatar or retake/reupload.",
-                        fontFamily = Google_Sans_Flex, fontSize = 15.sp
+                        fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold
                     )
                 }
             }
@@ -606,7 +611,7 @@ fun AvatarDialog(
                     onClick = onDismiss,
                     modifier = Modifier.weight(0.5f)
                 ) {
-                    Text("Cancel", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
 
                 Spacer(modifier = Modifier.size(8.dp))
@@ -634,7 +639,7 @@ fun AvatarDialog(
                     enabled = processedAvatarUrl != null && !isProcessing,
                     modifier = Modifier.weight(0.5f)
                 ) {
-                    Text("Save Avatar", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    Text("Save Avatar", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
             }
         }
