@@ -50,11 +50,12 @@ class CarouselViewModel(
     fun getPlaceholder(category: CarouselTypes): ItemEntry =
         when(category) {
             CarouselTypes.TOPWEAR -> _carouselState.value.placeholderTopwear
+            CarouselTypes.ONE_PIECES -> _carouselState.value.placeholderTopwear // use top slot
             CarouselTypes.BOTTOMWEAR -> _carouselState.value.placeholderBottomwear
             CarouselTypes.FOOTWEAR -> _carouselState.value.placeholderShoes
             CarouselTypes.ACCESSORIES -> _carouselState.value.placeholderAccessory
             else -> throw IllegalArgumentException("Invalid category")
-        }
+    }
 
     /** BLOCK CURRENT COMBINATION */
     fun blockCurrentCombination() {
@@ -114,25 +115,25 @@ class CarouselViewModel(
     /** UPDATE CENTERED ITEM */
     fun updateCenteredItem(category: CarouselTypes, item: ItemEntry?) {
         val current = _carouselState.value
-        val newState = when (category) {
-            CarouselTypes.ACCESSORIES -> current.copy(centeredAccessory = item)
-            CarouselTypes.TOPWEAR -> current.copy(centeredTopwear = item)
-            CarouselTypes.BOTTOMWEAR -> current.copy(centeredBottomwear = item)
-            CarouselTypes.FOOTWEAR -> current.copy(centeredShoes = item)
+        val newState = when(category) {
+            CarouselTypes.ONE_PIECES ->
+                current.copy(centeredTopwear = item, centeredBottomwear = null) // CLEAR PANTS
+
+            CarouselTypes.TOPWEAR ->
+                current.copy(centeredTopwear = item, centeredBottomwear = current.centeredBottomwear)
+
+            CarouselTypes.BOTTOMWEAR ->
+                if (current.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES)
+                    current // ignore bottom picks if dress is showing
+                else
+                    current.copy(centeredBottomwear = item)
+
             else -> current
         }
-        if (item == null || !isComboBlocked(
-                listOf(
-                    newState.centeredAccessory,
-                    newState.centeredTopwear,
-                    newState.centeredBottomwear,
-                    newState.centeredShoes
-                )
-            )
-        ) {
-            _carouselState.value = newState
-        }
+
+        _carouselState.value = newState
     }
+
 
     /** GET VALID ITEMS FOR A CATEGORY (FILTER BLOCKED) */
     fun getValidItemsForCategory(category: CarouselTypes, allItems: List<ItemEntry>): List<ItemEntry> {

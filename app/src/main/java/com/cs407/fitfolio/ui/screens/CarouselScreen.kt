@@ -57,6 +57,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.max
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -99,8 +100,9 @@ fun CarouselScreen(
     var createdOutfitId by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
 
-    val categories = CarouselTypes.entries.filter { it != CarouselTypes.DEFAULT }
-
+    val categories = CarouselTypes.entries.filter {
+        it != CarouselTypes.DEFAULT && it != CarouselTypes.ONE_PIECES
+    }
     // Use filteredItems if available, else fallback to full item list
     val allItems = closetState.filteredItems.takeIf { !it.isNullOrEmpty() } ?: closetState.items
 
@@ -108,7 +110,9 @@ fun CarouselScreen(
     LaunchedEffect(Unit) {
         carouselViewModel.loadCarousel(
             accessories = allItems.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-            topwear = allItems.filter { it.carouselType == CarouselTypes.TOPWEAR },
+            topwear = allItems.filter {
+                it.carouselType == CarouselTypes.TOPWEAR || it.carouselType == CarouselTypes.ONE_PIECES
+            },
             bottomwear = allItems.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
             shoes = allItems.filter { it.carouselType == CarouselTypes.FOOTWEAR }
         )
@@ -129,9 +133,17 @@ fun CarouselScreen(
             WeatherDataChip(weatherData = weatherState.weatherData)
         }
 
-
         categories.forEach { category ->
-            val filteredItems = allItems.filter { it.carouselType == category }
+            val filteredItems =
+                when(category) {
+                    CarouselTypes.TOPWEAR ->
+                        allItems.filter {
+                            it.carouselType == CarouselTypes.TOPWEAR ||
+                                    it.carouselType == CarouselTypes.ONE_PIECES
+                        }
+
+                    else -> allItems.filter { it.carouselType == category }
+                }
             val placeholder = carouselViewModel.getPlaceholder(category)
 
             val itemsWithPlaceholder =
@@ -231,7 +243,9 @@ fun ActionButtonsRow(
             listOfNotNull(
                 carouselState.centeredAccessory,
                 carouselState.centeredTopwear,
-                carouselState.centeredBottomwear,
+                carouselState.centeredBottomwear.takeIf {
+                    carouselState.centeredTopwear?.carouselType != CarouselTypes.ONE_PIECES
+                },
                 carouselState.centeredShoes
             ).filter { it.itemId > 0 }
         }
@@ -449,21 +463,34 @@ fun ClothingScroll(
     carouselViewModel: CarouselViewModel,
     onCenteredItemChange: (ItemEntry?) -> Unit
 ) {
-    val currentState by carouselViewModel.carouselState.collectAsState()
+    val carouselState by carouselViewModel.carouselState.collectAsState()
     val scope = rememberCoroutineScope()
+    val cardHeight =
+        if (category == CarouselTypes.TOPWEAR &&
+            carouselState.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES)
+            320.dp
+        else
+            150.dp
+    val shouldShow = when(category) {
+        CarouselTypes.BOTTOMWEAR ->
+            carouselState.centeredTopwear?.carouselType != CarouselTypes.ONE_PIECES
+
+        else -> true
+    }
+    if (!shouldShow) return
 
     // Dynamically filter items based on currently centered items in other categories
-    val filteredItems by remember(currentState, closetItems) {
+    val filteredItems by remember(carouselState, closetItems) {
         derivedStateOf {
             closetItems
                 .filter { item ->
-                    (!currentState.isFavoritesActive || item.isFavorite) &&
+                    (!carouselState.isFavoritesActive || item.isFavorite) &&
                             carouselViewModel.blockedCombos.none { combo ->
                                 combo == listOfNotNull(
-                                    currentState.centeredAccessory.takeIf { category == CarouselTypes.ACCESSORIES },
-                                    currentState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
-                                    currentState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
-                                    currentState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
+                                    carouselState.centeredAccessory.takeIf { category == CarouselTypes.ACCESSORIES },
+                                    carouselState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
+                                    carouselState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
+                                    carouselState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
                                     item.takeIf { true }
                                 ).mapNotNull { it?.itemId }.toSet()
                             }
@@ -524,7 +551,7 @@ fun ClothingScroll(
         val flingBehavior = rememberSnapFlingBehavior(listState)
         LazyRow(
             state = listState,
-            modifier = Modifier.weight(1f).height(150.dp),
+            modifier = Modifier.weight(1f).height(cardHeight),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             contentPadding = PaddingValues(horizontal = 75.dp),
             flingBehavior = flingBehavior
@@ -574,11 +601,18 @@ fun ClothingScroll(
 @Composable
 fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
     var aspectRatio by remember { mutableFloatStateOf(1f) }
+    val cardHeight =
+        if (item.carouselType == CarouselTypes.ONE_PIECES)
+            320.dp // one piece height
+        else
+            150.dp
 
     Box(
         modifier = Modifier
-            .size(150.dp)
-            .clip(MaterialTheme.shapes.medium),
+            .height( max(150.dp, cardHeight - 40.dp) )
+            .width(150.dp)
+            .clip(MaterialTheme.shapes.medium)
+            .background(if (isBlocked) Color.Gray.copy(alpha = 0.3f) else Color(0xFFE0E0E0).copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
         if (item.itemPhotoUri.isNotBlank()) {
