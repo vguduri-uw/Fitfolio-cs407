@@ -124,7 +124,7 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                         fontSize = 15.sp,
                         fontFamily = Kudryashev_Display_Sans_Regular,
                         fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.offset(y = -5.dp)
+                        modifier = Modifier.offset(y = (-5).dp)
                     )}
             }
         },
@@ -165,11 +165,7 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
             // Defines the "carousel" route and what UI to display there
             composable(route = "carousel") {
                 CarouselScreen(
-                    onNavigateToOutfitsScreen = { navController.navigate("outfits") },
                     onNavigateToCalendarScreen = { navController.navigate("calendar") },
-                    onNavigateToAddScreen = { navController.navigate("add") },
-                    onNavigateToClosetScreen = { navController.navigate("closet") },
-                    onNavigateToSignInScreen = { navController.navigate("sign_in") },
                     closetViewModel = closetViewModel,
                     weatherViewModel = weatherViewModel,
                     userViewModel = userViewModel,

@@ -18,8 +18,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -58,7 +56,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.max
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
@@ -78,11 +75,7 @@ import kotlin.math.abs
 
 @Composable
 fun CarouselScreen(
-    onNavigateToOutfitsScreen: () -> Unit,
     onNavigateToCalendarScreen: () -> Unit,
-    onNavigateToAddScreen: () -> Unit,
-    onNavigateToClosetScreen: () -> Unit,
-    onNavigateToSignInScreen: () -> Unit,
     closetViewModel: ClosetViewModel,
     weatherViewModel: WeatherViewModel,
     outfitsViewModel: OutfitsViewModel,
@@ -104,7 +97,7 @@ fun CarouselScreen(
         it != CarouselTypes.DEFAULT && it != CarouselTypes.ONE_PIECES
     }
     // Use filteredItems if available, else fallback to full item list
-    val allItems = closetState.filteredItems.takeIf { !it.isNullOrEmpty() } ?: closetState.items
+    val allItems = closetState.filteredItems.takeIf { it.isNotEmpty() } ?: closetState.items
 
     // Load carousel items by carouselType
     LaunchedEffect(Unit) {
@@ -182,14 +175,12 @@ fun CarouselScreen(
 
         ActionButtonsRow(
             closetState = closetState,
-            closetViewModel = closetViewModel,
             carouselState = carouselState,
             carouselViewModel = carouselViewModel,
             outfitsViewModel = outfitsViewModel,
             userViewModel = userViewModel,
             scope = scope,
             context = context,
-            onTryOn = { showTryOnModal = true },
             onOutfitSaved = { id -> createdOutfitId = id; showOutfitModal = true },
             onSaveError = { saveError = true }
         )
@@ -197,13 +188,8 @@ fun CarouselScreen(
 
     if (showTryOnModal) {
         TryOnModal(
-            carouselState = carouselState,
             carouselViewModel = carouselViewModel,
-            outfitsViewModel = outfitsViewModel,
-            userViewModel = userViewModel,
             onDismiss = { showTryOnModal = false },
-            context = context,
-            scope = scope
         )
     }
 
@@ -224,14 +210,12 @@ fun CarouselScreen(
 @Composable
 fun ActionButtonsRow(
     closetState: ClosetState,
-    closetViewModel: ClosetViewModel,
     carouselState: CarouselState,
     carouselViewModel: CarouselViewModel,
     outfitsViewModel: OutfitsViewModel,
     userViewModel: UserViewModel,
     scope: CoroutineScope,
     context: Context,
-    onTryOn: () -> Unit,
     onOutfitSaved: (Int) -> Unit,
     onSaveError: () -> Unit
 ) {
@@ -393,7 +377,7 @@ fun ActionButtonsRow(
                             }
 
                             // Verify that an avatar exists
-                            if (userState.avatarUri.isNullOrEmpty()) {
+                            if (userState.avatarUri.isEmpty()) {
                                 Toast.makeText(
                                     context,
                                     " Please upload your personal avatar in settings before you can save an outfit.",
@@ -440,7 +424,7 @@ fun ActionButtonsRow(
                                     onSaveError()
                                 }
 
-                            } catch (e: Exception) {
+                            } catch (_: Exception) {
                                 isUploading = false
                                 onSaveError()
                             }
@@ -492,7 +476,7 @@ fun ClothingScroll(
                                     carouselState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
                                     carouselState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
                                     item.takeIf { true }
-                                ).mapNotNull { it?.itemId }.toSet()
+                                ).map { it.itemId }.toSet()
                             }
                 }
         }
@@ -641,13 +625,8 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
 
 @Composable
 fun TryOnModal(
-    carouselState: CarouselState,
     carouselViewModel: CarouselViewModel,
-    outfitsViewModel: OutfitsViewModel,
-    userViewModel: UserViewModel,
     onDismiss: () -> Unit,
-    context: Context,
-    scope: CoroutineScope
 ) {
     val tryOnUrl by carouselViewModel.tryOnPreview.collectAsState()
 
