@@ -438,7 +438,7 @@ fun AddScreen(
 
                         if (itemId > 0) {
                             createdItemId = itemId
-                            Toast.makeText(context, "Item saved to closet.", Toast.LENGTH_SHORT)
+                            Toast.makeText(context, "Item saved to closet", Toast.LENGTH_SHORT)
                                 .show()
                             showItemModal = true
                         } else {
