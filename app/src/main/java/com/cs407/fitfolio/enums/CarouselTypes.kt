@@ -5,6 +5,7 @@ enum class CarouselTypes(val carouselType: String) {
     DEFAULT("Choose a carousel type."),
     ACCESSORIES("Accessories"),
     TOPWEAR("Topwear"),
+    ONE_PIECES("One-pieces"),
     BOTTOMWEAR("Bottomwear"),
     FOOTWEAR("Footwear")
 }
