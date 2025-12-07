@@ -54,6 +54,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -200,7 +202,7 @@ fun AddScreen(
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit
 ) {
-    var showInfo by remember { mutableStateOf(false) } // informationModal
+//    var showInfo by remember { mutableStateOf(false) } // informationModal
     val context = LocalContext.current // context for toast message
 
     val closetState by closetViewModel.closetState.collectAsState()
@@ -224,7 +226,6 @@ fun AddScreen(
         selectedCarouselType = CarouselTypes.DEFAULT
         createdItemId = -1
         saveError = false
-        showInfo = false
     }
 
     // gallery launcher
@@ -281,30 +282,97 @@ fun AddScreen(
                 .background(LightPeachFuzz),
             contentAlignment = Alignment.Center
         ) {
-            IconButton(
-                onClick = { showInfo = true },
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 8.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Info,
-                    contentDescription = "Info for camera use",
-                    tint = Color.Black
-                )
-            }
+//            IconButton(
+//                onClick = { showInfo = true },
+//                modifier = Modifier
+//                    .align(Alignment.TopEnd)
+//                    .padding(top = 8.dp)
+//            ) {
+//                Icon(
+//                    imageVector = Icons.Outlined.Info,
+//                    contentDescription = "Info for camera use",
+//                    tint = Color.Black
+//                )
+//            }
 
-                if (showInfo) {
-                    InformationModal(
-                        onDismiss = { showInfo = false },
-                        screen = "Add"
+//                if (showInfo) {
+//                    InformationModal(
+//                        onDismiss = { showInfo = false },
+//                        screen = "Add"
+//                    )
+//                }
+
+            if (selectedImageUri == null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        "Add Items to Your Closet",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 18.sp,
+                        color = Color.Black
+                    )
+
+                    Text(
+                        "Transform your physical wardrobe into a digital collection by photographing your clothing items.",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        "Photography Tips",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp,
+                        color = Color.Black,
+                        textDecoration = TextDecoration.Underline
+                    )
+
+                    Text(
+                        "This is the screen to add your physical clothing items to your digital closet",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        "For best results, lay your item of clothing flat on a contrasting surface and center it in the frame. Ensure good lighting and avoid shadows.",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        "Important: Do not wear the item when photographing. This ensures accurate virtual try-on results.",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
+                    )
+
+                    Text(
+                        "After uploading, remember to select the appropriate item type and carousel category for proper organization.",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 14.sp,
+                        color = Color.Black,
+                        textAlign = TextAlign.Center
                     )
                 }
-
-                if (selectedImageUri == null) {
-                    Text("No image selected yet", fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold)
-                } else {
+            } else {
                     AsyncImage(
                         model = selectedImageUri,
                         contentDescription = "Photo $selectedImageUri",
