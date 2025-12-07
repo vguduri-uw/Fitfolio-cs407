@@ -252,8 +252,6 @@ private fun ItemCard(
     closetViewModel: ClosetViewModel,
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit,
-    enableModal: Boolean = true,
-    showSelectionBadge: Boolean = false
 ) {
     var showItemModal by remember { mutableStateOf(false) }
 
@@ -262,19 +260,12 @@ private fun ItemCard(
             .clip(MaterialTheme.shapes.medium)
             .background(FloralWhite)
     ) {
-        val contentModifier =
-            if (enableModal) {
-                Modifier
-                    .clickable { showItemModal = true }
-                    .padding(10.dp)
-            } else {
-                Modifier.padding(10.dp)
-            }
-
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(6.dp),
-            modifier = contentModifier
+            modifier = Modifier
+                .clickable { showItemModal = true }
+                .padding(10.dp)
         ) {
             val hasPhoto = photoUri.isNotBlank()
 
@@ -282,49 +273,32 @@ private fun ItemCard(
                 Image(
                     painter = rememberAsyncImagePainter(photoUri),
                     contentDescription = "$name image",
-                    modifier = Modifier.size(72.dp)
+                    modifier = Modifier.size(90.dp),
+                    contentScale = ContentScale.Crop
                 )
             } else {
                 Image(
                     painter = painterResource(imageRes),
                     contentDescription = "Placeholder image for $name",
-                    modifier = Modifier.size(72.dp)
+                    modifier = Modifier.size(85.dp),
+                    contentScale = ContentScale.Crop
                 )
             }
 
             Text(
                 text = name,
                 fontFamily = Kudryashev_Display_Sans_Regular,
-                fontSize = 15.sp,
+                fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
             Text(
                 text = type,
                 fontFamily = Kudryashev_Display_Sans_Regular,
-                fontSize = 13.sp,
+                fontSize = 15.sp,
                 fontWeight = FontWeight.Bold,
                 textAlign = TextAlign.Center
             )
-        }
-
-        if (showSelectionBadge) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(6.dp)
-                    .size(22.dp)
-                    .clip(MaterialTheme.shapes.extraSmall)
-                    .background(GoldenApricot),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    painter = painterResource(R.drawable.add_nav_thick),
-                    contentDescription = "Select item",
-                    tint = LightPeachFuzz,
-                    modifier = Modifier.size(16.dp)
-                )
-            }
         }
     }
 
@@ -921,9 +895,6 @@ private fun ItemsInOutfitCard(
     // tracks state of ids of items selected to be deleted
     var selectedIds by remember(outfit.outfitId) { mutableStateOf<Set<Int>>(emptySet()) }
 
-    // tracks state of alert dialog
-    var showBatchDeleteDialog by remember { mutableStateOf(false) }
-
     Box(
         modifier = Modifier
             .clip(MaterialTheme.shapes.medium)
@@ -946,58 +917,6 @@ private fun ItemsInOutfitCard(
                     fontWeight = FontWeight.Bold,
                     fontSize = 20.sp,
                 )
-
-                // actions on the right
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    if (localEditing) {
-                        // trash/delete icon (enabled only if there's a selection)
-                        Box(
-                            modifier = Modifier
-                                .clickable(
-                                    enabled = selectedIds.isNotEmpty(),
-                                    onClick = { showBatchDeleteDialog = true },
-                                ),
-                        ) {
-                            Icon(
-                                painter = painterResource(R.drawable.delete),
-                                contentDescription = "Delete selected items",
-                                modifier = Modifier.size(20.dp),
-                                tint = if (selectedIds.isNotEmpty()) Color.Red else Color.Gray
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.size(5.dp))
-
-                        // confirm/save changes (exists edit mode)
-                        Box(
-                            modifier = Modifier
-                                .clickable(
-                                    onClick = {
-                                        localEditing = false
-                                        selectedIds = emptySet()
-                                    }
-                                )
-                            ) {
-                            Icon(
-                                painter = painterResource(R.drawable.check),
-                                contentDescription = "Done editing",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    } else {
-                        // enter edit mode
-                        Box(modifier = Modifier.clickable(onClick = { localEditing = true })) {
-                            Icon(
-                                painter = painterResource(R.drawable.edit),
-                                contentDescription = "Edit list of items",
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
             }
 
             // items row
@@ -1018,10 +937,6 @@ private fun ItemsInOutfitCard(
                                 )
                                 .clip(MaterialTheme.shapes.medium)
                                 .background(FloralWhite)
-                                .clickable(enabled = localEditing) {
-                                    selectedIds = if (selected) selectedIds - item.itemId
-                                    else selectedIds + item.itemId
-                                }
                         ) {
                             ItemCard(
                                 item = item,
@@ -1031,77 +946,12 @@ private fun ItemsInOutfitCard(
                                 photoUri = item.itemPhotoUri, //Uploaded item photo
                                 closetViewModel = closetViewModel,
                                 outfitsViewModel = outfitsViewModel,
-                                onNavigateToCalendarScreen = onNavigateToCalendarScreen,
-                                enableModal = !localEditing,
-                                showSelectionBadge = localEditing
+                                onNavigateToCalendarScreen = onNavigateToCalendarScreen
                             )
-
-
-                            if (localEditing && selected) {
-                                Box(
-                                    modifier = Modifier
-                                        .align(Alignment.TopEnd)
-                                        .padding(6.dp)
-                                        .size(20.dp)
-                                        .clip(MaterialTheme.shapes.small)
-                                        .background(Color.Black.copy(alpha = 0.75f)),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Filled.Check,
-                                        contentDescription = "Selected",
-                                        tint = FloralWhite,
-                                        modifier = Modifier.size(14.dp)
-                                    )
-                                }
-                            }
                         }
                     }
                 }
             }
         }
-    }
-
-    // does deletion in batches
-    if (showBatchDeleteDialog) {
-        val count = selectedIds.size
-        AlertDialog(
-            onDismissRequest = { showBatchDeleteDialog = false },
-            title = { Text("Remove $count item${if (count == 1) "" else "s"} from this outfit?") },
-            text = {
-                Text(
-                    "This will remove the selected item${if (count == 1) "" else "s"} from this outfit. " +
-                            "They will remain in your Closet. This action cannot be undone."
-                )
-            },
-            confirmButton = {
-                Button(onClick = {
-                    // perform the deletions
-                    if (selectedIds.isNotEmpty()) {
-                        // Map back to actual ItemEntry objects
-                        val itemIdsToDelete = itemList
-                            .filter { it.itemId in selectedIds }
-                            .map { it.itemId }
-
-                        outfitsViewModel.removeItemsFromItemsList(itemIdsToDelete, outfit.outfitId)
-
-                        // update local ui
-                        itemList = itemList.filter { it.itemId !in selectedIds }
-                    }
-                    // exits edit mode
-                    showBatchDeleteDialog = false
-                    localEditing = false
-                    selectedIds = emptySet()
-                }) { Text("Delete") }
-            },
-            dismissButton = {
-                Button(onClick = {
-                    // exits edit mode
-                    showBatchDeleteDialog = false
-                    localEditing = false
-                    selectedIds = emptySet()
-                }) { Text("Cancel") }
-            }
-        )
     }
 }

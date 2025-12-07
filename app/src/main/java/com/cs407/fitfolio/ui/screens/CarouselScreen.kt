@@ -47,6 +47,7 @@ import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.WeatherViewModel
 import kotlinx.coroutines.launch
 import android.widget.Toast
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
@@ -55,6 +56,8 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.cs407.fitfolio.data.ItemEntry
@@ -62,6 +65,7 @@ import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.viewModels.ClosetState
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import com.cs407.fitfolio.viewModels.UserViewModel
@@ -111,13 +115,19 @@ fun CarouselScreen(
 
     Column(modifier = Modifier.fillMaxSize().padding(vertical = 8.dp)) {
         Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            SimpleHeader("Outfit Carousel")
-            Spacer(modifier = Modifier.weight(1f))
+            SimpleHeader(
+                title = "Outfit Carousel",
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
             WeatherDataChip(weatherData = weatherState.weatherData)
         }
+
 
         categories.forEach { category ->
             val filteredItems = allItems.filter { it.carouselType == category }
@@ -143,7 +153,11 @@ fun CarouselScreen(
                     modifier = Modifier.fillMaxWidth().height(150.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text("No ${category.carouselType.lowercase()} items found")
+                    Text(
+                        "No ${category.carouselType.lowercase()} found",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 18.sp
+                    )
                 }
             } else {
                 ClothingScroll(
@@ -471,9 +485,25 @@ fun ClothingScroll(
         horizontalArrangement = Arrangement.Center,
         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
     ) {
-        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex - 1) } }) {
-            Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Previous")
+        Box(
+            modifier = Modifier
+                .clickable(
+                    onClick = {
+                        scope.launch {
+                            listState.animateScrollToItem(listState.firstVisibleItemIndex - 1)
+                        }
+                    }
+                )
+                .padding(end = 20.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.left_chevron),
+                contentDescription = "Previous",
+                modifier = Modifier
+                    .size(25.dp)
+            )
         }
+
         val flingBehavior = rememberSnapFlingBehavior(listState)
         LazyRow(
             state = listState,
@@ -488,8 +518,23 @@ fun ClothingScroll(
             }
         }
 
-        IconButton(onClick = { scope.launch { listState.animateScrollToItem(listState.firstVisibleItemIndex + 1) } }) {
-            Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Next")
+        Box(
+            modifier = Modifier
+                .clickable(
+                    onClick = {
+                        scope.launch {
+                            listState.animateScrollToItem(listState.firstVisibleItemIndex + 1)
+                        }
+                    }
+                )
+                .padding(start = 20.dp)
+        ) {
+            Icon(
+                painter = painterResource(R.drawable.right_chevron),
+                contentDescription = "Next",
+                modifier = Modifier
+                    .size(25.dp)
+            )
         }
     }
 
@@ -516,8 +561,7 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
     Box(
         modifier = Modifier
             .size(150.dp)
-            .clip(MaterialTheme.shapes.medium)
-            .background(if (isBlocked) Color.Gray.copy(alpha = 0.3f) else Color(0xFFE0E0E0).copy(alpha = 0.2f)),
+            .clip(MaterialTheme.shapes.medium),
         contentAlignment = Alignment.Center
     ) {
         if (item.itemPhotoUri.isNotBlank()) {
