@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -376,9 +377,10 @@ fun IconBox (
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(16.dp)
+                        .heightIn(max = 350.dp)
                         .clip(MaterialTheme.shapes.medium)
                         .aspectRatio(aspectRatio),
-                    contentScale = ContentScale.Crop,
+                    contentScale = ContentScale.Fit,
                     onSuccess = {
                         val w = it.result.drawable.intrinsicWidth
                         val h = it.result.drawable.intrinsicHeight
