@@ -21,10 +21,10 @@ enum class DefaultItemTypes(val typeName: String, val iconRes: Int) {
 
 
     // Accessories
-    BAGS("Bags", iconRes = R.drawable.hanger),
-    JEWELRY("Jewlery", iconRes = R.drawable.hanger),
-    SCARVES("Scarves", iconRes = R.drawable.hanger),
-    HATS("Hats", iconRes = R.drawable.hanger),
+    BAGS("Bags", iconRes = R.drawable.purse),
+    JEWELRY("Jewelery", iconRes = R.drawable.earrings),
+    SCARVES("Scarves", iconRes = R.drawable.scarf),
+    HATS("Hats", iconRes = R.drawable.hat),
 
     // Other
     DRESSES("Dresses", iconRes = R.drawable.dress),
