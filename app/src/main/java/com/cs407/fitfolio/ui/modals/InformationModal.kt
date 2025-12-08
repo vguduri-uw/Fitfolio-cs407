@@ -68,7 +68,7 @@ fun InformationModal(onDismiss: () -> Unit, screen: String) {
                 when (screen) {
                     "My Outfits" -> OutfitScreenInfo()
                     "My Calendar" -> CalendarScreenInfo()
-                    "Outfit Carousel" -> WardrobeScreenInfo()
+                    "My Carousel" -> WardrobeScreenInfo()
                     "Add" -> AddScreenInfo()
                     "My Closet" -> ClosetScreenInfo()
                 }
