@@ -63,7 +63,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import android.util.Base64
-import android.util.Log
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.AlertDialog
@@ -72,7 +71,6 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.text.font.FontWeight
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.viewModels.UserState
-import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseUser
@@ -289,7 +287,8 @@ fun SettingsModal (
                             onDone = {
                                 showReauthDialog = false
                                 currentPassword = ""
-                            }
+                            },
+                            scope = scope
                         )
                     }
                 ) {
@@ -496,7 +495,8 @@ fun updateUserAccount(
     newPassword: String,
     currentPassword: String,
     currentUserState: UserState,
-    onDone: () -> Unit
+    onDone: () -> Unit,
+    scope: CoroutineScope
 ) {
     val firebaseUser = Firebase.auth.currentUser
 
@@ -519,52 +519,58 @@ fun updateUserAccount(
     // 🔥 REAUTH FIRST
     val credential = EmailAuthProvider.getCredential(userEmail, currentPassword)
 
-    firebaseUser.reauthenticate(credential).addOnCompleteListener { reauthTask ->
-        if (!reauthTask.isSuccessful) {
-            Toast.makeText(
-                context,
-                "Incorrect password. Please try again.",
-                Toast.LENGTH_LONG
-            ).show()
+    firebaseUser.reauthenticate(credential).addOnCompleteListener { reauth ->
+        if (!reauth.isSuccessful) {
+            Toast.makeText(context, "Incorrect password.", Toast.LENGTH_LONG).show()
             onDone()
             return@addOnCompleteListener
         }
 
-        // 🔥 User is now reauthenticated!
-        // Check if email change is requested
-        if (trimmedEmail != userEmail) {
-
-            // Must be verified to change email
-            if (!firebaseUser.isEmailVerified) {
-                Toast.makeText(
-                    context,
-                    "Please verify your email before changing it.",
-                    Toast.LENGTH_LONG
-                ).show()
-                onDone()
-                return@addOnCompleteListener
+        // 🟢 UPDATE USERNAME IN ROOM DB
+        if (currentUserState.name != name) {
+            val userDao = db.userDao()
+            scope.launch {
+                userDao.updateUser(
+                    id = currentUserState.id,
+                    username = name,
+                    email = currentUserState.email // KEEP SAME EMAIL
+                )
             }
+        }
+        // ✉️ UPDATE EMAIL IF CHANGED
+        if (trimmedEmail != userEmail) {
+            firebaseUser.verifyBeforeUpdateEmail(trimmedEmail)
+                .addOnCompleteListener { emailTask ->
+                    if (emailTask.isSuccessful) {
+                        Toast.makeText(
+                            context,
+                            "A verification link was sent to $trimmedEmail. Click it to finish updating your email.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        scope.launch{
+                            db.userDao().updateUser(
+                                id = currentUserState.id,
+                                username = name,
+                                email = trimmedEmail
+                            )
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Email update failed: ${emailTask.exception?.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
 
-            // Update email
-            firebaseUser.updateEmail(trimmedEmail).addOnCompleteListener { emailTask ->
-                if (!emailTask.isSuccessful) {
-                    Toast.makeText(
-                        context,
-                        "Email update failed: ${emailTask.exception?.message}",
-                        Toast.LENGTH_LONG
-                    ).show()
-                    onDone()
-                    return@addOnCompleteListener
+                    // Continue to password update after email verification step
+                    updatePasswordIfNeeded(firebaseUser, newPassword, context, onDone)
                 }
 
-                // Now update password if needed
-                updatePasswordIfNeeded(firebaseUser, trimmedNewPassword, context, onDone)
-            }
-
-        } else {
-            // Email isn't changing → only change password
-            updatePasswordIfNeeded(firebaseUser, trimmedNewPassword, context, onDone)
+            return@addOnCompleteListener
         }
+
+        // 🟣 If email unchanged, just update password
+        updatePasswordIfNeeded(firebaseUser, newPassword, context, onDone)
     }
 }
 

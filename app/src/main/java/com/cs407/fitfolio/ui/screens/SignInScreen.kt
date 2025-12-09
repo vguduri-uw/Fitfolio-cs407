@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.content.Context
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
@@ -34,12 +36,20 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.R
+import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.ui.modals.EditableField
 import com.cs407.fitfolio.ui.theme.Kudryashev_Bold_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
+import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 @Composable
 fun ErrorText(error: String?, modifier: Modifier = Modifier) {
@@ -50,22 +60,42 @@ fun ErrorText(error: String?, modifier: Modifier = Modifier) {
 fun signIn(
     email: String,
     password: String,
-    onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit,
+    onComplete: (Boolean, String?, FirebaseUser?) -> Unit,
 ) {
     val auth = FirebaseAuth.getInstance()
     auth.signInWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                onComplete(true, null, auth.currentUser)
+                val user = auth.currentUser
+                if (user != null) {
+                    // reload in a coroutine
+                    val scope = CoroutineScope(Dispatchers.Main)
+                    scope.launch {
+                        try {
+                            user.reloadSuspend()  // <--- reload user from Firebase
+                            if (user.isEmailVerified) {
+                                onComplete(true, null, user)
+                            } else {
+                                auth.signOut()
+                                onComplete(false, "Please verify your email before logging in.", null)
+                            }
+                        } catch (e: Exception) {
+                            auth.signOut()
+                            onComplete(false, e.message ?: "Failed to reload user", null)
+                        }
+                    }
+                } else {
+                    onComplete(false, "Failed to get current user", null)
+                }
             } else {
-                onComplete(false, task.exception, null)
+                onComplete(false, task.exception?.message ?: "Sign in failed", null)
             }
         }
 }
 
 @Composable
 fun SignInScreen (
-    onSignInSuccess: () -> Unit,
+    userViewModel: UserViewModel,
     onNavigateToSignUpScreen: () -> Unit,
 ) {
 
@@ -85,7 +115,7 @@ fun SignInScreen (
             SignInScreenTopHeader()
 
             // sign in form - name, email, password
-            SignInForm(onNavigateToSignUpScreen, onSignInSuccess)
+            SignInForm(onNavigateToSignUpScreen, userViewModel)
         }
 
     }
@@ -113,7 +143,7 @@ fun SignInScreenTopHeader() {
 @Composable
 fun SignInForm(
     onNavigateToSignUpScreen: () -> Unit,
-    onSignInSuccess: () -> Unit,
+    userViewModel: UserViewModel,
 //    userDao: UserDao,
 ) {
     // User information
@@ -127,6 +157,9 @@ fun SignInForm(
             email.isNotEmpty() && password.isNotEmpty()
         }
     }
+    var showResendButton by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
 
     Box {
         Column(
@@ -158,11 +191,13 @@ fun SignInForm(
             // Sign in button
             Button(
                 onClick = {
-                    signIn(email, password) { success, exception, user ->
+                    signIn(email, password) { success, error, user ->
                         if (success && user != null) {
-                            onSignInSuccess()
+                            userViewModel.loginUser(FitfolioDatabase.getDatabase(context))
                         } else {
-                            errorMessage = exception?.message ?: "Sign in failed"
+                            errorMessage = error
+                            showResendButton = error?.contains("verify your email") == true
+
                         }
                     }
                 },
@@ -176,7 +211,21 @@ fun SignInForm(
                     )
                 },
             )
-
+            if (showResendButton) {
+                Button(
+                    onClick = {
+                        resendVerificationEmail(context, email, password,
+                            onSuccess = {
+                                errorMessage = "Verification email resent! Check your inbox."
+                            },
+                            onError = { e ->
+                                errorMessage = e
+                            }
+                        )
+                    },
+                    content = { Text("Resend Verification Email", fontFamily = Kudryashev_Regular, fontSize = 16.sp) }
+                )
+            }
             // move to sign up page if account doesn't exist
             Row{
                 Text(
@@ -196,5 +245,47 @@ fun SignInForm(
                 )
             }
         }
+    }
+}
+    fun resendVerificationEmail(
+        context: Context,
+        email: String,
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val auth = FirebaseAuth.getInstance()
+        // Sign in temporarily to send the verification email
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    if (user != null) {
+                        if (user.isEmailVerified) {
+                            onError("Your email is already verified.")
+                            auth.signOut()
+                        } else {
+                            user.sendEmailVerification()
+                                .addOnCompleteListener { verifyTask ->
+                                    if (verifyTask.isSuccessful) {
+                                        onSuccess()
+                                    } else {
+                                        onError(verifyTask.exception?.message ?: "Failed to send verification email.")
+                                    }
+                                    auth.signOut() // always sign out after sending
+                                }
+                        }
+                    } else {
+                        onError("Failed to get current user.")
+                    }
+                } else {
+                    onError(task.exception?.message ?: "Sign in failed for verification email.")
+                }
+            }
+    }
+suspend fun FirebaseUser.reloadSuspend(): kotlin.Unit = suspendCancellableCoroutine { cont ->
+    this.reload().addOnCompleteListener { task ->
+        if (task.isSuccessful) cont.resume(kotlin.Unit)
+        else cont.resumeWithException(task.exception ?: Exception("Failed to reload user"))
     }
 }
