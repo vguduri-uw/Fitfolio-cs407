@@ -57,46 +57,42 @@ fun ErrorText(error: String?, modifier: Modifier = Modifier) {
         Text(text = error, color = Color.Red, textAlign = TextAlign.Center)
 }
 
-fun signIn(
-    email: String,
-    password: String,
-    onComplete: (Boolean, String?, FirebaseUser?) -> Unit,
-) {
+suspend fun signIn(email: String, password: String): FirebaseUser {
     val auth = FirebaseAuth.getInstance()
-    auth.signInWithEmailAndPassword(email, password)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                val user = auth.currentUser
-                if (user != null) {
-                    // reload in a coroutine
-                    val scope = CoroutineScope(Dispatchers.Main)
-                    scope.launch {
-                        try {
-                            user.reloadSuspend()  // <--- reload user from Firebase
-                            if (user.isEmailVerified) {
-                                onComplete(true, null, user)
+    return suspendCancellableCoroutine { cont ->
+        auth.signInWithEmailAndPassword(email, password)
+            .addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+                    if (user != null) {
+                        // reload to get latest verification status
+                        user.reload().addOnCompleteListener { reloadTask ->
+                            if (reloadTask.isSuccessful) {
+                                if (user.isEmailVerified) cont.resume(user)
+                                else {
+                                    auth.signOut()
+                                    cont.resumeWithException(Exception("Please verify your email before logging in."))
+                                }
                             } else {
                                 auth.signOut()
-                                onComplete(false, "Please verify your email before logging in.", null)
+                                cont.resumeWithException(reloadTask.exception ?: Exception("Failed to reload user"))
                             }
-                        } catch (e: Exception) {
-                            auth.signOut()
-                            onComplete(false, e.message ?: "Failed to reload user", null)
                         }
+                    } else {
+                        cont.resumeWithException(Exception("Failed to get current user"))
                     }
                 } else {
-                    onComplete(false, "Failed to get current user", null)
+                    cont.resumeWithException(task.exception ?: Exception("Sign in failed"))
                 }
-            } else {
-                onComplete(false, task.exception?.message ?: "Sign in failed", null)
             }
-        }
+    }
 }
 
 @Composable
 fun SignInScreen (
     userViewModel: UserViewModel,
     onNavigateToSignUpScreen: () -> Unit,
+    onLoginSuccess: () -> Unit
 ) {
 
     Box(modifier = Modifier
@@ -115,7 +111,7 @@ fun SignInScreen (
             SignInScreenTopHeader()
 
             // sign in form - name, email, password
-            SignInForm(onNavigateToSignUpScreen, userViewModel)
+            SignInForm(onNavigateToSignUpScreen, userViewModel, onLoginSuccess)
         }
 
     }
@@ -144,6 +140,7 @@ fun SignInScreenTopHeader() {
 fun SignInForm(
     onNavigateToSignUpScreen: () -> Unit,
     userViewModel: UserViewModel,
+    onLoginSuccess: () -> Unit,
 //    userDao: UserDao,
 ) {
     // User information
@@ -191,13 +188,17 @@ fun SignInForm(
             // Sign in button
             Button(
                 onClick = {
-                    signIn(email, password) { success, error, user ->
-                        if (success && user != null) {
+                    val scope = CoroutineScope(Dispatchers.Main)
+                    scope.launch {
+                        try {
+                            val user = signIn(email, password)
+                            // update database & user state
                             userViewModel.loginUser(FitfolioDatabase.getDatabase(context))
-                        } else {
-                            errorMessage = error
-                            showResendButton = error?.contains("verify your email") == true
-
+                            // trigger navigation callback
+                            onLoginSuccess()
+                        } catch (e: Exception) {
+                            errorMessage = e.message
+                            showResendButton = e.message?.contains("verify your email") == true
                         }
                     }
                 },
@@ -283,9 +284,3 @@ fun SignInForm(
                 }
             }
     }
-suspend fun FirebaseUser.reloadSuspend(): kotlin.Unit = suspendCancellableCoroutine { cont ->
-    this.reload().addOnCompleteListener { task ->
-        if (task.isSuccessful) cont.resume(kotlin.Unit)
-        else cont.resumeWithException(task.exception ?: Exception("Failed to reload user"))
-    }
-}
