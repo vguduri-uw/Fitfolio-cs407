@@ -54,6 +54,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.max
 import androidx.compose.ui.unit.sp
@@ -308,37 +309,6 @@ fun ActionButtonsRow(
                 Spacer(modifier = Modifier.width(12.dp))
 
                 // TODO: decide if we want remove button or not
-                // Remove combination button
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(LightPeachFuzz),
-                    contentAlignment = Alignment.Center
-                ) {
-                    IconButton(
-                        onClick = {
-                            val allItemsByCategory = mapOf(
-                                CarouselTypes.ACCESSORIES to closetState.items.filter { it.carouselType == CarouselTypes.ACCESSORIES },
-                                CarouselTypes.TOPWEAR to closetState.items.filter { it.carouselType == CarouselTypes.TOPWEAR },
-                                CarouselTypes.BOTTOMWEAR to closetState.items.filter { it.carouselType == CarouselTypes.BOTTOMWEAR },
-                                CarouselTypes.FOOTWEAR to closetState.items.filter { it.carouselType == CarouselTypes.FOOTWEAR }
-                            )
-
-                            carouselViewModel.removeCurrentCombination(allItemsByCategory)
-                            Toast.makeText(context, "Combination removed!", Toast.LENGTH_SHORT)
-                                .show()
-                        },
-                        enabled = itemsToAdd.isNotEmpty()
-                    ) {
-                        Icon(
-                            painter = painterResource(R.drawable.minus),
-                            contentDescription = "Remove combination",
-                            tint = if (itemsToAdd.isNotEmpty()) Color.Black else Color.Black.copy(alpha = 0.3f),
-                            modifier = Modifier.size(20.dp)
-                        )
-                    }
-                }
-                Spacer(modifier = Modifier.width(12.dp))
 
                 // Reset placeholder button
                 Box(
@@ -436,9 +406,13 @@ fun ActionButtonsRow(
                             }
                         }
                     },
-                    enabled = itemsToAdd.isNotEmpty()
+                    enabled = itemsToAdd.isNotEmpty(),
+                    modifier = Modifier
+                        .width(130.dp)
+                        .height(44.dp),
+                    contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp)
                 ) {
-                    Text("Dress me ✨")
+                    Text("Dress me ✨", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp)
                 }
             }
         }

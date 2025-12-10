@@ -35,6 +35,8 @@ import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.LayersClear
 import androidx.compose.material3.IconButton
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
@@ -270,17 +272,14 @@ fun WardrobeScreenInfo() {
         )
 
         Row {
-            Text(
-                text = "—",
-                fontFamily = Kudryashev_Display_Sans_Regular,
-                fontWeight = FontWeight.Bold,
-                fontSize = 24.sp,
-                color = Color.Black,
-                modifier = Modifier.weight(.14f)
+            Icon(
+                imageVector = Icons.Outlined.LayersClear,
+                contentDescription = "Reset to placeholder item",
+                modifier = Modifier.size(24.dp)
             )
-
+            Spacer(modifier = Modifier.width(16.dp))
             Text(
-                text = "Delete - Block current item combination from future suggestions",
+                text = "Reset - Clear all item parameters. Use this when you want to leave outfit slots empty",
                 fontFamily = Kudryashev_Display_Sans_Regular,
                 fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
@@ -310,7 +309,7 @@ fun WardrobeScreenInfo() {
         }
 
         Text(
-            text = "Dress me ✨ - Generate an AI-powered try-on image with your selected items and save as an outfit",
+            text = "Dress me ✨   Generate an AI-powered try-on image with your selected items and save as an outfit",
             fontFamily = Kudryashev_Display_Sans_Regular,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,

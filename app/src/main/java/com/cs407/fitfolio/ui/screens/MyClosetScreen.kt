@@ -308,7 +308,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = {
@@ -335,7 +336,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             IconButton(
@@ -360,7 +362,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.CenterStart
         ) {
             IconButton(onClick = {
@@ -435,7 +438,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz)
-                .padding(horizontal = 15.dp, vertical = 14.dp),
+                .padding(horizontal = 10.dp)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -448,7 +452,7 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     style = TextStyle(
                         fontFamily = Kudryashev_Display_Sans_Regular,
                         fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
+                        fontSize = 12.sp,
                         color = Color.Black
                     )
                 )
@@ -520,7 +524,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             when (closetState.isDeleteActive) {
@@ -579,7 +584,8 @@ fun FilterRow(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { closetViewModel.clearFilters() }) {

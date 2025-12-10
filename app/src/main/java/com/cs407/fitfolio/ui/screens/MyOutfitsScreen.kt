@@ -369,8 +369,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
-            contentAlignment = Alignment.Center,
+                .background(LightPeachFuzz)
+                .size(40.dp),
+        contentAlignment = Alignment.Center,
         ) {
             IconButton(
                 onClick = {
@@ -398,7 +399,9 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
+
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.shuffleOutfits() }) {
@@ -420,7 +423,8 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = {
@@ -478,7 +482,8 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                 )
                 .clip(MaterialTheme.shapes.medium)
                 .background(LightPeachFuzz)
-                .padding(horizontal = 15.dp, vertical = 12.dp),
+                .padding(horizontal = 10.dp)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -488,10 +493,12 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
             ) {
                 Text(
                     text = "Tags",
-                    fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 15.sp,
-                    color = Color.Black,
+                    style = TextStyle(
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 12.sp,
+                        color = Color.Black
+                    )
                 )
 
                 Spacer(modifier = Modifier.size(4.dp))
@@ -560,7 +567,8 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             when (outfitsState.isDeleteActive) {
@@ -621,7 +629,8 @@ fun FilterRow(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                     clip = false
                 )
                 .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
+                .background(LightPeachFuzz)
+                .size(40.dp),
             contentAlignment = Alignment.Center
         ) {
             IconButton(onClick = { outfitsViewModel.clearFilters() }) {
