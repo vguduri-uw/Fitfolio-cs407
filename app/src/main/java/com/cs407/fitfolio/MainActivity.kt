@@ -68,7 +68,8 @@ fun AuthNavigation() {
                             name = it.username,
                             uid = it.userUID,
                             email = it.email,
-                            avatarUri = it.avatarUri
+                            avatarUri = it.avatarUri,
+                            profilePictureUri = it.profilePictureUri
                         )
                     )
                 }

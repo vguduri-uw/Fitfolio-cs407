@@ -1,6 +1,7 @@
 package com.cs407.fitfolio.ui.components
 
 import android.Manifest
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
@@ -66,21 +67,13 @@ fun TopHeader (title: String? = null, userViewModel: UserViewModel) {
             .clickable { showProfilePictureDialog = true },
         contentAlignment = Alignment.Center
     ) {
-        if (currentUserState.profilePictureUri.isBlank()) {
-            Image(
-                painter = painterResource(id = R.drawable.user),
-                contentDescription = "User profile image",
-                contentScale = ContentScale.Fit,
-                modifier = Modifier.fillMaxSize()
-            )
-        } else {
-            AsyncImage(
-                model = currentUserState.profilePictureUri,
-                contentDescription = "User profile image",
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize()
-            )
-        }
+        AsyncImage(
+            model = currentUserState.profilePictureUri.takeIf { it.isNotBlank() },
+            contentDescription = "User profile image",
+            placeholder = painterResource(R.drawable.user),
+            error = painterResource(R.drawable.user),
+            fallback = painterResource(R.drawable.user)
+        )
     }
 
     Spacer(modifier = Modifier.size(4.dp))
@@ -143,6 +136,10 @@ fun ProfilePictureDialog(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
         if (uri != null) {
+            context.contentResolver.takePersistableUriPermission(
+                uri,
+                Intent.FLAG_GRANT_READ_URI_PERMISSION
+            )
             localImageUri = uri
             selectedImageUri = uri.toString()
         }
