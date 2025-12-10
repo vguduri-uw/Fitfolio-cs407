@@ -117,11 +117,11 @@ fun AppNavigation(userViewModel: UserViewModel, onSignOut: () -> Unit) {
                     Icon(
                         painter = painterResource(R.drawable.carousel),
                         contentDescription = "Carousel",
-                        modifier = Modifier.size(40.dp),
+                        modifier = Modifier.size(38.dp),
                     )
                     Text(
                         text = stringResource(R.string.carousel),
-                        fontSize = 15.sp,
+                        fontSize = 13.sp,
                         fontFamily = Kudryashev_Display_Sans_Regular,
                         fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.offset(y = (-5).dp)
