@@ -42,10 +42,6 @@ class CarouselViewModel(
     private val _blockedCombos = mutableStateListOf<Set<Int>>()
     val blockedCombos: List<Set<Int>> get() = _blockedCombos
 
-    init {
-        viewModelScope.launch { loadBlockedCombinations() }
-    }
-
     // Gets the place holder card for carousel types
     fun getPlaceholder(category: CarouselTypes): ItemEntry =
         when(category) {
@@ -57,60 +53,6 @@ class CarouselViewModel(
             else -> throw IllegalArgumentException("Invalid category")
     }
 
-    /** BLOCK CURRENT COMBINATION */
-    fun blockCurrentCombination() {
-        val current = _carouselState.value
-        val ids = listOfNotNull(
-            current.centeredAccessory?.itemId,
-            current.centeredTopwear?.itemId,
-            current.centeredBottomwear?.itemId,
-            current.centeredShoes?.itemId
-        ).toSet()
-
-        if (ids.isEmpty() || _blockedCombos.contains(ids)) return
-
-        _blockedCombos.add(ids)
-
-        viewModelScope.launch(Dispatchers.IO) {
-            db.blockedCombinationDao().insertCombination(
-                BlockedCombination(
-                    accessoryId = current.centeredAccessory?.itemId,
-                    topwearId = current.centeredTopwear?.itemId,
-                    bottomwearId = current.centeredBottomwear?.itemId,
-                    shoesId = current.centeredShoes?.itemId
-                )
-            )
-        }
-    }
-
-    /** REMOVE CURRENT COMBINATION AND RELOAD CAROUSEL */
-    fun removeCurrentCombination(allItemsByCategory: Map<CarouselTypes, List<ItemEntry>>) {
-        blockCurrentCombination()
-        loadCarousel(
-            accessories = allItemsByCategory[CarouselTypes.ACCESSORIES] ?: emptyList(),
-            topwear = allItemsByCategory[CarouselTypes.TOPWEAR] ?: emptyList(),
-            bottomwear = allItemsByCategory[CarouselTypes.BOTTOMWEAR] ?: emptyList(),
-            shoes = allItemsByCategory[CarouselTypes.FOOTWEAR] ?: emptyList()
-        )
-    }
-
-    /** CHECK IF A COMBINATION IS BLOCKED */
-    fun isComboBlocked(combo: List<ItemEntry?>): Boolean {
-        val ids = combo.filterNotNull().map { it.itemId }.toSet()
-        return _blockedCombos.any { it == ids }
-    }
-
-    /** LOAD BLOCKED COMBINATIONS FROM DATABASE */
-    private suspend fun loadBlockedCombinations() {
-        val combos = withContext(Dispatchers.IO) {
-            db.blockedCombinationDao().getAllBlockedCombinations()
-        }
-        _blockedCombos.clear()
-        combos.forEach { combo ->
-            val ids = listOfNotNull(combo.accessoryId, combo.topwearId, combo.bottomwearId, combo.shoesId).toSet()
-            _blockedCombos.add(ids)
-        }
-    }
 
     /** UPDATE CENTERED ITEM */
     fun updateCenteredItem(category: CarouselTypes, item: ItemEntry?) {
@@ -143,41 +85,6 @@ class CarouselViewModel(
         }
 
         _carouselState.value = newState
-    }
-
-    /** GET VALID ITEMS FOR A CATEGORY (FILTER BLOCKED) */
-    fun getValidItemsForCategory(category: CarouselTypes, allItems: List<ItemEntry>): List<ItemEntry> {
-        val current = _carouselState.value
-        return allItems.filter { item ->
-            val combo = when (category) {
-                CarouselTypes.ACCESSORIES -> setOf(
-                    item.itemId,
-                    current.centeredTopwear?.itemId,
-                    current.centeredBottomwear?.itemId,
-                    current.centeredShoes?.itemId
-                ).filterNotNull().toSet()
-                CarouselTypes.TOPWEAR -> setOf(
-                    current.centeredAccessory?.itemId,
-                    item.itemId,
-                    current.centeredBottomwear?.itemId,
-                    current.centeredShoes?.itemId
-                ).filterNotNull().toSet()
-                CarouselTypes.BOTTOMWEAR -> setOf(
-                    current.centeredAccessory?.itemId,
-                    current.centeredTopwear?.itemId,
-                    item.itemId,
-                    current.centeredShoes?.itemId
-                ).filterNotNull().toSet()
-                CarouselTypes.FOOTWEAR -> setOf(
-                    current.centeredAccessory?.itemId,
-                    current.centeredTopwear?.itemId,
-                    current.centeredBottomwear?.itemId,
-                    item.itemId
-                ).filterNotNull().toSet()
-                else -> setOf(item.itemId)
-            }
-            _blockedCombos.none { it == combo }
-        }
     }
 
     /** LOAD CAROUSEL WITH BLOCKED FILTER */

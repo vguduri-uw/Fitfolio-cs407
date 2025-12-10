@@ -15,6 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
@@ -33,93 +34,102 @@ fun BottomNavigationBar(navController: NavController) {
         Row(
             modifier = Modifier
                 .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
+            horizontalArrangement = Arrangement.SpaceEvenly,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                    onClick = { navController.navigate("outfits") }
+                )
             ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable(
-                        onClick = { navController.navigate("outfits") }
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.shirt_nav),
-                        contentDescription = "Outfits",
-                        tint = TrueBlack,
-                        modifier = Modifier.size(35.dp)
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(
-                        text = stringResource(R.string.outfits),
-                        fontSize = 15.sp,
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable(
-                        onClick = { navController.navigate("calendar") }
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.schedule),
-                        contentDescription = "Calendar",
-                        tint = TrueBlack,
-                        modifier = Modifier.size(35.dp)
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(
-                        text = stringResource(R.string.calendar),
-                        fontSize = 15.sp,
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Icon(
+                    painter = painterResource(id = R.drawable.shirt_nav),
+                    contentDescription = "Outfits",
+                    tint = TrueBlack,
+                    modifier = Modifier.size(33.dp)
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(
+                    text = stringResource(R.string.outfits),
+                    fontSize = 13.sp,
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
-            Spacer(modifier = Modifier.size(56.dp))
-            Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable(
-                        onClick = { navController.navigate("add") }
-                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.add_nav_thin),
-                        contentDescription = "Add",
-                        tint = TrueBlack,
-                        modifier = Modifier.size(35.dp)
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(
-                        text = stringResource(R.string.add),
-                        fontSize = 15.sp,
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.clickable(
-                        onClick = { navController.navigate("closet") }                    )
-                ) {
-                    Icon(
-                        painter = painterResource(R.drawable.closet),
-                        contentDescription = "Closet",
-                        tint = TrueBlack,
-                        modifier = Modifier.size(35 .dp)
-                    )
-                    Spacer(modifier = Modifier.size(4.dp))
-                    Text(
-                        text = stringResource(R.string.closet),
-                        fontSize = 15.sp,
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                    onClick = { navController.navigate("closet") }                    )
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.closet),
+                    contentDescription = "Closet",
+                    tint = TrueBlack,
+                    modifier = Modifier.size(33 .dp)
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(
+                    text = stringResource(R.string.closet),
+                    fontSize = 13.sp,
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            Spacer(modifier = Modifier.weight(1f))//for fab
+
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                    onClick = { navController.navigate("add") }
+                )
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.add_nav_thin),
+                    contentDescription = "Add",
+                    tint = TrueBlack,
+                    modifier = Modifier.size(33.dp)
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(
+                    text = stringResource(R.string.add),
+                    fontSize = 13.sp,
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable(
+                    onClick = { navController.navigate("calendar") }
+                )
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.schedule),
+                    contentDescription = "Calendar",
+                    tint = TrueBlack,
+                    modifier = Modifier.size(33.dp)
+                )
+                Spacer(modifier = Modifier.size(4.dp))
+                Text(
+                    text = stringResource(R.string.calendar),
+                    fontSize = 13.sp,
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }
