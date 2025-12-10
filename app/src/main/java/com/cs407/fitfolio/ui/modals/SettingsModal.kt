@@ -1,5 +1,6 @@
 package com.cs407.fitfolio.ui.modals
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -30,10 +32,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
+import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -59,6 +63,7 @@ import com.cs407.fitfolio.ui.screens.createImageUri
 import com.cs407.fitfolio.services.RetrofitInstance
 import com.cs407.fitfolio.services.FashnRunRequest
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
+import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
@@ -68,6 +73,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontWeight
 import com.cs407.fitfolio.ui.components.TopHeader
 import com.cs407.fitfolio.viewModels.UserState
@@ -76,6 +83,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.CoroutineScope
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import java.io.ByteArrayOutputStream
 import kotlin.math.sqrt
 
@@ -148,16 +156,17 @@ fun SettingsModal (
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
+        containerColor = FloralWhite,
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 60.dp)
+            .padding(top = 45.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 24.dp, bottom = 48.dp, start = 24.dp, end = 24.dp)
+                .padding(bottom = 48.dp, start = 24.dp, end = 24.dp)
         ) {
             SettingsHeader(userViewModel = userViewModel) // TODO: allow update profile image??
 
@@ -168,8 +177,8 @@ fun SettingsModal (
             Button(
                 onClick = { showAvatarInstructions = true },
                 modifier = Modifier
-                    .offset(y = -10.dp)
                     .width(160.dp)
+                    .padding(bottom = 10.dp)
             ) {
                 Text(
                     text = avatarButtonLabel,
@@ -181,6 +190,7 @@ fun SettingsModal (
 
             // Fields for editing user information
             // TODO: add edit button and only enable then??
+
             EditableField(
                 label = "Name",
                 value = newName,
@@ -200,46 +210,49 @@ fun SettingsModal (
                 isPassword = true
             )
 
-            // Save button
-            Button(
-                onClick = {
-                    showReauthDialog = true
-                },
-                enabled = saveable,
-                content = {
-                    Text(
-                        "Save",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                modifier = Modifier.width(125.dp)
-            )
-
-            // Sign out button
-            Button(
-                onClick = {
-                    showSignOutDialog = true
-
-                },
-                content = {
-                    Text(
-                        "Sign out",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontSize = 15.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                },
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = MaterialTheme.colorScheme.primary
-                ),
+            // row of buttons
+            Row(
+                horizontalArrangement = Arrangement.SpaceEvenly,
                 modifier = Modifier
-                    .width(125.dp)
-                    .offset(y = -10.dp)
-            )
+                    .fillMaxWidth()
+                    .padding(top = 15.dp)
+            ) {
+                // Save button
+                Button(
+                    onClick = {
+                        showReauthDialog = true
+                    },
+                    enabled = saveable,
+                    content = {
+                        Text(
+                            "Save",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    modifier = Modifier.width(125.dp)
+                )
 
-            // Reset account link
+                // Sign out button
+                Button(
+                    onClick = {
+                        showSignOutDialog = true
+
+                    },
+                    content = {
+                        Text(
+                            "Sign out",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    modifier = Modifier.width(125.dp)
+                )
+            }
+
+            // Delete account link
             Text(
                 text = "Delete your account",
                 fontFamily = Kudryashev_Display_Sans_Regular,
@@ -247,11 +260,8 @@ fun SettingsModal (
                 textDecoration = TextDecoration.Underline,
                 fontSize = 15.sp,
                 modifier = Modifier
-                    .padding(bottom = 12.dp)
+                    .padding(top = 5.dp)
                     .clickable(onClick = { showDeleteDialog = true })
-//                    .offset(y = -20.dp)
-                // TODO: implement reset account implementation
-                // there should be an alert dialog that requires them to confirm
             )
         }
     }
@@ -409,7 +419,8 @@ fun SettingsModal (
                 Button(onClick = { showSignOutDialog = false }) {
                     Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
                 }
-            }
+            },
+            containerColor = FloralWhite
         )
     }
 
@@ -464,7 +475,7 @@ fun SettingsHeader (userViewModel: UserViewModel) {
     TopHeader(userViewModel = userViewModel)
 
     Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp, fontWeight = FontWeight.Bold)
-    Spacer(modifier = Modifier.size(5.dp))
+    Spacer(modifier = Modifier.size(2.dp))
     Text(text = "Settings", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp, fontWeight = FontWeight.Bold, modifier = Modifier.offset(y = -15.dp))
 }
 
@@ -479,6 +490,7 @@ fun EditableField(
     Row {
         OutlinedTextField(
             value = value,
+            textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold),
             onValueChange = onValueChange,
             label = { Text(label, fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
             modifier = Modifier.fillMaxWidth(),

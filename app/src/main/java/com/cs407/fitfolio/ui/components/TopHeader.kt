@@ -83,7 +83,7 @@ fun TopHeader (title: String? = null, userViewModel: UserViewModel) {
         }
     }
 
-    Spacer(modifier = Modifier.size(8.dp))
+    Spacer(modifier = Modifier.size(4.dp))
     if (title != null) {
         Box(
             contentAlignment = Alignment.Center,
