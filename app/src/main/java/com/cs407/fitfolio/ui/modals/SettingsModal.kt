@@ -764,7 +764,14 @@ fun AvatarDialog(
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create / Edit Avatar") },
+        title = {
+            Text(
+                text = "Create / Edit Avatar",
+                fontFamily = Kudryashev_Display_Sans_Regular,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
