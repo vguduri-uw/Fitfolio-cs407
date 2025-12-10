@@ -993,7 +993,7 @@ private fun AddDialog(
 // Displays a title, message, and confirm/cancel actions
 // Used for deleting a global tag or item type from all items
 @Composable
-private fun DeleteDialog(
+fun DeleteDialog(
     title: String,
     message: String,
     onDismiss: () -> Unit,
