@@ -88,6 +88,9 @@ import java.io.ByteArrayOutputStream
 import kotlin.math.sqrt
 import androidx.exifinterface.media.ExifInterface
 import android.graphics.Matrix
+import android.hardware.lights.Light
+import androidx.compose.ui.graphics.Color
+import com.cs407.fitfolio.ui.theme.LightPeachFuzz
 import java.io.ByteArrayInputStream
 
 // Loads the user from Room DB, shows editable fields, avatar creation/edit, and sign-out logic
@@ -159,7 +162,7 @@ fun SettingsModal (
         onDismissRequest = { onDismiss() },
         sheetState = sheetState,
         dragHandle = { BottomSheetDefaults.DragHandle() },
-        containerColor = FloralWhite,
+        containerColor = if (showDeleteDialog || showReauthDialog || showSignOutDialog) LightPeachFuzz else FloralWhite,
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 45.dp)
@@ -272,10 +275,10 @@ fun SettingsModal (
         //alertdialog should come up to ensure the user want to change the username, password or email
         AlertDialog(
             onDismissRequest = { showReauthDialog = false },
-            title = { Text("Confirm Changes") },
+            title = { Text("Confirm Changes", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold) },
             text = {
                 Column {
-                    Text("Enter your current password to apply updates.")
+                    Text("Enter your current password to apply updates.", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold,)
                     Spacer(Modifier.height(12.dp))
                     OutlinedTextField(
                         value = currentPassword,
@@ -305,23 +308,23 @@ fun SettingsModal (
                         )
                     }
                 ) {
-                    Text("Confirm")
+                    Text("Confirm", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold,)
                 }
             },
             dismissButton = {
                 TextButton(onClick = { showReauthDialog = false }) {
-                    Text("Cancel")
+                    Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold,)
                 }
             }
         )
     }
     var deletePassword by remember { mutableStateOf("") }
 
-// Step 1: Show password input dialog
+// Show password input dialog
     if (showDeleteDialog) {
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { showDeleteDialog = false },
-            title = { Text("Confirm to Delete") },
+            title = { Text("Confirm to Delete", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold,) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(
@@ -431,7 +434,7 @@ fun SettingsModal (
     if (showAvatarInstructions) {
         androidx.compose.material3.AlertDialog(
             onDismissRequest = { showAvatarInstructions = false },
-            title = { Text("Avatar Photo Instructions") },
+            title = { Text("Avatar Photo Instructions", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold) },
             text = {
                 Text(
                     "For best results, take or upload a full-body photo from head to toe, " +
@@ -764,7 +767,14 @@ fun AvatarDialog(
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create / Edit Avatar") },
+        title = {
+            Text(
+                text = "Create / Edit Avatar",
+                fontFamily = Kudryashev_Display_Sans_Regular,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
+        },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),

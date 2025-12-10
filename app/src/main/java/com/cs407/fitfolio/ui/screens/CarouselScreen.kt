@@ -76,6 +76,8 @@ import com.cs407.fitfolio.viewModels.CarouselState
 import com.cs407.fitfolio.viewModels.CarouselViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.abs
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.unit.dp
 
 @Composable
 fun CarouselScreen(
@@ -439,36 +441,31 @@ fun ClothingScroll(
 ) {
     val carouselState by carouselViewModel.carouselState.collectAsState()
     val scope = rememberCoroutineScope()
-    val cardHeight =
-        if (category == CarouselTypes.TOPWEAR &&
-            carouselState.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES)
-            320.dp
-        else
-            150.dp
-    val shouldShow = when(category) {
+
+    val cardHeight = 150.dp
+
+    val shouldShow = when (category) {
         CarouselTypes.BOTTOMWEAR ->
             carouselState.centeredTopwear?.carouselType != CarouselTypes.ONE_PIECES
-
         else -> true
     }
     if (!shouldShow) return
 
-    // Dynamically filter items based on currently centered items in other categories
+    // Filter items (favorites / blocked combos)
     val filteredItems by remember(carouselState, closetItems) {
         derivedStateOf {
-            closetItems
-                .filter { item ->
-                    (!carouselState.isFavoritesActive || item.isFavorite) &&
-                            carouselViewModel.blockedCombos.none { combo ->
-                                combo == listOfNotNull(
-                                    carouselState.centeredAccessory.takeIf { category == CarouselTypes.ACCESSORIES },
-                                    carouselState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
-                                    carouselState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
-                                    carouselState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
-                                    item.takeIf { true }
-                                ).map { it.itemId }.toSet()
-                            }
-                }
+            closetItems.filter { item ->
+                (!carouselState.isFavoritesActive || item.isFavorite) &&
+                        carouselViewModel.blockedCombos.none { combo ->
+                            combo == listOfNotNull(
+                                carouselState.centeredAccessory.takeIf { category == CarouselTypes.ACCESSORIES },
+                                carouselState.centeredTopwear.takeIf { category == CarouselTypes.TOPWEAR },
+                                carouselState.centeredBottomwear.takeIf { category == CarouselTypes.BOTTOMWEAR },
+                                carouselState.centeredShoes.takeIf { category == CarouselTypes.FOOTWEAR },
+                                item     // always include the candidate item
+                            ).map { it.itemId }.toSet()
+                        }
+            }
         }
     }
 
@@ -482,12 +479,21 @@ fun ClothingScroll(
         return
     }
 
-    val stableItems = remember(filteredItems.size) { filteredItems.toList() }
+    val stableItems = remember(filteredItems) { filteredItems.toList() }
+
     val listState = rememberLazyListState()
     val LOOP_SIZE = 10_000
     val middleIndex = LOOP_SIZE / 2
     val startIndex = middleIndex - (middleIndex % stableItems.size)
 
+    // Start in the middle of the loop
+    LaunchedEffect(Unit) {
+        if (stableItems.isNotEmpty()) {
+            listState.scrollToItem(startIndex)
+        }
+    }
+
+    // If a specific item is selected from state, jump to it
     LaunchedEffect(selectedItem) {
         selectedItem?.let {
             val index = stableItems.indexOf(it)
@@ -498,73 +504,99 @@ fun ClothingScroll(
         }
     }
 
+    val centerItemIndex by remember {
+        derivedStateOf {
+            val visible = listState.layoutInfo.visibleItemsInfo
+            if (visible.isEmpty()) return@derivedStateOf startIndex
+
+            val viewportCenter =
+                (listState.layoutInfo.viewportStartOffset +
+                        listState.layoutInfo.viewportEndOffset) / 2
+
+            val closest = visible.minByOrNull { item ->
+                val itemCenter = item.offset + item.size / 2
+                kotlin.math.abs(itemCenter - viewportCenter)
+            }
+
+            closest?.index ?: startIndex
+        }
+    }
+
     Row(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp)
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp)
     ) {
+        // LEFT ARROW – move one item from the CURRENT CENTER
         Box(
             modifier = Modifier
-                .clickable(
-                    onClick = {
-                        scope.launch {
-                            listState.animateScrollToItem(listState.firstVisibleItemIndex - 1)
-                        }
+                .clickable {
+                    scope.launch {
+                        val target = (centerItemIndex - 1).coerceAtLeast(0)
+                        listState.animateScrollToItem(target)
                     }
-                )
+                }
                 .padding(end = 20.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.left_chevron),
                 contentDescription = "Previous",
-                modifier = Modifier
-                    .size(25.dp)
+                modifier = Modifier.size(25.dp)
             )
         }
 
         val flingBehavior = rememberSnapFlingBehavior(listState)
-        LazyRow(
-            state = listState,
-            modifier = Modifier.weight(1f).height(cardHeight),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            contentPadding = PaddingValues(horizontal = 75.dp),
-            flingBehavior = flingBehavior
+
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .height(cardHeight)
         ) {
-            items(LOOP_SIZE) { index ->
-                val realIndex = index % stableItems.size
-                ClothingItemCard(stableItems[realIndex])
+            val cardWidth = 150.dp
+
+            val horizontalPadding =
+                ((maxWidth - cardWidth) / 2).coerceAtLeast(0.dp)
+
+            LazyRow(
+                state = listState,
+                modifier = Modifier.fillMaxSize(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                contentPadding = PaddingValues(horizontal = horizontalPadding),
+                flingBehavior = flingBehavior
+            ) {
+                items(LOOP_SIZE) { index ->
+                    val realIndex = index % stableItems.size
+                    ClothingItemCard(stableItems[realIndex])
+                }
             }
         }
 
+        // RIGHT ARROW – move one item from the CURRENT CENTER
         Box(
             modifier = Modifier
-                .clickable(
-                    onClick = {
-                        scope.launch {
-                            listState.animateScrollToItem(listState.firstVisibleItemIndex + 1)
-                        }
+                .clickable {
+                    scope.launch {
+                        val target = (centerItemIndex + 1).coerceAtMost(LOOP_SIZE - 1)
+                        listState.animateScrollToItem(target)
                     }
-                )
+                }
                 .padding(start = 20.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.right_chevron),
                 contentDescription = "Next",
-                modifier = Modifier
-                    .size(25.dp)
+                modifier = Modifier.size(25.dp)
             )
         }
     }
 
-    // Update the centered item
-    val centeredItem by remember {
+    // Map the centered index back to the actual ItemEntry
+    val centeredItem by remember(centerItemIndex, stableItems) {
         derivedStateOf {
-            val visible = listState.layoutInfo.visibleItemsInfo
-            if (visible.isEmpty()) return@derivedStateOf null
-            val center = (listState.layoutInfo.viewportStartOffset + listState.layoutInfo.viewportEndOffset) / 2
-            val closet = visible.minByOrNull { abs(it.offset + it.size / 2 - center) } ?: return@derivedStateOf null
-            stableItems[closet.index % stableItems.size]
-
+            if (stableItems.isEmpty()) null
+            else stableItems[centerItemIndex % stableItems.size]
         }
     }
 
@@ -572,6 +604,7 @@ fun ClothingScroll(
         centeredItem?.let { onCenteredItemChange(it) }
     }
 }
+
 @Composable
 fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
     var aspectRatio by remember { mutableFloatStateOf(1f) }
