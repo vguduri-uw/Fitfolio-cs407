@@ -23,8 +23,10 @@ import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.ArrowDropDown
 import androidx.compose.material.icons.outlined.CheckCircle
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -623,6 +625,7 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                 Box(
                     modifier = Modifier.padding(bottom = 10.dp)
                 ){
+
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -675,9 +678,17 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                         onClick = { closetViewModel.toggleFavoritesProperty(item) },
                                         modifier = Modifier.size(28.dp)
                                     ) {
-                                        Box(modifier = Modifier.padding(5.dp)){
-
-                                        }
+//                                        Box(modifier = Modifier.padding(5.dp)){
+//                                        }
+                                        Icon(
+                                            painter = if (item.isFavorite)
+                                                painterResource(R.drawable.heart_filled_red)
+                                            else
+                                                painterResource(R.drawable.heart_outline),
+                                            contentDescription = "Toggles favorites",
+                                            tint = if (item.isFavorite) Color.Red else Color.Black,
+                                            modifier = Modifier.size(20.dp),
+                                        )
                                     }
                                 }
 
@@ -687,10 +698,8 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                         imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
                                         contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
                                     )
-
                                 }
                             }
-
                             // Item image
                             if (item.itemPhotoUri.isNotEmpty()) {
                                 AsyncImage(
@@ -717,6 +726,7 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                         .size(180.dp)
                                 )
                             }
+
                         }
                     }
                 }
