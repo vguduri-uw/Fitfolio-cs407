@@ -681,19 +681,34 @@ fun ClosetGrid(closetState: ClosetState, closetViewModel: ClosetViewModel) {
                                         onClick = { closetViewModel.toggleFavoritesProperty(item) },
                                         modifier = Modifier.size(28.dp)
                                     ) {
-                                        Box(modifier = Modifier.padding(5.dp)){
-
-                                        }
+                                        Icon(
+                                            painter = if (item.isFavorite)
+                                                painterResource(R.drawable.heart_filled_red)
+                                            else
+                                                painterResource(R.drawable.heart_outline),
+                                            contentDescription = if (item.isFavorite)
+                                                "Remove item from favorites"
+                                            else
+                                                "Add item to favorites",
+                                            tint = if (item.isFavorite) Color.Red else Color.Black,
+                                            modifier = Modifier.size(20.dp)
+                                        )
                                     }
                                 }
 
                                 // Toggle deletion candidate icon (if in delete state)
                                 if (closetState.isDeleteActive == DeletionStates.Active.name) {
                                     Icon(
-                                        imageVector = if (item.isDeletionCandidate) Icons.Filled.CheckCircle else Icons.Outlined.CheckCircle,
-                                        contentDescription = if (item.isDeletionCandidate) "Remove item from deletion candidates" else "Add item to deletion candidates"
+                                        painter = painterResource(R.drawable.delete),
+                                        contentDescription = if (item.isDeletionCandidate)
+                                            "Remove outfit from deletion candidates"
+                                        else
+                                            "Add outfit to deletion candidates",
+                                        tint = if (item.isDeletionCandidate) Color.Red else Color.Gray,
+                                        modifier = Modifier
+                                            .padding(top = 6.dp, end = 6.dp)
+                                            .size(22.dp)
                                     )
-
                                 }
                             }
 

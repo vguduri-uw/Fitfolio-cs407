@@ -77,6 +77,9 @@ import com.cs407.fitfolio.viewModels.CarouselViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.abs
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -160,7 +163,8 @@ fun CarouselScreen(
                         Text(
                             "No ${category.carouselType.lowercase()} found",
                             fontFamily = Kudryashev_Display_Sans_Regular,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
@@ -179,6 +183,9 @@ fun CarouselScreen(
                     closetItems = itemsWithPlaceholder
                 )
             }
+        }
+        if (carouselState.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES) {
+            Spacer(modifier = Modifier.height(150.dp))
         }
 
         Spacer(modifier = Modifier.height(12.dp))
@@ -259,7 +266,7 @@ fun ActionButtonsRow(
             Toast.makeText(
                 context,
                 "Please do not leave the screen during image processing.",
-                Toast.LENGTH_SHORT
+                Toast.LENGTH_LONG
             ).show()
         }
     } else {
@@ -623,7 +630,7 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
                 model = item.itemPhotoUri,
                 contentDescription = item.itemName,
                 modifier = Modifier.fillMaxSize().aspectRatio(aspectRatio),
-                contentScale = ContentScale.Fit,
+                contentScale = if (item.carouselType == CarouselTypes.ACCESSORIES) ContentScale.Inside else ContentScale.Fit,
                 alpha = if (isBlocked) 0.5f else 1f,
                 onSuccess = { result ->
                     val w = result.result.drawable.intrinsicWidth

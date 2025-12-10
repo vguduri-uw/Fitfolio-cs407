@@ -54,7 +54,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
-import java.time.format.TextStyle
 import java.util.Locale
 import androidx.compose.material3.ExperimentalMaterial3Api
 import com.cs407.fitfolio.ui.modals.OutfitModal
@@ -71,6 +70,7 @@ import androidx.compose.material3.Button
 import androidx.compose.ui.draw.shadow
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.ui.components.SimpleHeader
 import com.cs407.fitfolio.ui.theme.GoldenApricot
@@ -215,6 +215,10 @@ fun CalendarScreen(
                 shape = RoundedCornerShape(8.dp),
                 colors = OutlinedTextFieldDefaults.colors(
                     unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.5f)
+                ),
+                textStyle = TextStyle(
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold
                 )
             )
 
@@ -269,7 +273,7 @@ fun CalendarScreen(
                                 modifier = Modifier.size(25.dp))                        }
 
                         Text(
-                            text = "${currentMonth.month.getDisplayName(TextStyle.FULL, Locale.getDefault())} ${currentMonth.year}",
+                            text = "${currentMonth.month.getDisplayName(java.time.format.TextStyle.FULL, Locale.getDefault())} ${currentMonth.year}",
                             fontFamily = Kudryashev_Display_Sans_Regular,
                             fontWeight = FontWeight.SemiBold,
                             fontSize = 25.sp,
