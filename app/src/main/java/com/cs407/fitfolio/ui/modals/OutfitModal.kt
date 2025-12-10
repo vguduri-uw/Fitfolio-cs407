@@ -373,6 +373,7 @@ private fun TagChipSelectable(
             Icon(
                 painter = painterResource(R.drawable.delete_filled_red),
                 contentDescription = "Delete tag",
+                tint = Color.Red,
                 modifier = Modifier
                     .size(14.dp)
                     .clickable { onDeleteGlobal() }
@@ -628,6 +629,8 @@ fun OutfitIconBox(
     var showDatePicker by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
     Column(
         modifier = Modifier.fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -709,9 +712,7 @@ fun OutfitIconBox(
             ) {
                 IconButton(
                     onClick = {
-                        onDismiss()
-                        outfitsViewModel.toggleDeleteState(DeletionStates.Active.name)
-                        outfitsViewModel.setDeletionCandidates(outfit)
+                        showDeleteDialog = true
                     }
                 ) {
                     Icon(
@@ -790,6 +791,21 @@ fun OutfitIconBox(
                 DatePicker(state = datePickerState)
             }
         }
+    }
+
+    if (showDeleteDialog) {
+        DeleteDialog(
+            title = "Delete outfit?",
+            message = "This action cannot be undone.",
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                scope.launch {
+                    outfitsViewModel.deleteOutfits(listOf(outfit))
+                    outfitsViewModel.refresh()
+                    onDismiss()
+                }
+            }
+        )
     }
 }
 
