@@ -46,6 +46,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import androidx.compose.ui.unit.sp
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 
@@ -89,6 +90,7 @@ fun SignUpScreen (
     val db = FitfolioDatabase.getDatabase(context)
     Box(modifier = Modifier
         .fillMaxSize()
+        .background(FloralWhite)
         .padding(8.dp)
     ) {
         Column(

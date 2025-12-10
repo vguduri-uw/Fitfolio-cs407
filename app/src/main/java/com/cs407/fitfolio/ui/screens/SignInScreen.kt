@@ -2,6 +2,7 @@ package com.cs407.fitfolio.ui.screens
 
 import android.content.Context
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,6 +39,7 @@ import androidx.compose.ui.unit.sp
 import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.ui.modals.EditableField
+import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Bold_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
@@ -97,6 +99,7 @@ fun SignInScreen (
 
     Box(modifier = Modifier
         .fillMaxSize()
+        .background(FloralWhite)
         .padding(8.dp)
     ) {
         Column(

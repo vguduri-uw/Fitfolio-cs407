@@ -36,8 +36,10 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.IconButton
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.cs407.fitfolio.ui.theme.FloralWhite
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -53,7 +55,7 @@ fun InformationModal(onDismiss: () -> Unit, screen: String) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.50f))
+                .background(FloralWhite)
         ) {
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -84,7 +86,7 @@ fun InformationModal(onDismiss: () -> Unit, screen: String) {
                 Icon(
                     painter = painterResource(R.drawable.clear),
                     contentDescription = "Close",
-                    tint = Color.White,
+                    tint = Color.Black,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -105,9 +107,9 @@ fun InformationHeader() {
     )
 
     Spacer(modifier = Modifier.size(25.dp))
-    Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 30.sp, color = Color.White)
+    Text(text = "FitFolio", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold, fontSize = 30.sp, color = Color.Black)
     Spacer(modifier = Modifier.size(15.dp))
-    Text(text = "Information", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 25.sp, color = Color.White)
+    Text(text = "Information", fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold, fontSize = 25.sp, color = Color.Black)
     Spacer(modifier = Modifier.size(10.dp))
 }
 
@@ -122,8 +124,9 @@ fun OutfitScreenInfo() {
         Text(
             "My Outfits Icons",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
-            color = Color.White,
+            color = Color.Black,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -175,8 +178,9 @@ fun OutfitScreenInfo() {
         Text(
             text = "Clicking an outfit pulls up more information that can be viewed and edited",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = Color.White,
+            color = Color.Black,
             modifier = Modifier.weight(1f)
         )
     }
@@ -193,8 +197,9 @@ fun CalendarScreenInfo() {
         Text(
             "My Calendar Icons",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
-            color = Color.White,
+            color = Color.Black,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -226,8 +231,9 @@ fun CalendarScreenInfo() {
         Text(
             text = "Click on any day see what outfit(s) you have scheduled, Light gray indicates an outfit(s) is scheduled for that day",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = Color.White
+            color = Color.Black
         )
     }
 }
@@ -243,6 +249,7 @@ fun WardrobeScreenInfo() {
         Text(
             "Outfit Creation Icons",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
             modifier = Modifier.padding(bottom = 8.dp)
         )
@@ -266,16 +273,18 @@ fun WardrobeScreenInfo() {
             Text(
                 text = "—",
                 fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold,
                 fontSize = 24.sp,
-                color = Color.White,
+                color = Color.Black,
                 modifier = Modifier.weight(.14f)
             )
 
             Text(
                 text = "Delete - Block current item combination from future suggestions",
                 fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = Color.White,
+                color = Color.Black,
                 modifier = Modifier.weight(.86f)
             )
         }
@@ -284,16 +293,18 @@ fun WardrobeScreenInfo() {
             Text(
                 text = "< >",
                 fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold,
                 fontSize = 22.sp,
-                color = Color.White,
+                color = Color.Black,
                 modifier = Modifier.weight(.14f)
             )
 
             Text(
                 text = "Navigate through carousel items in each category",
                 fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold,
                 fontSize = 14.sp,
-                color = Color.White,
+                color = Color.Black,
                 modifier = Modifier.weight(.86f)
             )
         }
@@ -301,22 +312,24 @@ fun WardrobeScreenInfo() {
         Text(
             text = "Dress me ✨ - Generate an AI-powered try-on image with your selected items and save as an outfit",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = Color.White
+            color = Color.Black
         )
 
         Text(
             text = "Requires at least one item selected and a personal avatar uploaded in settings. You can do this in your settings",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = Color.White
+            color = Color.Black
         )
     }
 }
 
 @Composable
 fun AddScreenInfo() {
-    Text("Add", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 20.sp)
+    Text("Add", fontFamily = Kudryashev_Display_Sans_Regular,  fontWeight = FontWeight.Bold, fontSize = 20.sp)
 }
 
 @Composable
@@ -330,8 +343,9 @@ fun ClosetScreenInfo() {
         Text(
             "My Wardrobe Icons",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 20.sp,
-            color = Color.White,
+            color = Color.Black,
             modifier = Modifier.padding(bottom = 8.dp)
         )
 
@@ -378,8 +392,9 @@ fun ClosetScreenInfo() {
         Text(
             text = "Clicking an item pulls up more information that can be viewed and edited",
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = Color.White,
+            color = Color.Black,
             modifier = Modifier.weight(1f)
         )
     }
@@ -401,7 +416,7 @@ fun IconInfoRow(iconRes: List<Int>, description: String) {
                 Icon(
                     painter = painterResource(icon),
                     contentDescription = null,
-                    tint = Color.White,
+                    tint = Color.Black,
                     modifier = Modifier.size(24.dp)
                 )
             }
@@ -412,8 +427,9 @@ fun IconInfoRow(iconRes: List<Int>, description: String) {
         Text(
             text = description,
             fontFamily = Kudryashev_Display_Sans_Regular,
+            fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
-            color = Color.White,
+            color = Color.Black,
             modifier = Modifier.weight(1f)
         )
     }

@@ -564,7 +564,7 @@ interface DeleteDao {
         UserOutfitsTagsRelation::class,
         BlockedCombination::class
     ],
-    version = 9
+    version = 11
 )
 @TypeConverters(Converters::class)
 abstract class FitfolioDatabase : RoomDatabase() {
