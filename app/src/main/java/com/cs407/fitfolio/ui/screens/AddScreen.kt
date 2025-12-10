@@ -4,6 +4,9 @@ import android.Manifest
 import android.content.ContentValues
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Matrix
 import android.net.Uri
 import android.provider.MediaStore
 import android.util.Base64
@@ -58,18 +61,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import com.cs407.fitfolio.enums.DefaultItemTypes
-import com.cs407.fitfolio.ui.modals.InformationModal
-import com.cs407.fitfolio.viewModels.ClosetViewModel
 import androidx.core.content.ContextCompat
+import androidx.exifinterface.media.ExifInterface
+import coil.compose.AsyncImage
 import com.cs407.fitfolio.BuildConfig
 import com.cs407.fitfolio.enums.CarouselTypes
+import com.cs407.fitfolio.enums.DefaultItemTypes
+import com.cs407.fitfolio.ui.modals.InformationModal
 import com.cs407.fitfolio.ui.modals.ItemModal
 import com.cs407.fitfolio.ui.theme.FloralWhite
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.LightChocolate
 import com.cs407.fitfolio.ui.theme.LightPeachFuzz
+import com.cs407.fitfolio.viewModels.ClosetViewModel
 import com.cs407.fitfolio.viewModels.OutfitsViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -78,6 +82,9 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONObject
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import kotlin.math.sqrt
 
 fun createImageUri(context: Context): Uri {
     val contentResolver = context.contentResolver
@@ -108,9 +115,12 @@ fun ItemTypeDropdown(
     ) {
         OutlinedTextField(
             placeholder = {
-                Text("Choose or create an item type",
+                Text(
+                    "Choose or create an item type",
                     fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.Bold) },
+                    fontWeight = FontWeight.Bold
+                )
+            },
             value = selectedItemType,
             onValueChange = { newType -> onItemTypeSelected(newType) },
             label = {
@@ -118,8 +128,12 @@ fun ItemTypeDropdown(
                     "Item Type",
                     fontFamily = Kudryashev_Display_Sans_Regular,
                     fontWeight = FontWeight.Bold
-                )},
-            textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold),
+                )
+            },
+            textStyle = TextStyle(
+                fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold
+            ),
             modifier = Modifier
                 .menuAnchor()
         )
@@ -136,7 +150,8 @@ fun ItemTypeDropdown(
                             typeName,
                             fontFamily = Kudryashev_Display_Sans_Regular,
                             fontWeight = FontWeight.Bold
-                        ) },
+                        )
+                    },
                     onClick = {
                         onItemTypeSelected(typeName)
                         expanded = false
@@ -165,10 +180,18 @@ fun CarouselTypeDropdown(
     ) {
         OutlinedTextField(
             value = selectedCarouselType.carouselType,
-            textStyle = TextStyle(fontFamily = Kudryashev_Display_Sans_Regular, fontWeight = FontWeight.Bold),
+            textStyle = TextStyle(
+                fontFamily = Kudryashev_Display_Sans_Regular,
+                fontWeight = FontWeight.Bold
+            ),
             onValueChange = {},
-            label = { Text("Carousel Type", fontFamily = Kudryashev_Display_Sans_Regular,
-                fontWeight = FontWeight.Bold) },
+            label = {
+                Text(
+                    "Carousel Type",
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold
+                )
+            },
             modifier = Modifier
                 .menuAnchor()
                 .clickable { expanded = true },
@@ -185,8 +208,13 @@ fun CarouselTypeDropdown(
         ) {
             allCarouselTypes.forEach { typeName ->
                 DropdownMenuItem(
-                    text = { Text(typeName.carouselType, fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold) },
+                    text = {
+                        Text(
+                            typeName.carouselType,
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
                     onClick = {
                         onCarouselTypeSelected(typeName)
                         expanded = false
@@ -203,7 +231,6 @@ fun AddScreen(
     outfitsViewModel: OutfitsViewModel,
     onNavigateToCalendarScreen: () -> Unit
 ) {
-//    var showInfo by remember { mutableStateOf(false) } // informationModal
     val context = LocalContext.current // context for toast message
 
     val closetState by closetViewModel.closetState.collectAsState()
@@ -218,7 +245,7 @@ fun AddScreen(
     var saveError by remember { mutableStateOf(false) }
     var isUploading by remember { mutableStateOf(false) }
     var aspectRatio by remember { mutableFloatStateOf(1f) }
-    val scope =  rememberCoroutineScope()
+    val scope = rememberCoroutineScope()
 
     // reset screen after successful save to closet
     fun reset() {
@@ -279,107 +306,88 @@ fun AddScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp)
-    ) {
-        //show the selected/taken photo
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth()
-                .clip(MaterialTheme.shapes.medium)
-                .background(LightPeachFuzz),
-            contentAlignment = Alignment.Center
         ) {
-//            IconButton(
-//                onClick = { showInfo = true },
-//                modifier = Modifier
-//                    .align(Alignment.TopEnd)
-//                    .padding(top = 8.dp)
-//            ) {
-//                Icon(
-//                    imageVector = Icons.Outlined.Info,
-//                    contentDescription = "Info for camera use",
-//                    tint = Color.Black
-//                )
-//            }
+            // show the selected/taken photo
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .clip(MaterialTheme.shapes.medium)
+                    .background(LightPeachFuzz),
+                contentAlignment = Alignment.Center
+            ) {
 
-//                if (showInfo) {
-//                    InformationModal(
-//                        onDismiss = { showInfo = false },
-//                        screen = "Add"
-//                    )
-//                }
+                if (selectedImageUri == null) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            "Add Items to Your Closet",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp,
+                            color = Color.Black
+                        )
 
-            if (selectedImageUri == null) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    Text(
-                        "Add Items to Your Closet",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 18.sp,
-                        color = Color.Black
-                    )
+                        Text(
+                            "Transform your physical wardrobe into a digital collection by photographing your clothing items.",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
 
-                    Text(
-                        "Transform your physical wardrobe into a digital collection by photographing your clothing items.",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
+                        Text(
+                            "Photography Tips",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 15.sp,
+                            color = Color.Black,
+                            textDecoration = TextDecoration.Underline
+                        )
 
-                    Text(
-                        "Photography Tips",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 15.sp,
-                        color = Color.Black,
-                        textDecoration = TextDecoration.Underline
-                    )
+                        Text(
+                            "This is the screen to add your physical clothing items to your digital closet",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
 
-                    Text(
-                        "This is the screen to add your physical clothing items to your digital closet",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
+                        Text(
+                            "For best results, lay your item of clothing flat on a contrasting surface and center it in the frame. Ensure good lighting and avoid shadows.",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
 
-                    Text(
-                        "For best results, lay your item of clothing flat on a contrasting surface and center it in the frame. Ensure good lighting and avoid shadows.",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
+                        Text(
+                            "Important: Do not wear the item when photographing. This ensures accurate virtual try-on results.",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
 
-                    Text(
-                        "Important: Do not wear the item when photographing. This ensures accurate virtual try-on results.",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
-
-                    Text(
-                        "After uploading, remember to select the appropriate item type and carousel category for proper organization.",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 14.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center
-                    )
-                }
-            } else {
+                        Text(
+                            "After uploading, remember to select the appropriate item type and carousel category for proper organization.",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 14.sp,
+                            color = Color.Black,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                } else {
                     AsyncImage(
                         model = selectedImageUri,
                         contentDescription = "Photo $selectedImageUri",
@@ -401,7 +409,7 @@ fun AddScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            //two button: upload & take photo
+            // two buttons: upload & take photo
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -410,8 +418,14 @@ fun AddScreen(
                 OutlinedButton(
                     onClick = { galleryLauncher.launch("image/*") },
                     modifier = Modifier.weight(1f)
-                ) { Text("Upload", fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+                ) {
+                    Text(
+                        "Upload",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
 
                 Button(
                     onClick = {
@@ -429,8 +443,14 @@ fun AddScreen(
                         }
                     },
                     modifier = Modifier.weight(1f)
-                ) { Text("Take Photo", fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.Bold, fontSize = 15.sp) }
+                ) {
+                    Text(
+                        "Take Photo",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 15.sp
+                    )
+                }
             }
 
             Spacer(Modifier.height(12.dp))
@@ -474,7 +494,7 @@ fun AddScreen(
                     }
 
                     scope.launch {
-                        // upload photo to imgbb
+                        // upload photo to imgbb (now EXIF-aware + resized JPEG)
                         isUploading = true
                         val hostedUrl = uploadToImgbb(selectedImageUri!!, context)
 
@@ -513,19 +533,29 @@ fun AddScreen(
 
                         if (itemId > 0) {
                             createdItemId = itemId
-                            Toast.makeText(context, "Item saved to closet", Toast.LENGTH_SHORT)
-                                .show()
+                            Toast.makeText(
+                                context,
+                                "Item saved to closet",
+                                Toast.LENGTH_SHORT
+                            ).show()
                             showItemModal = true
                         } else {
                             saveError = true
                         }
                     }
                 },
-                enabled = !isUploading && selectedItemType.isNotEmpty() && selectedCarouselType != CarouselTypes.DEFAULT && selectedImageUri != null,
+                enabled = !isUploading &&
+                        selectedItemType.isNotEmpty() &&
+                        selectedCarouselType != CarouselTypes.DEFAULT &&
+                        selectedImageUri != null,
                 modifier = Modifier.fillMaxWidth()
             ) {
-                Text("Save to Closet", fontFamily = Kudryashev_Display_Sans_Regular,
-                    fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                Text(
+                    "Save to Closet",
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 15.sp
+                )
             }
 
             Spacer(Modifier.height(12.dp))
@@ -553,13 +583,112 @@ fun AddScreen(
     }
 }
 
+suspend fun uriToJpegBytesWithExif(
+    context: Context,
+    uri: Uri,
+    maxPixels: Int = 1_050_000
+): ByteArray? = withContext(Dispatchers.IO) {
+    // Read all bytes once
+    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        ?: return@withContext null
+
+    // Get EXIF orientation
+    val exif = ExifInterface(ByteArrayInputStream(bytes))
+    val orientation = exif.getAttributeInt(
+        ExifInterface.TAG_ORIENTATION,
+        ExifInterface.ORIENTATION_NORMAL
+    )
+
+    // Decode bitmap from bytes
+    var bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        ?: return@withContext null
+
+    // Apply rotation/flip
+    bitmap = applyExifTransform(bitmap, orientation)
+
+    // Resize if needed
+    val width = bitmap.width
+    val height = bitmap.height
+    val totalPixels = width.toLong() * height.toLong()
+
+    val finalBitmap: Bitmap = if (totalPixels > maxPixels) {
+        val scale = sqrt(maxPixels.toDouble() / totalPixels.toDouble())
+        val newWidth = (width * scale).toInt().coerceAtLeast(1)
+        val newHeight = (height * scale).toInt().coerceAtLeast(1)
+        Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+    } else {
+        bitmap
+    }
+
+    // Compress to JPEG
+    val output = ByteArrayOutputStream()
+    finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+    val jpegBytes = output.toByteArray()
+    output.close()
+
+    jpegBytes
+}
+
+// Apply EXIF rotation / flipping to a Bitmap.
+private fun applyExifTransform(
+    source: Bitmap,
+    orientation: Int
+): Bitmap {
+    val matrix = Matrix()
+
+    when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> {
+            matrix.postRotate(90f)
+        }
+        ExifInterface.ORIENTATION_ROTATE_180 -> {
+            matrix.postRotate(180f)
+        }
+        ExifInterface.ORIENTATION_ROTATE_270 -> {
+            matrix.postRotate(270f)
+        }
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> {
+            matrix.postScale(-1f, 1f)
+        }
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
+            matrix.postScale(1f, -1f)
+        }
+        ExifInterface.ORIENTATION_TRANSPOSE -> { // flip + rotate 90
+            matrix.postRotate(90f)
+            matrix.postScale(-1f, 1f)
+        }
+        ExifInterface.ORIENTATION_TRANSVERSE -> { // flip + rotate 270
+            matrix.postRotate(270f)
+            matrix.postScale(-1f, 1f)
+        }
+        else -> {
+            // ORIENTATION_NORMAL or unknown
+            return source
+        }
+    }
+
+    return Bitmap.createBitmap(
+        source,
+        0,
+        0,
+        source.width,
+        source.height,
+        matrix,
+        true
+    )
+}
+
+/**
+ * Uploads an EXIF-corrected JPEG from a local Uri to imgbb
+ * and returns the hosted URL.
+ */
 suspend fun uploadToImgbb(localUri: Uri, context: Context): String? {
     return withContext(Dispatchers.IO) {
         runCatching {
-            val stream = context.contentResolver.openInputStream(localUri)
+            // Get orientation-fixed, resized JPEG bytes
+            val jpegBytes = uriToJpegBytesWithExif(context, localUri)
                 ?: return@withContext null
-            val bytes = stream.readBytes()
-            val encodedImage = Base64.encodeToString(bytes, Base64.DEFAULT)
+
+            val encodedImage = Base64.encodeToString(jpegBytes, Base64.DEFAULT)
 
             val client = OkHttpClient()
             val requestBody = MultipartBody.Builder()
