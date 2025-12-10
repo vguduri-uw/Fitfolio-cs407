@@ -112,6 +112,21 @@ class OutfitsViewModel(
             outfitPhotoUri = photoUri,
         )
 
+        val currOutfits = _outfitsState.value.outfits
+        val newItemIds = itemList.map { it.itemId }.toSet()
+
+        // check each existing outfit to see if it matches the new outfit
+        for (existing in currOutfits) {
+            // get existing outfit’s item ids
+            val existingItemIds =
+                db.outfitDao().getItemsByOutfitId(existing.outfitId).map { item -> item.itemId}.toSet()
+
+            // do not insert outfit if already exists
+            if (existingItemIds == newItemIds) {
+                return -2
+            }
+        }
+
         // insert outfit, get its generated ID
         val outfitId = db.outfitDao().upsertOutfit(newOutfit, userId)
 
