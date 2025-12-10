@@ -72,6 +72,7 @@ import androidx.compose.ui.draw.shadow
 import coil.compose.rememberAsyncImagePainter
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.sp
+import com.cs407.fitfolio.ui.components.SimpleHeader
 import com.cs407.fitfolio.ui.theme.GoldenApricot
 import com.cs407.fitfolio.ui.theme.Google_Sans_Flex
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
@@ -159,41 +160,19 @@ fun CalendarScreen(
             modifier = Modifier
                 .align(alignment = Alignment.TopCenter)
                 .fillMaxHeight()
-                .padding(top = 20.dp, start = 20.dp, end = 20.dp)
+                .padding(vertical = 8.dp, horizontal = 24.dp)
         ) {
             // Title
             Row(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(48.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center
+                    .fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                var showInformation by remember { mutableStateOf(false) }
+                SimpleHeader(
+                    title = "My Calendar",
+                    modifier = Modifier.weight(1f)
+                )
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start,
-                    modifier = Modifier.weight(.60f)
-                ) {
-                    Text(
-                        text = "My Calendar",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontSize = 30.sp
-                    )
-
-                    IconButton(onClick = { showInformation = true }) { // todo: add info onClick lambda
-                        Icon(painter = painterResource(R.drawable.info),
-                            contentDescription = "Information",
-                            modifier = Modifier
-                                .size(20.dp)
-                        )
-                    }
-                }
-
-                if (showInformation) {
-                    InformationModal(onDismiss = { showInformation = false}, screen = "My Calendar")
-                }
             }
 
             Spacer(modifier = Modifier.size(24.dp))
@@ -343,15 +322,12 @@ fun CalendarScreen(
         IconButton(
             onClick = { showSettings = true },
             modifier = Modifier
-                .align(alignment = Alignment.TopEnd)
-                .padding(top = 8.dp)
+                .align(alignment = Alignment.TopEnd).padding(end = 8.dp)
         ) {
             Icon(
                 painter = painterResource(R.drawable.cog),
                 contentDescription = "Settings",
-                modifier = Modifier
-                    .size(50.dp)
-                    .padding(end = 15.dp)
+                Modifier.size(36.dp)
             )
         }
 
