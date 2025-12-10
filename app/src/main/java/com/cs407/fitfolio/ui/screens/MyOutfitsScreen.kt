@@ -731,9 +731,9 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                                     else
                                         painterResource(R.drawable.heart_outline),
                                     contentDescription = if (outfit.isFavorite)
-                                        "Remove item from favorites"
+                                        "Remove outfit from favorites"
                                     else
-                                        "Add item to favorites",
+                                        "Add outfit to favorites",
                                     tint = if (outfit.isFavorite) Color.Red else Color.Black,
                                     modifier = Modifier.size(20.dp)
                                 )
@@ -742,9 +742,9 @@ fun OutfitGrid(outfitsState: OutfitsState, outfitsViewModel: OutfitsViewModel) {
                             Icon(
                                 painter = painterResource(R.drawable.delete),
                                 contentDescription = if (outfit.isDeletionCandidate)
-                                    "Remove item from deletion candidates"
+                                    "Remove outfit from deletion candidates"
                                 else
-                                    "Add item to deletion candidates",
+                                    "Add outfit to deletion candidates",
                                 tint = if (outfit.isDeletionCandidate) Color.Red else Color.Gray,
                                 modifier = Modifier
                                     .align(Alignment.TopEnd)

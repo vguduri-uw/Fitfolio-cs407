@@ -77,6 +77,8 @@ import com.cs407.fitfolio.viewModels.CarouselViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.abs
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
@@ -264,7 +266,7 @@ fun ActionButtonsRow(
             Toast.makeText(
                 context,
                 "Please do not leave the screen during image processing.",
-                Toast.LENGTH_SHORT
+                Toast.LENGTH_LONG
             ).show()
         }
     } else {
