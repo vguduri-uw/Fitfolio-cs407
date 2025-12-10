@@ -86,6 +86,9 @@ import kotlinx.coroutines.CoroutineScope
 import com.cs407.fitfolio.ui.theme.FloralWhite
 import java.io.ByteArrayOutputStream
 import kotlin.math.sqrt
+import androidx.exifinterface.media.ExifInterface
+import android.graphics.Matrix
+import java.io.ByteArrayInputStream
 
 // Loads the user from Room DB, shows editable fields, avatar creation/edit, and sign-out logic
 @OptIn(ExperimentalMaterial3Api::class)
@@ -617,35 +620,97 @@ suspend fun uriToJpegBase64(
     uri: Uri,
     maxPixels: Int = 1_050_000
 ): String? = withContext(Dispatchers.IO) {
-    // Decode to bitmap
-    val input = context.contentResolver.openInputStream(uri) ?: return@withContext null
-    val originalBitmap = BitmapFactory.decodeStream(input)
-    input.close()
 
-    if (originalBitmap == null) return@withContext null
+    // Read the raw bytes once
+    val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+        ?: return@withContext null
 
-    val width = originalBitmap.width
-    val height = originalBitmap.height
+    // Read EXIF orientation from the bytes
+    val exif = ExifInterface(ByteArrayInputStream(bytes))
+    val orientation = exif.getAttributeInt(
+        ExifInterface.TAG_ORIENTATION,
+        ExifInterface.ORIENTATION_NORMAL
+    )
+
+    // Decode bitmap from bytes
+    var bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
+        ?: return@withContext null
+
+    // Apply rotation/flip according to EXIF
+    bitmap = applyExifTransform(bitmap, orientation)
+
+    // Now check size and scale if needed
+    val width = bitmap.width
+    val height = bitmap.height
     val totalPixels = width.toLong() * height.toLong()
 
-    val bitmap: Bitmap = if (totalPixels > maxPixels) {
-        val scale = sqrt(maxPixels.toDouble() / totalPixels.toDouble())
+    val finalBitmap: Bitmap = if (totalPixels > maxPixels) {
+        val scale = kotlin.math.sqrt(maxPixels.toDouble() / totalPixels.toDouble())
         val newWidth = (width * scale).toInt().coerceAtLeast(1)
         val newHeight = (height * scale).toInt().coerceAtLeast(1)
-        Bitmap.createScaledBitmap(originalBitmap, newWidth, newHeight, true)
+        Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
     } else {
-        originalBitmap
+        bitmap
     }
 
     // Compress to JPEG
     val output = ByteArrayOutputStream()
-    bitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
+    finalBitmap.compress(Bitmap.CompressFormat.JPEG, 90, output)
     val jpegBytes = output.toByteArray()
     output.close()
 
-    // Encode to base64
     val encoded = Base64.encodeToString(jpegBytes, Base64.NO_WRAP)
     "data:image/jpeg;base64,$encoded"
+}
+
+/**
+ * Rotates/flips a bitmap based on EXIF orientation.
+ */
+private fun applyExifTransform(
+    source: Bitmap,
+    orientation: Int
+): Bitmap {
+    val matrix = Matrix()
+
+    when (orientation) {
+        ExifInterface.ORIENTATION_ROTATE_90 -> {
+            matrix.postRotate(90f)
+        }
+        ExifInterface.ORIENTATION_ROTATE_180 -> {
+            matrix.postRotate(180f)
+        }
+        ExifInterface.ORIENTATION_ROTATE_270 -> {
+            matrix.postRotate(270f)
+        }
+        ExifInterface.ORIENTATION_FLIP_HORIZONTAL -> {
+            matrix.postScale(-1f, 1f)
+        }
+        ExifInterface.ORIENTATION_FLIP_VERTICAL -> {
+            matrix.postScale(1f, -1f)
+        }
+        ExifInterface.ORIENTATION_TRANSPOSE -> { // flip + rotate 90
+            matrix.postRotate(90f)
+            matrix.postScale(-1f, 1f)
+        }
+        ExifInterface.ORIENTATION_TRANSVERSE -> { // flip + rotate 270
+            matrix.postRotate(270f)
+            matrix.postScale(-1f, 1f)
+        }
+        else -> {
+            // ORIENTATION_NORMAL or unknown; no transform
+            return source
+        }
+    }
+
+    return Bitmap.createBitmap(
+        source,
+        0,
+        0,
+        source.width,
+        source.height,
+        matrix,
+        true
+    )
 }
 
 // dialog to allow for creating/editing avatar
