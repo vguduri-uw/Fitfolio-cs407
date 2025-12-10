@@ -99,9 +99,14 @@ fun AuthNavigation() {
                 SignInScreen(
                     userViewModel = userViewModel,
                     onNavigateToSignUpScreen = { navController.navigate("sign_up") },
-                    onLoginSuccess = {navController.navigate("app_nav") {
-                        popUpTo("sign_in") { inclusive = true }
-                    }}
+                    onLoginSuccess = {
+                        val newUser = userViewModel.userState.value.newUser
+                        val route = if (newUser) "welcome" else "app_nav"
+
+                        navController.navigate(route) {
+                            popUpTo("sign_in") { inclusive = true }
+                        }
+                    }
                 )
             }
             composable("sign_up") {
