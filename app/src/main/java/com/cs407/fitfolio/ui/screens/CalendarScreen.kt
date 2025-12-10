@@ -188,7 +188,7 @@ fun CalendarScreen(
                 placeholder = {
                     Text(
                         text = "Search for Outfits by Date",
-                        fontFamily = Kudryashev_Display_Sans_Regular,fontSize = 18.sp,
+                        fontFamily = Kudryashev_Display_Sans_Regular,fontSize = 16.sp,
                         fontWeight = FontWeight.SemiBold
                     )},
                 leadingIcon = {

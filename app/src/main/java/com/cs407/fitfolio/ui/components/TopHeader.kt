@@ -72,7 +72,9 @@ fun TopHeader (title: String? = null, userViewModel: UserViewModel) {
             contentDescription = "User profile image",
             placeholder = painterResource(R.drawable.user),
             error = painterResource(R.drawable.user),
-            fallback = painterResource(R.drawable.user)
+            fallback = painterResource(R.drawable.user),
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
     }
 
@@ -168,7 +170,7 @@ fun ProfilePictureDialog(
 
     androidx.compose.material3.AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Update Profile Picture") },
+        title = { Text("Update Profile Picture", fontFamily = Kudryashev_Display_Sans_Regular) },
         text = {
             Column(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -191,7 +193,7 @@ fun ProfilePictureDialog(
                             )
                         }
                         else -> {
-                            Text("No photo selected yet", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                            Text("No photo selected yet", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp)
                         }
                     }
                 }
@@ -204,7 +206,7 @@ fun ProfilePictureDialog(
                         onClick = { galleryLauncher.launch("image/*") },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Upload", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                        Text("Upload", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp)
                     }
 
                     Button(
@@ -223,7 +225,7 @@ fun ProfilePictureDialog(
                         },
                         modifier = Modifier.weight(1f)
                     ) {
-                        Text("Take Photo", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                        Text("Take Photo", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp)
                     }
                 }
             }
@@ -237,7 +239,7 @@ fun ProfilePictureDialog(
                     onClick = onDismiss,
                     modifier = Modifier.weight(0.5f)
                 ) {
-                    Text("Cancel", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    Text("Cancel", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp)
                 }
 
                 Spacer(modifier = Modifier.size(8.dp))
@@ -262,7 +264,7 @@ fun ProfilePictureDialog(
                     enabled = selectedImageUri != null,
                     modifier = Modifier.weight(0.5f)
                 ) {
-                    Text("Save", fontFamily = Google_Sans_Flex, fontSize = 15.sp)
+                    Text("Save", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp)
                 }
             }
         }
