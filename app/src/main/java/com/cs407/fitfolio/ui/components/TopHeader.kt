@@ -72,7 +72,9 @@ fun TopHeader (title: String? = null, userViewModel: UserViewModel) {
             contentDescription = "User profile image",
             placeholder = painterResource(R.drawable.user),
             error = painterResource(R.drawable.user),
-            fallback = painterResource(R.drawable.user)
+            fallback = painterResource(R.drawable.user),
+            modifier = Modifier.fillMaxSize(),
+            contentScale = ContentScale.Crop
         )
     }
 
