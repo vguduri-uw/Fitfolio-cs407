@@ -77,6 +77,7 @@ import com.cs407.fitfolio.viewModels.CarouselViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlin.math.abs
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
 @Composable
@@ -160,7 +161,8 @@ fun CarouselScreen(
                         Text(
                             "No ${category.carouselType.lowercase()} found",
                             fontFamily = Kudryashev_Display_Sans_Regular,
-                            fontSize = 18.sp
+                            fontSize = 18.sp,
+                            fontWeight = FontWeight.Bold
                         )
                     }
                 }
