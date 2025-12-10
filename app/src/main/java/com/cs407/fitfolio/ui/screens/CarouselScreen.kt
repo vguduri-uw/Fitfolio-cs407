@@ -182,6 +182,9 @@ fun CarouselScreen(
                 )
             }
         }
+        if (carouselState.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES) {
+            Spacer(modifier = Modifier.height(150.dp))
+        }
 
         Spacer(modifier = Modifier.height(12.dp))
 
@@ -625,7 +628,7 @@ fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
                 model = item.itemPhotoUri,
                 contentDescription = item.itemName,
                 modifier = Modifier.fillMaxSize().aspectRatio(aspectRatio),
-                contentScale = ContentScale.Fit,
+                contentScale = if (item.carouselType == CarouselTypes.ACCESSORIES) ContentScale.Inside else ContentScale.Fit,
                 alpha = if (isBlocked) 0.5f else 1f,
                 onSuccess = { result ->
                     val w = result.result.drawable.intrinsicWidth

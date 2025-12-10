@@ -271,22 +271,27 @@ fun WardrobeScreenInfo() {
             description = "Favorite - Toggle to show only favorited items in carousel"
         )
 
-        Row {
-            Icon(
-                imageVector = Icons.Outlined.LayersClear,
-                contentDescription = "Reset to placeholder item",
-                modifier = Modifier.size(24.dp)
-            )
-            Spacer(modifier = Modifier.width(16.dp))
-            Text(
-                text = "Reset - Clear all item parameters. Use this when you want to leave outfit slots empty",
-                fontFamily = Kudryashev_Display_Sans_Regular,
-                fontWeight = FontWeight.Bold,
-                fontSize = 14.sp,
-                color = Color.Black,
-                modifier = Modifier.weight(.86f)
-            )
-        }
+        IconInfoRow(
+            iconRes = listOf(R.drawable.placeholder_toggle),
+            description = "Reset - Clear all item parameters. Use this when you want to leave outfit slots empty"
+        )
+
+//        Row {
+//            Icon(
+//                imageVector = R.drawable.placeholder_toggle,
+//                contentDescription = "Reset to placeholder item",
+//                modifier = Modifier.size(24.dp)
+//            )
+//            Spacer(modifier = Modifier.width(16.dp))
+//            Text(
+//                text = "Reset - Clear all item parameters. Use this when you want to leave outfit slots empty",
+//                fontFamily = Kudryashev_Display_Sans_Regular,
+//                fontWeight = FontWeight.Bold,
+//                fontSize = 14.sp,
+//                color = Color.Black,
+//                modifier = Modifier.weight(.86f)
+//            )
+//        }
 
         Row {
             Text(
@@ -317,7 +322,7 @@ fun WardrobeScreenInfo() {
         )
 
         Text(
-            text = "Requires at least one item selected and a personal avatar uploaded in settings. You can do this in your settings",
+            text = "Requires at least one item selected and a personal avatar uploaded in settings.",
             fontFamily = Kudryashev_Display_Sans_Regular,
             fontWeight = FontWeight.Bold,
             fontSize = 14.sp,
