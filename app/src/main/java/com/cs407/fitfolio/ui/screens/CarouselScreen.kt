@@ -120,7 +120,7 @@ fun CarouselScreen(
             verticalAlignment = Alignment.CenterVertically
         ) {
             SimpleHeader(
-                title = "Outfit Carousel",
+                title = "My Carousel",
                 modifier = Modifier.weight(1f)
             )
             Spacer(modifier = Modifier.width(8.dp))
