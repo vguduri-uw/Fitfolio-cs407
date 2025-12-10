@@ -1,5 +1,7 @@
 package com.cs407.fitfolio.ui.screens
 
+import android.content.Context
+import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -48,18 +50,31 @@ import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import com.cs407.fitfolio.ui.theme.Kudryashev_Regular
 
 fun createAccount(
+    context: Context,
     email: String,
     password: String,
     onSuccess: (FirebaseUser) -> Unit,
-    onError: (Exception) -> Unit
+    onError: (String) -> Unit
 ) {
     val auth = FirebaseAuth.getInstance()
     auth.createUserWithEmailAndPassword(email, password)
         .addOnCompleteListener { task ->
             if (task.isSuccessful) {
-                task.result?.user?.let { onSuccess(it) }
+                val user = auth.currentUser
+                if (user != null) {
+                    user.sendEmailVerification().addOnCompleteListener { verifyTask ->
+                        if (verifyTask.isSuccessful) {
+                            auth.signOut() // prevent login until verified
+                            onSuccess(user)
+                        } else {
+                            onError(verifyTask.exception?.message ?: "Failed to send verification email.")
+                        }
+                    }
+                } else {
+                    onError("Failed to get current user.")
+                }
             } else {
-                task.exception?.let { onError(it) }
+                onError(task.exception?.message ?: "Failed to create account.")
             }
         }
 }
@@ -137,37 +152,6 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit,onNavigateToAppNav: () -> U
     // Track whether all fields are filled (to make sign up button available)
     val allFieldsFilled = name.isNotEmpty() && email.isNotEmpty() &&
             password.isNotEmpty() && reenteredPassword.isNotEmpty()
-//    val onComplete: (Boolean, Exception?, FirebaseUser?) -> Unit =
-//        { isSuccess, taskException, signedUser ->
-//            if (isSuccess && signedUser != null)
-//                scope.launch {
-//                    var user = db.userDao().getByUID(signedUser.uid)
-//
-//                    if (user == null) {
-//                        db.userDao().insert(
-//                            User(
-//                                userUID = signedUser.uid,
-//                                username = name,
-//                            )
-//                        )
-//                        user = db.userDao().getByUID(signedUser.uid)
-//                    }
-//
-//                    signUpButtonClick(
-//                        UserState(
-//                            id = user!!.userId,
-//                            name = name,
-//                            uid = signedUser.uid
-//                        )
-//                    )
-//                }
-//            else
-//                error = taskException?.message
-//        }
-//
-//    val user = Firebase.auth.currentUser
-//    if (user != null)
-//        onComplete(true, null, user)
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -216,12 +200,11 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit,onNavigateToAppNav: () -> U
         Button(
             enabled = allFieldsFilled && passwordsMatch,
             onClick = {
-                error = null // reset error
-                createAccount(email, password,
+                error = null
+                createAccount(context, email, password,
                     onSuccess = { firebaseUser ->
                         scope.launch {
                             try {
-                                // Check if user exists in local DB
                                 var localUser = db.userDao().getByUID(firebaseUser.uid)
                                 if (localUser == null) {
                                     val newUser = User(
@@ -243,7 +226,13 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit,onNavigateToAppNav: () -> U
                                             newUser = true
                                         )
                                     )
-                                    onNavigateToAppNav()
+                                    // Instead of navigating to app, maybe navigate to "Check your email" screen
+                                    Toast.makeText(
+                                        context,
+                                        "Account created! Please verify your email before logging in.",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                    onNavigateToSignInScreen()
                                 } else {
                                     error = "Failed to create local user"
                                 }
@@ -253,51 +242,14 @@ fun SignUpForm( onNavigateToSignInScreen: () -> Unit,onNavigateToAppNav: () -> U
                         }
                     },
                     onError = { e ->
-                        error = e.message ?: "Failed to create Firebase account"
+                        error = e
                     }
                 )
             },
-                    modifier = Modifier
-                    .padding(top = 25.dp)
-
+            modifier = Modifier.padding(top = 25.dp)
         ) {
             Text("Sign Up", fontFamily = Kudryashev_Regular, fontSize = 18.sp)
-
-//            onClick = {
-//                createAccount(
-//                    email,
-//                    password,
-//                    onSuccess = { user ->
-//                        scope.launch {
-//                            var dbUser = db.userDao().getByUID(user.uid)
-//                            if (dbUser == null) {
-//                                val newUser = User(userUID = user.uid, username = name)
-//                                db.userDao().insert(newUser)
-//                                dbUser = db.userDao().getByUID(user.uid)
-//                            }
-//                            signUpButtonClick(
-//                                UserState(
-//                                    id = dbUser!!.userId,
-//                                    name = dbUser.username,
-//                                    uid = user.uid
-//                                )
-//                            )
-//                        }
-//                    },
-//                    onError = { exception ->
-//                        error = exception.message
-//                    }
-//                )
-//            },
-//            enabled = allFieldsFilled && passwordsMatch,
-//            content = {
-//                Text(
-//                    text = "Sign Up",
-//                    fontFamily = Kudryashev_Regular,
-//                    fontSize = 18.sp,
-//                    modifier = Modifier.padding(5.dp)
-//                )
-            }
+        }
 
         // move to sign in page if account exists already
         Row {

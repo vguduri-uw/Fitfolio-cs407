@@ -58,20 +58,25 @@ fun AuthNavigation() {
     LaunchedEffect(true) {
         val current = FirebaseAuth.getInstance().currentUser
         if (current != null) {
-            val local = db.userDao().getByUID(current.uid)
-            if (local != null) {
-                userViewModel.setUser(
-                    UserState(
-                        id = local.userId,
-                        name = local.username,
-                        uid = local.userUID,
-                        email = local.email,
-                        avatarUri = local.avatarUri
+            current.reload() // suspend if using `reloadSuspend()` helper
+            if (current.isEmailVerified) {
+                val local = db.userDao().getByUID(current.uid) // suspend function
+                local?.let {
+                    userViewModel.setUser(
+                        UserState(
+                            id = it.userId,
+                            name = it.username,
+                            uid = it.userUID,
+                            email = it.email,
+                            avatarUri = it.avatarUri
+                        )
                     )
-                )
+                }
+            } else {
+                FirebaseAuth.getInstance().signOut()
             }
         }
-        isLoading = false // loading finished
+        isLoading = false
     }
 
     if (isLoading) {
@@ -81,9 +86,10 @@ fun AuthNavigation() {
         // Only start NavHost after we know if user is signed in
         // If user is new, navigate to welcome screen
         val startDestination = when {
-            userState.id == 0 -> "sign_in"
-            userState.newUser -> "welcome"
-            else -> "app_nav"
+            FirebaseAuth.getInstance().currentUser?.isEmailVerified == true -> {
+                if (userState.newUser) "welcome" else "app_nav"
+            }
+            else -> "sign_in"
         }
         NavHost(
             navController = navController,
@@ -91,8 +97,11 @@ fun AuthNavigation() {
         ) {
             composable("sign_in") {
                 SignInScreen(
-                    onSignInSuccess = { userViewModel.loginUser(db) },
+                    userViewModel = userViewModel,
                     onNavigateToSignUpScreen = { navController.navigate("sign_up") },
+                    onLoginSuccess = {navController.navigate("app_nav") {
+                        popUpTo("sign_in") { inclusive = true }
+                    }}
                 )
             }
             composable("sign_up") {

@@ -1,6 +1,5 @@
 package com.cs407.fitfolio.ui.modals
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -32,17 +30,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
-import com.cs407.fitfolio.R
 import com.cs407.fitfolio.data.FitfolioDatabase
 import com.cs407.fitfolio.viewModels.UserViewModel
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.launch
 import android.Manifest
+import android.content.Context
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -62,16 +59,23 @@ import com.cs407.fitfolio.ui.screens.createImageUri
 import com.cs407.fitfolio.services.RetrofitInstance
 import com.cs407.fitfolio.services.FashnRunRequest
 import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
-import com.cs407.fitfolio.ui.theme.Kudryashev_Display_Sans_Regular
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import android.util.Base64
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.text.font.Font
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.ui.text.font.FontWeight
 import com.cs407.fitfolio.ui.components.TopHeader
+import com.cs407.fitfolio.viewModels.UserState
+import com.google.firebase.Firebase
+import com.google.firebase.auth.EmailAuthProvider
+import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.auth.auth
+import kotlinx.coroutines.CoroutineScope
 import java.io.ByteArrayOutputStream
 import kotlin.math.sqrt
 
@@ -86,12 +90,15 @@ fun SettingsModal (
     // User information
 //    val userState by userViewModel.userState.collectAsState()
     // TODO: implement the way to get this from storage (these are placeholders)
-    var name by remember { mutableStateOf("name") }
-    var email by remember { mutableStateOf("emailaddress@gmail.com") }
-    var password by remember { mutableStateOf("password") }
+    //current email, password and username
+    var currentName by remember { mutableStateOf("Name") }
+    var currentEmail by remember { mutableStateOf("email@gmail.com") }
+    var currentPassword by remember { mutableStateOf("") }
 
-    // Track whether there is information to be saved
-    var saveable by remember { mutableStateOf(false) }
+    //new email, password, and username
+    var newName by remember { mutableStateOf("") }
+    var newEmail by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
 
     // Track sheet state and open to full screen
     val sheetState = rememberModalBottomSheetState(
@@ -100,21 +107,40 @@ fun SettingsModal (
     // Track whether sign-out dialog is showing
     var showSignOutDialog by remember { mutableStateOf(false) }
 
-    val context = LocalContext.current
-    val db = FitfolioDatabase.getDatabase(context)
-    val currentUserState by userViewModel.userState.collectAsState()
-    val scope = rememberCoroutineScope()
+    // track whether delete dialog shows
+    var showDeleteDialog by remember { mutableStateOf(false) }
+
+    //authentification dialog to change info
+    var showReauthDialog by remember { mutableStateOf(false) }
 
     // track whether avatar instructions and dialog are showing
     var showAvatarInstructions by remember { mutableStateOf(false) }
     var showAvatarDialog by remember { mutableStateOf(false) }
 
-    LaunchedEffect(currentUserState.id) {
+    val context = LocalContext.current
+    val db = FitfolioDatabase.getDatabase(context)
+    val currentUserState by userViewModel.userState.collectAsState()
+    val scope = rememberCoroutineScope()
+
+
+// Track whether there is information to be saved
+    val saveable by remember {
+        derivedStateOf {
+            newName != currentUserState.name ||
+                    newEmail != currentUserState.email ||
+                    newPassword.isNotBlank()
+        }
+    }
+    LaunchedEffect(currentUserState) {
+        //if there is a user according to the user state, then the current name and email should be based on them
         if (currentUserState.id != 0) {
             val localUser = db.userDao().getByUID(currentUserState.uid)
             if (localUser != null) {
-                name = localUser.username
-                email = localUser.email ?: ""
+                currentName = localUser.username
+                currentEmail = localUser.email ?: ""
+
+                newName = currentName
+                newEmail = currentEmail
             }
         }
     }
@@ -124,16 +150,16 @@ fun SettingsModal (
         dragHandle = { BottomSheetDefaults.DragHandle() },
         modifier = Modifier
             .fillMaxSize()
-            .padding(top = 50.dp)
+            .padding(top = 60.dp)
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp),
+            verticalArrangement = Arrangement.spacedBy(10.dp),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 24.dp, bottom = 48.dp, start = 24.dp, end = 24.dp)
         ) {
-            SettingsHeader(userViewModel=userViewModel) // TODO: allow update profile image??
+            SettingsHeader(userViewModel = userViewModel) // TODO: allow update profile image??
 
             // avatar button
             val avatarButtonLabel =
@@ -145,59 +171,66 @@ fun SettingsModal (
                     .offset(y = -10.dp)
                     .width(160.dp)
             ) {
-                Text(text = avatarButtonLabel, fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold)
+                Text(
+                    text = avatarButtonLabel,
+                    fontFamily = Kudryashev_Display_Sans_Regular,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
             }
 
             // Fields for editing user information
             // TODO: add edit button and only enable then??
             EditableField(
                 label = "Name",
-                value = name,
-                onValueChange = { name = it; saveable = true},
+                value = newName,
+                onValueChange = { newName = it},
                 isPassword = false,
             )
             EditableField(
                 label = "Email",
-                value = email,
-                onValueChange = { email = it; saveable = true },
+                value = newEmail,
+                onValueChange = { newEmail = it},
                 isPassword = false
             )
             EditableField(
-                label = "Password",
-                value = password,
-                onValueChange = { password = it; saveable = true},
+                label = "Change Password",
+                value = newPassword,
+                onValueChange = { newPassword = it},
                 isPassword = true
             )
 
             // Save button
             Button(
                 onClick = {
-                    saveable = false
-                    scope.launch {
-                        db.userDao().updateUser(
-                            id = currentUserState.id,
-                            username = name,
-                            email = email
-                        )
-                        userViewModel.setUser(currentUserState.copy(name = name, uid = currentUserState.uid))
-                    }
-                    // TODO: implement saving information to storage
-                    // TODO: implement updating information everywhere else in app
-                    // there should be an alert dialog that requires them to confirm
+                    showReauthDialog = true
                 },
                 enabled = saveable,
-                content = { Text("Save", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold) },
+                content = {
+                    Text(
+                        "Save",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 modifier = Modifier.width(125.dp)
             )
 
             // Sign out button
-            Button( // TODO: implement sign out functionality
-                // there should be an alert dialog that requires them to confirm
+            Button(
                 onClick = {
                     showSignOutDialog = true
 
                 },
-                content = { Text("Sign Out", fontFamily = Kudryashev_Display_Sans_Regular, fontSize = 15.sp, fontWeight = FontWeight.Bold) },
+                content = {
+                    Text(
+                        "Sign out",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                },
                 colors = ButtonDefaults.buttonColors(
                     containerColor = MaterialTheme.colorScheme.primary
                 ),
@@ -208,24 +241,155 @@ fun SettingsModal (
 
             // Reset account link
             Text(
-                text = "Reset your account",
+                text = "Delete your account",
                 fontFamily = Kudryashev_Display_Sans_Regular,
                 fontWeight = FontWeight.Bold,
                 textDecoration = TextDecoration.Underline,
                 fontSize = 15.sp,
                 modifier = Modifier
                     .padding(bottom = 12.dp)
-                    .clickable(onClick = {})
-                    .offset(y = -20.dp)
+                    .clickable(onClick = { showDeleteDialog = true })
+//                    .offset(y = -20.dp)
                 // TODO: implement reset account implementation
                 // there should be an alert dialog that requires them to confirm
             )
         }
     }
+    if (showReauthDialog) {
+        //alertdialog should come up to ensure the user want to change the username, password or email
+        AlertDialog(
+            onDismissRequest = { showReauthDialog = false },
+            title = { Text("Confirm Changes") },
+            text = {
+                Column {
+                    Text("Enter your current password to apply updates.")
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = currentPassword,
+                        onValueChange = { currentPassword = it },
+                        visualTransformation = PasswordVisualTransformation(),
+                        label = { Text("Current Password") }
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // takes the new email, newname, new password and old
+                        updateUserAccount(
+                            context = context,
+                            db = db,
+                            name = newName,
+                            email = newEmail,
+                            newPassword = newPassword,
+                            currentPassword = currentPassword,
+                            currentUserState = currentUserState,
+                            onDone = {
+                                showReauthDialog = false
+                                currentPassword = ""
+                            },
+                            scope = scope
+                        )
+                    }
+                ) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showReauthDialog = false }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
+    var deletePassword by remember { mutableStateOf("") }
+
+// Step 1: Show password input dialog
+    if (showDeleteDialog) {
+        androidx.compose.material3.AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Confirm to Delete") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(
+                        "Are you sure you want to delete your account? This cannot be undone.",
+                        fontFamily = Kudryashev_Display_Sans_Regular,
+                        fontSize = 15.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    OutlinedTextField(
+                        value = deletePassword,
+                        onValueChange = { deletePassword = it },
+                        label = { Text("Confirm Password") },
+                        visualTransformation = PasswordVisualTransformation(),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showDeleteDialog = false
+
+                    // Step 2: Reauthenticate user
+                    val auth = FirebaseAuth.getInstance()
+                    val firebaseUser = auth.currentUser
+                    val email = firebaseUser?.email
+
+                    if (!email.isNullOrBlank() && firebaseUser != null) {
+                        val credential = EmailAuthProvider.getCredential(email, deletePassword)
+                        firebaseUser.reauthenticate(credential)
+                            .addOnCompleteListener { reauthTask ->
+                                if (reauthTask.isSuccessful) {
+                                    // Step 3: Delete account from Room and Firebase
+                                    scope.launch {
+                                        try {
+                                            db.deleteDao().delete(currentUserState.id)
+
+                                            firebaseUser.delete().addOnCompleteListener { deleteTask ->
+                                                if (deleteTask.isSuccessful) {
+                                                    Toast.makeText(context, "Account deleted", Toast.LENGTH_SHORT).show()
+                                                    userViewModel.logoutUser()
+                                                    onSignOut()
+                                                } else {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "Delete failed: ${deleteTask.exception?.message}",
+                                                        Toast.LENGTH_LONG
+                                                    ).show()
+                                                }
+                                            }
+                                        } catch (e: Exception) {
+                                            Toast.makeText(context, "Error: ${e.message}", Toast.LENGTH_LONG).show()
+                                        }
+                                    }
+                                } else {
+                                    Toast.makeText(context, "Wrong password or reauth failed", Toast.LENGTH_LONG).show()
+                                }
+                            }
+                    } else {
+                        Toast.makeText(context, "No user logged in", Toast.LENGTH_LONG).show()
+                    }
+
+                    deletePassword = ""
+                }) {
+                    Text("Confirm")
+                }
+            },
+            dismissButton = {
+                Button(onClick = {
+                    showDeleteDialog = false
+                    deletePassword = ""
+                }) {
+                    Text("Cancel")
+                }
+            }
+        )
+    }
 
     // Confirmation dialog for sign out
     if (showSignOutDialog) {
-        androidx.compose.material3.AlertDialog(
+        AlertDialog(
             onDismissRequest = { showSignOutDialog = false },
             title = { Text("Sign Out") },
             text = { Text("Are you sure you want to sign out?") },
@@ -323,6 +487,118 @@ fun EditableField(
     }
 }
 
+fun updateUserAccount(
+    context: Context,
+    db: FitfolioDatabase,
+    name: String,
+    email: String,
+    newPassword: String,
+    currentPassword: String,
+    currentUserState: UserState,
+    onDone: () -> Unit,
+    scope: CoroutineScope
+) {
+    val firebaseUser = Firebase.auth.currentUser
+
+    if (firebaseUser == null) {
+        Toast.makeText(context, "Not logged in.", Toast.LENGTH_LONG).show()
+        onDone()
+        return
+    }
+
+    if (currentPassword.isBlank()) {
+        Toast.makeText(context, "Please enter your current password.", Toast.LENGTH_LONG).show()
+        onDone()
+        return
+    }
+
+    val trimmedEmail = email.trim()
+    val trimmedNewPassword = newPassword.trim()
+    val userEmail = firebaseUser.email ?: ""
+
+    // 🔥 REAUTH FIRST
+    val credential = EmailAuthProvider.getCredential(userEmail, currentPassword)
+
+    firebaseUser.reauthenticate(credential).addOnCompleteListener { reauth ->
+        if (!reauth.isSuccessful) {
+            Toast.makeText(context, "Incorrect password.", Toast.LENGTH_LONG).show()
+            onDone()
+            return@addOnCompleteListener
+        }
+
+        // 🟢 UPDATE USERNAME IN ROOM DB
+        if (currentUserState.name != name) {
+            val userDao = db.userDao()
+            scope.launch {
+                userDao.updateUser(
+                    id = currentUserState.id,
+                    username = name,
+                    email = currentUserState.email // KEEP SAME EMAIL
+                )
+            }
+        }
+        // ✉️ UPDATE EMAIL IF CHANGED
+        if (trimmedEmail != userEmail) {
+            firebaseUser.verifyBeforeUpdateEmail(trimmedEmail)
+                .addOnCompleteListener { emailTask ->
+                    if (emailTask.isSuccessful) {
+                        Toast.makeText(
+                            context,
+                            "A verification link was sent to $trimmedEmail. Click it to finish updating your email.",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        scope.launch{
+                            db.userDao().updateUser(
+                                id = currentUserState.id,
+                                username = name,
+                                email = trimmedEmail
+                            )
+                        }
+                    } else {
+                        Toast.makeText(
+                            context,
+                            "Email update failed: ${emailTask.exception?.message}",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    }
+
+                    // Continue to password update after email verification step
+                    updatePasswordIfNeeded(firebaseUser, newPassword, context, onDone)
+                }
+
+            return@addOnCompleteListener
+        }
+
+        // 🟣 If email unchanged, just update password
+        updatePasswordIfNeeded(firebaseUser, newPassword, context, onDone)
+    }
+}
+
+
+fun updatePasswordIfNeeded(
+    firebaseUser: FirebaseUser,
+    newPassword: String,
+    context: Context,
+    onDone: () -> Unit
+) {
+    if (newPassword.isNotBlank()) {
+        firebaseUser.updatePassword(newPassword).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                Toast.makeText(context, "Changes saved!", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(
+                    context,
+                    "Password update failed: ${task.exception?.message}",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            onDone()
+        }
+    } else {
+        Toast.makeText(context, "Changes saved!", Toast.LENGTH_SHORT).show()
+        onDone()
+    }
+}
 // Converts a given img uri to a resized JPEG Base64 string to prevent issues when sending to FASHN API
 suspend fun uriToJpegBase64(
     context: android.content.Context,
