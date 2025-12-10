@@ -49,6 +49,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.runtime.collectAsState
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.material.icons.outlined.LayersClear
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.runtime.derivedStateOf
@@ -60,6 +61,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import coil.compose.AsyncImage
 import com.cs407.fitfolio.data.ItemEntry
+import com.cs407.fitfolio.data.OutfitEntry
 import com.cs407.fitfolio.enums.CarouselTypes
 import com.cs407.fitfolio.ui.modals.OutfitModal
 import com.cs407.fitfolio.ui.theme.FloralWhite
@@ -93,6 +95,7 @@ fun CarouselScreen(
     var showOutfitModal by remember { mutableStateOf(false) }
     var createdOutfitId by remember { mutableIntStateOf(-1) }
     var saveError by remember { mutableStateOf(false) }
+    var toastError by remember { mutableStateOf("") }
 
     val categories = CarouselTypes.entries.filter {
         it != CarouselTypes.DEFAULT && it != CarouselTypes.ONE_PIECES
@@ -149,11 +152,14 @@ fun CarouselScreen(
                     modifier = Modifier.fillMaxWidth().height(150.dp),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        "No ${category.carouselType.lowercase()} found",
-                        fontFamily = Kudryashev_Display_Sans_Regular,
-                        fontSize = 18.sp
-                    )
+                    if (carouselState.centeredTopwear?.carouselType == CarouselTypes.ONE_PIECES && category == CarouselTypes.BOTTOMWEAR) null
+                    else {
+                        Text(
+                            "No ${category.carouselType.lowercase()} found",
+                            fontFamily = Kudryashev_Display_Sans_Regular,
+                            fontSize = 18.sp
+                        )
+                    }
                 }
             } else {
                 ClothingScroll(
@@ -183,7 +189,10 @@ fun CarouselScreen(
             scope = scope,
             context = context,
             onOutfitSaved = { id -> createdOutfitId = id; showOutfitModal = true },
-            onSaveError = { saveError = true }
+            onSaveError = { error ->
+                saveError = true
+                toastError = error
+            }
         )
     }
 
@@ -203,7 +212,7 @@ fun CarouselScreen(
             onNavigateToCalendarScreen = onNavigateToCalendarScreen
         )
     } else if (saveError) {
-        Toast.makeText(context, "Outfit could not be saved. Please try again.", Toast.LENGTH_SHORT).show()
+        Toast.makeText(context, toastError, Toast.LENGTH_SHORT).show()
         saveError = false
     }
 }
@@ -218,7 +227,7 @@ fun ActionButtonsRow(
     scope: CoroutineScope,
     context: Context,
     onOutfitSaved: (Int) -> Unit,
-    onSaveError: () -> Unit
+    onSaveError: (String) -> Unit
 ) {
     val userState by userViewModel.userState.collectAsState()
     var isUploading by remember { mutableStateOf(false) }
@@ -426,13 +435,14 @@ fun ActionButtonsRow(
                                     Toast.makeText(context, "Outfit saved!", Toast.LENGTH_SHORT)
                                         .show()
                                     onOutfitSaved(outfitId)
+                                } else if (outfitId == -2) {
+                                    onSaveError("Outfit already exists!")
                                 } else {
-                                    onSaveError()
+                                    onSaveError("Outfit could not be saved. Please try again.")
                                 }
-
-                            } catch (_: Exception) {
+                            } catch (e: Exception) {
                                 isUploading = false
-                                onSaveError()
+                                onSaveError(e.message.toString())
                             }
                         }
                     },
@@ -592,14 +602,11 @@ fun ClothingScroll(
 fun ClothingItemCard(item: ItemEntry, isBlocked: Boolean = false) {
     var aspectRatio by remember { mutableFloatStateOf(1f) }
     val cardHeight =
-        if (item.carouselType == CarouselTypes.ONE_PIECES)
-            320.dp // one piece height
-        else
-            150.dp
+        if (item.carouselType == CarouselTypes.ONE_PIECES) 280.dp else 150.dp
 
     Box(
         modifier = Modifier
-            .height( max(150.dp, cardHeight - 40.dp) )
+            .heightIn(min = 150.dp, max = cardHeight)
             .width(150.dp)
             .clip(MaterialTheme.shapes.medium),
         contentAlignment = Alignment.Center
