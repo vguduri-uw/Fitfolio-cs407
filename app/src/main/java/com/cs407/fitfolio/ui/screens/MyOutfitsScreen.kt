@@ -281,31 +281,27 @@ private fun PreviewSquare(
     iconSize: Dp,
     squarePadding: Dp
 ) {
+    val baseModifier = modifier
+        .aspectRatio(1f)
+        .padding(squarePadding)
+        .clip(MaterialTheme.shapes.small)
+
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .padding(squarePadding)
-            .clip(MaterialTheme.shapes.small)
-            .background(FloralWhite),
+        modifier = if (item != null) {
+            baseModifier.background(FloralWhite)
+        } else {
+            baseModifier
+        },
         contentAlignment = Alignment.Center
     ) {
         when {
-            item == null -> {
-                Image(
-                    painter = painterResource(R.drawable.hanger),
-                    contentDescription = "Empty slot",
-                    modifier = Modifier
-                        .size(35.dp),
-                    contentScale = ContentScale.Fit
-                )
-            }
+            item == null -> {}
 
             item.itemPhotoUri.isNotBlank() -> {
                 Image(
                     painter = rememberAsyncImagePainter(item.itemPhotoUri),
                     contentDescription = item.itemName,
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
             }
@@ -314,15 +310,13 @@ private fun PreviewSquare(
                 Image(
                     painter = painterResource(R.drawable.hanger),
                     contentDescription = "Placeholder for ${item.itemName}",
-                    modifier = Modifier
-                        .fillMaxSize(),
+                    modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Fit
                 )
             }
         }
     }
 }
-
 
 @Composable
 fun OutfitPreviewGrid(
